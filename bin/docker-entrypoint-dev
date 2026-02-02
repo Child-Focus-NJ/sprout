@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+
+# Remove potentially stale server.pid
+rm -f /rails/tmp/pids/server.pid
+
+# Install gems if Gemfile changed (useful when rebuilding)
+bundle check || bundle install
+
+# Create and migrate database if it doesn't exist
+if ! bin/rails db:version &>/dev/null; then
+  echo "Database not found. Creating..."
+  bin/rails db:create
+fi
+
+# Run migrations
+bin/rails db:migrate
+
+exec "$@"
