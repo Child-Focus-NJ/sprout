@@ -13,7 +13,7 @@ class CreateCommunicationTemplates < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :communication_templates, [:funnel_stage, :trigger_type]
+    add_index :communication_templates, [ :funnel_stage, :trigger_type ]
     add_index :communication_templates, :active
   end
 end

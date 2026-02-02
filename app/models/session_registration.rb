@@ -6,5 +6,5 @@ class SessionRegistration < ApplicationRecord
 
   validates :volunteer_id, uniqueness: { scope: :information_session_id, message: "already registered for this session" }
 
-  scope :active, -> { where(status: [:registered, :attended]) }
+  scope :active, -> { where(status: [ :registered, :attended ]) }
 end

@@ -11,6 +11,6 @@ class CreateStatusChanges < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :status_changes, [:volunteer_id, :created_at]
+    add_index :status_changes, [ :volunteer_id, :created_at ]
   end
 end

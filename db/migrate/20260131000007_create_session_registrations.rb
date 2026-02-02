@@ -11,7 +11,7 @@ class CreateSessionRegistrations < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :session_registrations, [:volunteer_id, :information_session_id], unique: true, name: 'idx_session_registrations_volunteer_session'
+    add_index :session_registrations, [ :volunteer_id, :information_session_id ], unique: true, name: 'idx_session_registrations_volunteer_session'
     add_index :session_registrations, :status
   end
 end

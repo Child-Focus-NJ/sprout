@@ -11,7 +11,7 @@ class CreateScheduledReminders < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :scheduled_reminders, [:volunteer_id, :status]
-    add_index :scheduled_reminders, [:scheduled_for, :status]
+    add_index :scheduled_reminders, [ :volunteer_id, :status ]
+    add_index :scheduled_reminders, [ :scheduled_for, :status ]
   end
 end

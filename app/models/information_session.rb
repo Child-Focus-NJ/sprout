@@ -12,6 +12,6 @@ class InformationSession < ApplicationRecord
 
   def spots_remaining
     return nil unless capacity
-    capacity - session_registrations.where(status: [:registered, :attended]).count
+    capacity - session_registrations.where(status: [ :registered, :attended ]).count
   end
 end
