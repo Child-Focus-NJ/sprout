@@ -1,7 +1,7 @@
 # Development Dockerfile for Sprout
 # Optimized for fast rebuilds and live code reloading
 
-ARG RUBY_VERSION=3.4.1
+ARG RUBY_VERSION=3.4.5
 FROM docker.io/library/ruby:$RUBY_VERSION-slim
 
 # Rails app lives here
