@@ -48,6 +48,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_31_000013) do
     t.index ["volunteer_id"], name: "index_communications_on_volunteer_id"
   end
 
+  create_table "external_sync_logs", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.jsonb "payload_snapshot"
+    t.integer "records_processed"
+    t.datetime "started_at"
+    t.integer "status", default: 0, null: false
+    t.integer "sync_direction", default: 0, null: false
+    t.integer "sync_type", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "volunteer_id"
+    t.index ["started_at"], name: "index_external_sync_logs_on_started_at"
+    t.index ["status"], name: "index_external_sync_logs_on_status"
+    t.index ["volunteer_id"], name: "index_external_sync_logs_on_volunteer_id"
+  end
+
   create_table "information_sessions", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.integer "capacity"
@@ -84,23 +101,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_31_000013) do
     t.bigint "volunteer_id", null: false
     t.index ["user_id"], name: "index_notes_on_user_id"
     t.index ["volunteer_id"], name: "index_notes_on_volunteer_id"
-  end
-
-  create_table "optima_sync_logs", force: :cascade do |t|
-    t.datetime "completed_at"
-    t.datetime "created_at", null: false
-    t.text "error_message"
-    t.jsonb "payload_snapshot"
-    t.integer "records_processed"
-    t.datetime "started_at"
-    t.integer "status", default: 0, null: false
-    t.integer "sync_direction", default: 0, null: false
-    t.integer "sync_type", default: 0, null: false
-    t.datetime "updated_at", null: false
-    t.bigint "volunteer_id"
-    t.index ["started_at"], name: "index_optima_sync_logs_on_started_at"
-    t.index ["status"], name: "index_optima_sync_logs_on_status"
-    t.index ["volunteer_id"], name: "index_optima_sync_logs_on_volunteer_id"
   end
 
   create_table "referral_sources", force: :cascade do |t|
@@ -185,13 +185,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_31_000013) do
     t.datetime "created_at", null: false
     t.integer "current_funnel_stage", default: 0, null: false
     t.string "email", null: false
+    t.string "external_id"
+    t.datetime "external_synced_at"
     t.string "first_name", null: false
     t.datetime "first_session_attended_at"
     t.integer "inactive_reason"
     t.datetime "inquiry_date"
     t.string "last_name", null: false
-    t.string "optima_id"
-    t.datetime "optima_synced_at"
     t.string "phone"
     t.integer "preferred_contact_method", default: 0, null: false
     t.datetime "reactivated_at"
@@ -203,8 +203,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_31_000013) do
     t.index ["became_inactive_at"], name: "index_volunteers_on_became_inactive_at"
     t.index ["current_funnel_stage"], name: "index_volunteers_on_current_funnel_stage"
     t.index ["email"], name: "index_volunteers_on_email", unique: true
+    t.index ["external_id"], name: "index_volunteers_on_external_id"
     t.index ["inquiry_date"], name: "index_volunteers_on_inquiry_date"
-    t.index ["optima_id"], name: "index_volunteers_on_optima_id"
     t.index ["referral_source_id"], name: "index_volunteers_on_referral_source_id"
     t.index ["referred_by_volunteer_id"], name: "index_volunteers_on_referred_by_volunteer_id"
   end
@@ -212,10 +212,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_31_000013) do
   add_foreign_key "communications", "communication_templates"
   add_foreign_key "communications", "users", column: "sent_by_user_id"
   add_foreign_key "communications", "volunteers"
+  add_foreign_key "external_sync_logs", "volunteers"
   add_foreign_key "inquiry_form_submissions", "volunteers"
   add_foreign_key "notes", "users"
   add_foreign_key "notes", "volunteers"
-  add_foreign_key "optima_sync_logs", "volunteers"
   add_foreign_key "scheduled_reminders", "communication_templates"
   add_foreign_key "scheduled_reminders", "volunteers"
   add_foreign_key "session_registrations", "information_sessions"

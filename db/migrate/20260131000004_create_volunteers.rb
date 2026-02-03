@@ -2,8 +2,8 @@ class CreateVolunteers < ActiveRecord::Migration[8.1]
   def change
     create_table :volunteers do |t|
       # Core identification
-      t.string :optima_id
-      t.datetime :optima_synced_at
+      t.string :external_id
+      t.datetime :external_synced_at
 
       # Personal info
       t.string :first_name, null: false
@@ -38,7 +38,7 @@ class CreateVolunteers < ActiveRecord::Migration[8.1]
     end
 
     add_index :volunteers, :email, unique: true
-    add_index :volunteers, :optima_id
+    add_index :volunteers, :external_id
     add_index :volunteers, :current_funnel_stage
     add_index :volunteers, :inquiry_date
     add_index :volunteers, :became_inactive_at

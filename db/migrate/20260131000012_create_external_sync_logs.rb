@@ -1,6 +1,6 @@
-class CreateOptimaSyncLogs < ActiveRecord::Migration[8.1]
+class CreateExternalSyncLogs < ActiveRecord::Migration[8.1]
   def change
-    create_table :optima_sync_logs do |t|
+    create_table :external_sync_logs do |t|
       t.references :volunteer, foreign_key: true
       t.integer :sync_type, default: 0, null: false
       t.integer :sync_direction, default: 0, null: false
@@ -14,7 +14,7 @@ class CreateOptimaSyncLogs < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :optima_sync_logs, :status
-    add_index :optima_sync_logs, :started_at
+    add_index :external_sync_logs, :status
+    add_index :external_sync_logs, :started_at
   end
 end
