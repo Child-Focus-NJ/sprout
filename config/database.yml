@@ -5,33 +5,35 @@ default: &default
   adapter: postgresql
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  timeout: 5000
+  url: <%= ENV["DATABASE_URL"] %>
 
 development:
   <<: *default
   database: sprout_development
+  host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
+  username: <%= ENV.fetch("DB_USERNAME") { "sprout" } %>
+  password: <%= ENV.fetch("DB_PASSWORD") { "sprout" } %>
 
 test:
   <<: *default
   database: sprout_test
-  url: <%= ENV["DATABASE_URL"] %>
+  host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
+  username: <%= ENV.fetch("DB_USERNAME") { "sprout" } %>
+  password: <%= ENV.fetch("DB_PASSWORD") { "sprout" } %>
 
 production:
   primary:
     <<: *default
-    url: <%= ENV["DATABASE_URL"] %>
+    database: sprout_production
   cache:
     <<: *default
-    url: <%= ENV["DATABASE_URL"] %>
     database: sprout_production_cache
     migrations_paths: db/cache_migrate
   queue:
     <<: *default
-    url: <%= ENV["DATABASE_URL"] %>
     database: sprout_production_queue
     migrations_paths: db/queue_migrate
   cable:
     <<: *default
-    url: <%= ENV["DATABASE_URL"] %>
     database: sprout_production_cable
     migrations_paths: db/cable_migrate
