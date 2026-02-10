@@ -194,7 +194,7 @@ Staff can create info sessions (virtual or in-person), register volunteers, and 
 ### Tasks
 
 1. **Configure email service**
-   - Set up Postmark (or SendGrid) with ActionMailer
+   - Set up MailChimp Transactional (Mandrill) with ActionMailer
    - Configure production credentials via `rails credentials:edit`
    - Create `VolunteerMailer` with base template
 
@@ -213,7 +213,7 @@ Staff can create info sessions (virtual or in-person), register volunteers, and 
    - Each template linked to a funnel stage and trigger type
 
 4. **Automated email scheduling**
-   - `ProcessScheduledRemindersJob` runs every 5 minutes via Solid Queue recurring
+   - `ProcessScheduledRemindersJob` runs every 15 minutes via Solid Queue recurring
    - On new inquiry: create ScheduledReminder records for 2/4/8/12 week intervals
    - On attendance: cancel all pending reminders, send application email
    - On skip/cancel: send "schedule another session" template
@@ -312,7 +312,7 @@ Full communication history visible on every volunteer profile. Notes added manua
 
 ## Phase 7: SMS Integration
 
-**Goal:** Send SMS reminders via Twilio, track delivery.
+**Goal:** Send SMS reminders via MailChimp Transactional (Mandrill), track delivery.
 
 **Dependencies:** Phase 4 (communication infrastructure), Phase 6 (notes)
 
@@ -320,16 +320,16 @@ Full communication history visible on every volunteer profile. Notes added manua
 
 ### Tasks
 
-1. **Twilio setup**
-   - Configure Twilio credentials
-   - Purchase phone number
-   - Apply for Twilio.org Impact Access (nonprofit program)
+1. **MailChimp Transactional SMS setup**
+   - Configure SMS consent and sender settings in Mandrill
+   - Uses the same Mandrill API key already set up for transactional email
+   - No additional service or gem needed
 
 2. **SMS sending**
-   - `SendSmsJob` using twilio-ruby
+   - `SendSmsJob` using Mandrill Transactional SMS API (via HTTParty)
    - Manual send from volunteer profile
    - Template-based SMS with Liquid variables
-   - Delivery status tracking via Twilio webhooks
+   - Delivery status tracking via Mandrill webhooks
 
 3. **Automated SMS scheduling**
    - Same ScheduledReminder system as email, with `communication_type: :sms`
@@ -339,11 +339,10 @@ Full communication history visible on every volunteer profile. Notes added manua
 4. **SMS history**
    - SMS recorded as Communication records
    - Visible in volunteer profile timeline
-   - Delivery status updates via Twilio status callbacks
-   - Inbound SMS responses stored (if Twilio webhook configured)
+   - Delivery status updates via Mandrill webhook callbacks
 
 ### Deliverable
-Staff can send SMS manually or automatically. SMS history tracked alongside email. Delivery status visible. Twilio nonprofit pricing applied.
+Staff can send SMS manually or automatically. SMS history tracked alongside email. Delivery status visible. All communications consolidated under one MailChimp/Mandrill API key.
 
 ---
 

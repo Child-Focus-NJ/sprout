@@ -160,17 +160,15 @@ MAILCHIMP = MailchimpMarketing::Client.new({
 
 ### 5. SMS Service
 
-**Decision: Twilio**
+**Decision: MailChimp Transactional SMS (Mandrill)**
 
-Twilio is the standard for programmatic SMS. Their nonprofit Impact Access Program provides $100 in free credits and reduced rates.
+Since the team already has MailChimp, we can consolidate email and SMS under a single API key. MailChimp's Transactional (Mandrill) API supports programmatic, event-driven SMS — session reminders, application follow-ups, etc. — alongside the transactional email service we're already using.
 
-**Note:** The user story mentions "MailChimp/SendGrid" for SMS. MailChimp does offer SMS as a marketing add-on, but it's designed for bulk marketing campaigns — not programmatic transactional messages triggered by app events. Twilio is the right tool for automated, event-driven SMS (session reminders, application follow-ups, etc.).
+See [Mailchimp Transactional SMS Documentation](https://mailchimp.com/developer/transactional/docs/transactional-sms/) for setup and API details.
 
-```ruby
-gem "twilio-ruby"
-```
+**No additional gem needed** — SMS is sent via the same Mandrill API used for transactional email. Use HTTParty (already in the stack) for direct API calls.
 
-**Estimated cost:** $0-7/month ($3 campaign fee + ~$0.008/SMS).
+**Estimated cost:** Included with existing MailChimp plan (Transactional SMS pricing applies per message).
 
 ### 6. Email Template Rendering
 
@@ -261,7 +259,7 @@ Info sessions are held via Zoom (and occasionally in-person). Zoom's Reports API
 **Key constraints:**
 - Reports API data is available **15 minutes** after a meeting ends
 - Email matching is ~70-80% reliable (depends on participants being signed into Zoom)
-- Requires Zoom **Pro plan or higher** (50% nonprofit discount available — ~$75/year)
+- Requires Zoom **Pro plan or higher** (50% nonprofit discount available — ~$75/year) — **TODO: verify whether Child Focus NJ currently has a Zoom Pro plan**
 - Requires a Server-to-Server OAuth app on the Zoom Marketplace
 
 **CSV upload fallback:** For in-person sessions or when API matching misses people, staff can download Zoom's attendance CSV and upload it to Sprout. This is also the simplest path to implement first.
@@ -310,7 +308,7 @@ gem "chartkick"
 # Communications
 gem "MailchimpMarketing", git: "https://github.com/mailchimp/mailchimp-marketing-ruby.git"  # Audience sync, campaigns, reports
 # MailChimp Transactional (Mandrill) uses SMTP relay — no gem needed for sending
-gem "twilio-ruby"
+# MailChimp Transactional (Mandrill) handles both email and SMS — no additional gem needed
 gem "liquid"
 
 # PDF Reports
@@ -363,7 +361,7 @@ gem "invisible_captcha"
                       │
 ┌─────────────────────v──────────────────────────────┐
 │              External Services                       │
-│  MailChimp Transactional (email), Twilio (SMS),     │
+│  MailChimp Transactional (email + SMS),              │
 │  Zoom (attendance sync), Google OAuth (auth),        │
 │  External volunteer system (API sync)                │
 └────────────────────────────────────────────────────┘
@@ -376,8 +374,8 @@ gem "invisible_captcha"
 | Service | Cost | Notes |
 |---------|------|-------|
 | MailChimp Transactional | $0/mo | 500 free emails/mo; already have MailChimp |
-| Twilio | $0-7/mo | $100 nonprofit credit to start |
+| MailChimp Transactional SMS | Included | Same Mandrill API key as email |
 | Zoom Pro | ~$6/mo | 50% nonprofit discount (~$75/year) |
 | Hosting | $5-20/mo | Kamal to a VPS, or Railway/Render |
 | Domain | ~$1/mo | If not already owned |
-| **Total** | **$12-49/mo** | |
+| **Total** | **$6-27/mo** | |

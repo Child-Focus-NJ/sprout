@@ -97,7 +97,7 @@ These are all planned features (documented in the roadmap) but not needed for th
 | Email template editor | Depends on email automation. |
 | Zoom API attendance sync | Needs Zoom app approval + Pro account. Manual sign-in covers the demo. |
 | Zoom CSV upload | Nice to have but manual sign-in demonstrates the concept. |
-| SMS integration | Needs Twilio setup. Not core to the demo story. |
+| SMS integration | Uses Mandrill Transactional SMS. Not core to the demo story. |
 | PDF reports / charts | Valuable but not needed to show the core workflow. |
 | Data import (CSV/Excel) | Post-launch feature for historical data migration. |
 | External system sync | Needs external API details. Post-MVP. |

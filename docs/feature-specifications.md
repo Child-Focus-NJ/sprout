@@ -28,7 +28,7 @@ end
 | first_name | text | Yes | |
 | last_name | text | Yes | |
 | email | email | Yes | Used for duplicate detection |
-| phone | tel | No | |
+| phone | tel | Yes | Needed for SMS onboarding and volunteer applications |
 | referral_source_id | select | Yes | From ReferralSource table |
 | referral_person_name | text | Conditional | Shown when referral is "person" |
 | referral_person_email | email | Conditional | Shown when referral is "person" |
@@ -108,14 +108,14 @@ When `referral_source` is "Person":
 ```yaml
 process_scheduled_reminders:
   class: ProcessScheduledRemindersJob
-  schedule: "every 5 minutes"
+  schedule: "every 15 minutes"
 ```
 
 **Flow:**
 1. Volunteer enters funnel → `CreateIntervalRemindersJob` creates ScheduledReminder records
-2. Every 5 min → `ProcessScheduledRemindersJob` finds due reminders
+2. Every 15 min → `ProcessScheduledRemindersJob` finds due reminders
 3. For each due reminder → enqueues `SendReminderJob`
-4. `SendReminderJob` renders template with Liquid, sends via Postmark/SendGrid, records Communication
+4. `SendReminderJob` renders template with Liquid, sends via Mandrill, records Communication
 
 **Cancellation rules:**
 - On attendance confirmed: cancel all pending follow-up reminders
@@ -125,7 +125,7 @@ process_scheduled_reminders:
 ### Email Tracking
 - Each send creates a Communication record
 - External message ID stored for delivery tracking
-- Postmark webhook for bounces/opens (optional)
+- Mandrill webhook for bounces/opens (optional)
 - `sent_at` timestamp on Communication and ScheduledReminder
 
 ---
@@ -294,10 +294,10 @@ Staff need a focused view of the application pipeline:
 
 **User Story:** As a system administrator, I want to send SMS reminders to volunteers, so that I can reach them through multiple channels.
 
-### Twilio Setup
-- Account SID, Auth Token, Phone Number stored in Rails credentials
-- Apply for Twilio.org Impact Access (nonprofit pricing)
-- Register A2P 10DLC campaign for compliance
+### MailChimp Transactional SMS Setup
+- Uses the same Mandrill API key already configured for transactional email
+- SMS consent field must be configured per [Mailchimp Transactional SMS docs](https://mailchimp.com/developer/transactional/docs/transactional-sms/)
+- No additional service accounts or API keys needed
 
 ### SMS Capabilities
 
@@ -317,16 +317,14 @@ Staff need a focused view of the application pipeline:
 - Confirmation with count before sending
 
 ### SMS Tracking
-- Delivery status via Twilio status callback webhook
-- Statuses: queued, sent, delivered, failed, undelivered
-- Inbound reply tracking (optional, requires Twilio webhook)
+- Delivery status via Mandrill webhook callbacks
+- Statuses: queued, sent, delivered, failed
 - All SMS recorded as Communication records, visible in timeline
 
 ### Webhook Endpoint
 ```ruby
 # Routes
-post "webhooks/twilio/status", to: "webhooks/twilio#status_update"
-post "webhooks/twilio/inbound", to: "webhooks/twilio#inbound_message"
+post "webhooks/mandrill/sms_status", to: "webhooks/mandrill#sms_status_update"
 ```
 
 ---
