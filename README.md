@@ -1,6 +1,6 @@
-## 🌱 Sprout – Volunteer Management for Child Focus NJ
+## 🌱 Sprout – Volunteer Management
 
-**Sprout** is a Ruby on Rails application that replaces spreadsheet-based workflows with a centralized system for managing the full volunteer lifecycle at Child Focus NJ.
+**Sprout** is a Ruby on Rails application that replaces spreadsheet-based workflows with a centralized system for managing the full volunteer lifecycle.
 
 Sprout supports the journey from initial inquiry through information session attendance, application eligibility, and ongoing follow-up — giving staff a clear view of every volunteer’s status in one place.
 
@@ -22,17 +22,15 @@ Working under **Dr. Peter DePasquale**
 - **Information sessions & attendance:** Create sessions, register volunteers, and use an electronic sign-in sheet to record attendance and automatically advance statuses.
 - **Notes & communication history:** Inline notes and system-generated entries (status changes, attendance) for a unified volunteer timeline.
 
-Additional planned functionality (documented in `docs/`): automated email follow-ups, template management, Zoom attendance sync, SMS reminders, reporting, and external system integrations.
-
 ---
 
 ## 🛠️ Tech Stack
 
-- **Language:** Ruby (see `.ruby-version`)
+- **Language:** Ruby (3.4.5)
 - **Framework:** Ruby on Rails 8.1.x
 - **Database:** PostgreSQL
-- **Background jobs:** Solid Queue
-- **Caching & WebSockets:** Solid Cache, Solid Cable
+- **Cloud Services:** TBD
+- **App Deployment:** TBD
 - **Styling:** Tailwind CSS via `tailwindcss-rails`
 
 Architecture, gem choices, and integration decisions are detailed in `docs/architecture-and-tech-stack.md` and `docs/feature-specifications.md`.
@@ -57,14 +55,3 @@ Architecture, gem choices, and integration decisions are detailed in `docs/archi
    ```
 
 For Docker-based setup and more implementation details, see `docs/docker-setup.md`, `docs/mvp-plan.md`, and `docs/implementation-roadmap.md`.
-
----
-
-## 📄 Documentation
-
-Design docs and specifications live in the `docs/` directory, including:
-
-- `mvp-plan.md` – demo scope and build sequence
-- `feature-specifications.md` – user-story–driven feature specs
-- `user-stories/` – original user stories from stakeholders
-- `architecture-and-tech-stack.md` – architecture, integrations, and cost estimates
