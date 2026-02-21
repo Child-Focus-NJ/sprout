@@ -9,3 +9,4 @@
 - Inquiry account links to application account (handles cases where different emails are used)
 - Relationship between accounts is visible in the system
 - System can propagate referrer name/email when referral source is a person
+- Tagging can be used to organize volunteers (VIP, daytime trainings preferred, etc.)

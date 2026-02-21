@@ -11,3 +11,4 @@
 - Date and time of attendance is recorded
 - Attendance confirmation triggers application email
 - System helps track when people attended sessions
+- If volunteer attends without signing up, they will be redirected to a form to add them to the system

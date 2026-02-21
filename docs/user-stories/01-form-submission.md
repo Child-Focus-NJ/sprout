@@ -10,3 +10,4 @@
 - Form submission sends email notification to Sarah
 - System creates inquiry account
 - System checks for existing accounts by email to prevent duplicates
+- System organizes "how heard" information into general sections (e.g. tv, TV, television all in same category)
