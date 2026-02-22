@@ -7,13 +7,24 @@ def parse_session_datetime(month, day, year, hour, minute, meridian)
 end
 
 Given('the following information sessions exist:') do |table|
-  # table is a Cucumber::MultilineArgument::DataTable
-  pending # Write code here that turns the phrase above into concrete actions
+    table.hashes.each do |row|
+        FactoryBot.create(:information_session,
+            capacity: row['capacity'],
+            scheduled_at: Date.parse(row['date']),
+            name: row['name'],
+            location: row['location']
+        )
+    end
 end
 
-Given('the following attendee exists:') do |table|
-  # table is a Cucumber::MultilineArgument::DataTable
-  pending # Write code here that turns the phrase above into concrete actions
+Given('the following attendees exist:') do |table|
+    table.hashes.each do |row|
+        FactoryBot.create(:volunteer,
+            first_name: row['name'],
+            last_name: row['email'],
+            email: row['phone'] 
+        )
+    end
 end
 
 Given('I am logged in as a system administrator') do

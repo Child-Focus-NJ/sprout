@@ -10,7 +10,7 @@ Feature: Manage Information Sessions
             | 10       | Zoom                 | Thursday Evening Info Session | 2026-04-16 18:00:00 |
             | 10       | 415 Hamburg Turnpike | Monday Morning Info Session   | 2025-12-08 10:00:00 |
 
-        Given the following attendee exists:
+        Given the following attendees exist:
             | email              | first_name | last_name | 
             | johndoe3@gmail.com | John       | Doe       | 
             | janedoe2@gmail.com | Jane       | Doe       | 
