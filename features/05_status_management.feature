@@ -25,10 +25,10 @@ Feature: Status Management
 
   Scenario: Status updates automatically when application is submitted
     Given I am on the volunteer "Jane Doe" profile page
-    And the volunteer has status "application_sent"
+    And the volunteer has status "application sent"
     When I mark the application as submitted
     Then the volunteer should have status "application submitted"
-    And I should see a status change entry for "application_sent" to "application submitted"
+    And I should see a status change entry for "application sent" to "application submitted"
     And the volunteer's application submitted date should be set
 
   Scenario: Status options include required funnel stages
@@ -42,16 +42,16 @@ Feature: Status Management
 
   Scenario: Inactive volunteer retains application sent date
     Given I am on the volunteer "Jane Doe" profile page
-    And the volunteer has status "application_sent"
-    And the volunteer was sent an application on "2025-02-15"
+    And the volunteer has status "application sent"
+    And the volunteer was sent an application on "2026-02-21"
     When I change the status to "inactive"
     And I press "Update Status"
     Then the volunteer should have status "inactive"
-    And I should still see application sent date "2025-02-15"
+    And I should still see application sent date "2026-02-21"
 
   Scenario: System prevents duplicate application sends
     Given I am on the volunteer "Jane Doe" profile page
-    And the volunteer has status "application_sent"
+    And the volunteer has status "application sent"
     And the volunteer has already received the application email
     When I attempt to send the application email again
     Then the application email should not be sent

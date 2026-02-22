@@ -3,7 +3,7 @@ Feature: SMS Integration
   I want to send SMS reminders to volunteers
   So that I can reach them through multiple channels
 
-  # Integrates with MailChimp SMS functionality per customer requirements
+  # Integrates with MailChimp SMS functionality
 
   Background:
     Given I am a signed-in system administrator
