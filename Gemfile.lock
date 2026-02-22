@@ -102,10 +102,40 @@ GEM
     concurrent-ruby (1.3.6)
     connection_pool (3.0.2)
     crass (1.0.6)
+    cucumber (10.2.0)
+      base64 (~> 0.2)
+      builder (~> 3.2)
+      cucumber-ci-environment (> 9, < 12)
+      cucumber-core (> 15, < 17)
+      cucumber-cucumber-expressions (> 17, < 20)
+      cucumber-html-formatter (> 21, < 23)
+      diff-lcs (~> 1.5)
+      logger (~> 1.6)
+      mini_mime (~> 1.1)
+      multi_test (~> 1.1)
+      sys-uname (~> 1.3)
+    cucumber-ci-environment (11.0.0)
+    cucumber-core (16.2.0)
+      cucumber-gherkin (> 36, < 40)
+      cucumber-messages (> 31, < 33)
+      cucumber-tag-expressions (> 6, < 9)
+    cucumber-cucumber-expressions (19.0.0)
+      bigdecimal
+    cucumber-gherkin (38.0.0)
+      cucumber-messages (>= 31, < 33)
+    cucumber-html-formatter (22.3.0)
+      cucumber-messages (> 23, < 33)
+    cucumber-messages (32.0.1)
+    cucumber-rails (4.0.0)
+      capybara (>= 3.25, < 4)
+      cucumber (>= 7, < 11)
+      railties (>= 6.1, < 9)
+    cucumber-tag-expressions (8.1.0)
     date (3.5.1)
     debug (1.11.1)
       irb (~> 1.10)
       reline (>= 0.3.8)
+    diff-lcs (1.6.2)
     dotenv (3.2.0)
     drb (2.2.3)
     ed25519 (1.4.0)
@@ -170,12 +200,14 @@ GEM
       net-smtp
     marcel (1.1.0)
     matrix (0.4.3)
+    memoist3 (1.0.0)
     mini_magick (5.3.1)
       logger
     mini_mime (1.1.5)
     minitest (6.0.1)
       prism (~> 1.5)
     msgpack (1.8.0)
+    multi_test (1.1.0)
     net-imap (0.6.2)
       date
       net-protocol
@@ -355,6 +387,9 @@ GEM
     stimulus-rails (1.3.4)
       railties (>= 6.0.0)
     stringio (3.2.0)
+    sys-uname (1.5.0)
+      ffi (~> 1.1)
+      memoist3 (~> 1.0.0)
     thor (1.5.0)
     thruster (0.1.17)
     thruster (0.1.17-aarch64-linux)
@@ -403,6 +438,7 @@ DEPENDENCIES
   brakeman (~> 8.0)
   bundler-audit
   capybara
+  cucumber-rails
   debug
   image_processing (~> 1.2)
   importmap-rails
@@ -451,8 +487,18 @@ CHECKSUMS
   concurrent-ruby (1.3.6) sha256=6b56837e1e7e5292f9864f34b69c5a2cbc75c0cf5338f1ce9903d10fa762d5ab
   connection_pool (3.0.2) sha256=33fff5ba71a12d2aa26cb72b1db8bba2a1a01823559fb01d29eb74c286e62e0a
   crass (1.0.6) sha256=dc516022a56e7b3b156099abc81b6d2b08ea1ed12676ac7a5657617f012bd45d
+  cucumber (10.2.0) sha256=fdedbd31ecf40858b60f04853f2aa15c44f5c30bbac29c6a227fa1e7005a8158
+  cucumber-ci-environment (11.0.0) sha256=0df79a9e1d0b015b3d9def680f989200d96fef206f4d19ccf86a338c4f71d1e2
+  cucumber-core (16.2.0) sha256=592b58a95cf42feef8e5a349f68e363784ba3b6568ffbcf6776e38e136cf970b
+  cucumber-cucumber-expressions (19.0.0) sha256=33208ff204732ac9bed42b46993a0a243054f71ece08579d57e53df6a1c9d93a
+  cucumber-gherkin (38.0.0) sha256=3e5846badf646eaec482b07067520e4494f370a0cfa5474d63522ca2ace800c4
+  cucumber-html-formatter (22.3.0) sha256=f9768ed05588dbd73a5f3824c2cc648bd86b00206e6972d743af8051281d0729
+  cucumber-messages (32.0.1) sha256=8889d29fa5486e6523bd537e95fbf86b99eb11258528d2d55af4b806594ffcff
+  cucumber-rails (4.0.0) sha256=b2fe07af16f74e7c6ef7cec5bb238a358443a91af019fba8586d936f49c47cf2
+  cucumber-tag-expressions (8.1.0) sha256=9bd8c4b6654f8e5bf2a9c99329b6f32136a75e50cd39d4cfb3927d0fa9f52e21
   date (3.5.1) sha256=750d06384d7b9c15d562c76291407d89e368dda4d4fff957eb94962d325a0dc0
   debug (1.11.1) sha256=2e0b0ac6119f2207a6f8ac7d4a73ca8eb4e440f64da0a3136c30343146e952b6
+  diff-lcs (1.6.2) sha256=9ae0d2cba7d4df3075fe8cd8602a8604993efc0dfa934cff568969efb1909962
   dotenv (3.2.0) sha256=e375b83121ea7ca4ce20f214740076129ab8514cd81378161f11c03853fe619d
   drb (2.2.3) sha256=0b00d6fdb50995fe4a45dea13663493c841112e4068656854646f418fda13373
   ed25519 (1.4.0) sha256=16e97f5198689a154247169f3453ef4cfd3f7a47481fde0ae33206cdfdcac506
@@ -484,10 +530,12 @@ CHECKSUMS
   mail (2.9.0) sha256=6fa6673ecd71c60c2d996260f9ee3dd387d4673b8169b502134659ece6d34941
   marcel (1.1.0) sha256=fdcfcfa33cc52e93c4308d40e4090a5d4ea279e160a7f6af988260fa970e0bee
   matrix (0.4.3) sha256=a0d5ab7ddcc1973ff690ab361b67f359acbb16958d1dc072b8b956a286564c5b
+  memoist3 (1.0.0) sha256=686e42402cf150a362050c23143dc57b0ef88f8c344943ff8b7845792b50d56f
   mini_magick (5.3.1) sha256=29395dfd76badcabb6403ee5aff6f681e867074f8f28ce08d78661e9e4a351c4
   mini_mime (1.1.5) sha256=8681b7e2e4215f2a159f9400b5816d85e9d8c6c6b491e96a12797e798f8bccef
   minitest (6.0.1) sha256=7854c74f48e2e975969062833adc4013f249a4b212f5e7b9d5c040bf838d54bb
   msgpack (1.8.0) sha256=e64ce0212000d016809f5048b48eb3a65ffb169db22238fb4b72472fecb2d732
+  multi_test (1.1.0) sha256=e9e550cdd863fb72becfe344aefdcd4cbd26ebf307847f4a6c039a4082324d10
   net-imap (0.6.2) sha256=08caacad486853c61676cca0c0c47df93db02abc4a8239a8b67eb0981428acc6
   net-pop (0.1.2) sha256=848b4e982013c15b2f0382792268763b748cce91c9e91e36b0f27ed26420dff3
   net-protocol (0.2.2) sha256=aa73e0cba6a125369de9837b8d8ef82a61849360eba0521900e2c3713aa162a8
@@ -553,6 +601,7 @@ CHECKSUMS
   sshkit (1.25.0) sha256=c8c6543cdb60f91f1d277306d585dd11b6a064cb44eab0972827e4311ff96744
   stimulus-rails (1.3.4) sha256=765676ffa1f33af64ce026d26b48e8ffb2e0b94e0f50e9119e11d6107d67cb06
   stringio (3.2.0) sha256=c37cb2e58b4ffbd33fe5cd948c05934af997b36e0b6ca6fdf43afa234cf222e1
+  sys-uname (1.5.0) sha256=15286961bc583796424135e2e4949c54f2943997c7b1a23470b70e5d021c3053
   thor (1.5.0) sha256=e3a9e55fe857e44859ce104a84675ab6e8cd59c650a49106a05f55f136425e73
   thruster (0.1.17) sha256=6f3f1de43e22f0162d81cbc363f45ee42a1b8460213856c1a899cbf0d3297235
   thruster (0.1.17-aarch64-linux) sha256=1b3a34b2814185c2aeaf835b5ecff5348cdcf8e77809f7a092d46e4b962a16ba
