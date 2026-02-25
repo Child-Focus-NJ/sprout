@@ -1,0 +1,3 @@
+default: --format pretty --no-source
+wip: --tags @wip --format pretty
+strict: --strict --format progress
