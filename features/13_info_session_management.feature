@@ -14,7 +14,7 @@ Feature: Manage Information Sessions
             | email              | first_name | last_name | 
             | johndoe3@gmail.com | John       | Doe       | 
             | janedoe2@gmail.com | Jane       | Doe       | 
-        And I am logged in as a system administrator
+        And I am a signed-in system administrator
         And I am on the information session management page
 
         Scenario: Creating an information session successfully

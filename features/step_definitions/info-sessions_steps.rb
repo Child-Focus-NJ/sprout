@@ -27,14 +27,6 @@ Given('the following attendees exist:') do |table|
     end
 end
 
-Given('I am logged in as a system administrator') do
-    OmniAuth.config.test_mode = true #don't need to have actual google account
-    OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(provider: 'google_oauth2', uid: '123456', info: { email: 'admin@example.com', name: 'System Admin' })
-    User.find_or_create_by!(email: 'admin@example.com', role: 'system_admin')
-
-    #login with google auth
-    visit '/auth/google_oauth2'
-end
 
 Given('I am on the information session management page') do
     visit information_sessions_path
