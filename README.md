@@ -39,30 +39,30 @@ Architecture, gem choices, and integration decisions are detailed in `docs/archi
 
 ## ⚙️ Local Setup (Development)
 
-### Option A: Docker Compose (recommended)
+### Option A: Docker (recommended)
 
-Docker Compose runs Rails, PostgreSQL, and LocalStack together. LocalStack emulates the AWS services (SQS, S3, Lambda, API Gateway) so you can develop the full stack without an AWS account.
+One script starts everything — Rails, PostgreSQL, and LocalStack (AWS emulator) — in Docker containers. No local Ruby, Postgres, or AWS tools needed.
 
 **Prerequisites:** [Docker Desktop](https://docs.docker.com/get-docker/)
 
 ```sh
-docker compose up
+bin/dev-docker
 ```
 
 This will:
 - Build the Rails dev image
 - Start PostgreSQL and run migrations automatically
-- Start LocalStack and provision all AWS resources (queues, buckets, lambdas, API Gateway)
+- Start LocalStack and provision all AWS resources (SQS queues, S3 bucket, Lambda functions, API Gateway)
 - Start the Rails server on http://localhost:3000
 
-To rebuild after Gemfile changes:
+To rebuild after Gemfile or Dockerfile changes:
 ```sh
-docker compose up --build
+bin/dev-docker --build
 ```
 
 To reset everything (database, LocalStack state):
 ```sh
-docker compose down -v && docker compose up
+bin/dev-docker --reset
 ```
 
 ### Option B: Local Ruby (without AWS services)

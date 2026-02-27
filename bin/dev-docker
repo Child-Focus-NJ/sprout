@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# One-command local development setup using Docker Compose.
+# Starts Rails, PostgreSQL, and LocalStack (AWS emulator) in containers.
+#
+# Usage:
+#   bin/dev-docker           # Start everything
+#   bin/dev-docker --build   # Rebuild after Gemfile or Dockerfile changes
+#   bin/dev-docker --reset   # Tear down volumes and start fresh
+
+cd "$(dirname "$0")/.."
+
+# ── Pre-flight checks ──────────────────────────────────────────────
+
+if ! command -v docker &>/dev/null; then
+  echo "Error: Docker is not installed."
+  echo "Install Docker Desktop: https://docs.docker.com/get-docker/"
+  exit 1
+fi
+
+if ! docker info &>/dev/null; then
+  echo "Error: Docker daemon is not running."
+  echo "Start Docker Desktop and try again."
+  exit 1
+fi
+
+# ── Handle flags ────────────────────────────────────────────────────
+
+COMPOSE_ARGS=""
+
+for arg in "$@"; do
+  case "$arg" in
+    --build)
+      COMPOSE_ARGS="--build"
+      ;;
+    --reset)
+      echo "Tearing down containers and volumes..."
+      docker compose down -v
+      COMPOSE_ARGS="--build"
+      ;;
+    *)
+      echo "Unknown option: $arg"
+      echo "Usage: bin/dev-docker [--build] [--reset]"
+      exit 1
+      ;;
+  esac
+done
+
+# ── Start services ──────────────────────────────────────────────────
+
+echo "Starting Sprout development environment..."
+echo ""
+echo "  Rails:      http://localhost:3000"
+echo "  PostgreSQL: localhost:5432"
+echo "  LocalStack: http://localhost:4566"
+echo ""
+echo "Press Ctrl+C to stop all services."
+echo ""
+
+docker compose up $COMPOSE_ARGS
