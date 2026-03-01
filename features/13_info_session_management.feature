@@ -10,7 +10,7 @@ Feature: Manage Information Sessions
             | 10       | Zoom                 | Thursday Evening Info Session | 2026-04-16 18:00:00 |
             | 10       | 415 Hamburg Turnpike | Monday Morning Info Session   | 2025-12-08 10:00:00 |
 
-        Given the following attendees exist:
+        Given the following volunteers exist:
             | email              | first_name | last_name | 
             | johndoe3@gmail.com | John       | Doe       | 
             | janedoe2@gmail.com | Jane       | Doe       | 
@@ -128,7 +128,4 @@ Feature: Manage Information Sessions
             When the reminder job runs
             Then "John Doe" should receive a reminder email about the session
             And "Jane Doe" should receive a reminder email about the session
-            
-        
-
             

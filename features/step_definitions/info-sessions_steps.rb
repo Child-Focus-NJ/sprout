@@ -17,7 +17,7 @@ Given('the following information sessions exist:') do |table|
     end
 end
 
-Given('the following attendees exist:') do |table|
+Given('the following volunteers exist:') do |table|
     table.hashes.each do |row|
         Volunteer.find_or_create_by!(email: row['email']) do |volunteer|
         volunteer.first_name = row['first_name']
@@ -170,7 +170,6 @@ end
 
 Then('an information session with a blank date should not be on the inquiry form') do
   visit inquiry_form_path
-  # Check that no sessions with a blank date are displayed
   expect(page).not_to have_selector('.information-session', text: '')
 end
 

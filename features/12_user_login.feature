@@ -16,5 +16,3 @@ Feature: User Login
             And I click the "Sign In" button
             Then I will receive the message "Must use a CASA associated email"
             And I will be on the login page
-
-    
