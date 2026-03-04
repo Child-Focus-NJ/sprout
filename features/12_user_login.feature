@@ -7,12 +7,12 @@ Feature: User Login
         Given I am on the login page
         
         Scenario: Successful Login
-            Given I have a CASA email domain
+            Given I have a Child Focus NJ email domain
             And I click the "Sign In" button
             Then I am redirected to the volunteer home page
 
         Scenario: Unsuccessful Login
-            Given I do not have a CASA email domain
+            Given I do not have a Child Focus NJ email domain
             And I click the "Sign In" button
-            Then I will receive the message "Must use a CASA associated email"
+            Then I will receive the message "Must use a Child Focus NJ associated email"
             And I will be on the login page

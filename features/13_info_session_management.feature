@@ -12,8 +12,8 @@ Feature: Manage Information Sessions
 
         Given the following volunteers exist:
             | email              | first_name | last_name | 
-            | johndoe3@gmail.com | John       | Doe       | 
-            | janedoe2@gmail.com | Jane       | Doe       | 
+            | johndoe3@childfocusnj.org | John       | Doe       | 
+            | janedoe2@childfocusnj.org | Jane       | Doe       | 
         And I am a signed-in system administrator
         And I am on the information session management page
 

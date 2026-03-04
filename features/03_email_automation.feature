@@ -5,8 +5,8 @@ Feature: Email Automation
 
   Scenario: New inquiry triggers an email
     Given I clear all sent emails
-    When I submit a valid inquiry for "jane@example.com"
-    Then an email should be sent to "jane@example.com"
+    When I submit a valid inquiry for "jane@childfocusnj.org"
+    Then an email should be sent to "jane@childfocusnj.org"
 
   Scenario: Invalid inquiry does not send an email
     Given I clear all sent emails

@@ -7,13 +7,13 @@ Feature: Integration & Administration
         Given I am on the system management page
         And the following users exist:
             | email              | first_name | last_name | role     |
-            | joel777@gmail.com  | Joel       | Savitz    | employee |
-            | robh89@gmail.com   | Robert     | Hernandez | employee |
+            | joel777@childfocusnj.org  | Joel       | Savitz    | employee |
+            | robh89@childfocusnj.org   | Robert     | Hernandez | employee |
         
         And the following volunteers exist:
             | email              | first_name | last_name | 
-            | katej@gmail.com    | Katie      | Jones     | 
-            | eddyh@gmail.com    | Edward     | Henning   |
+            | katej@childfocusnj.org    | Katie      | Jones     | 
+            | eddyh@childfocusnj.org    | Edward     | Henning   |
         
         
         Scenario: Volunteer data transferred to external system successfully
@@ -57,7 +57,7 @@ Feature: Integration & Administration
             And I have clicked "Add Employee"
             And I enter "Kevra" in the "First Name" field
             And I enter "Scholl" in the "Last Name" field
-            And I enter "kevra23@gmail.com" in the "Email" field
+            And I enter "kevra23@childfocusnj.org" in the "Email" field
             And I select "Employee" in the "Role" dropdown field
             And I have clicked the "Add Employee" button
             And I have clicked the "Confirm" on the confirmation modal
