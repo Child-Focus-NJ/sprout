@@ -94,7 +94,7 @@ RUBY
 LAMBDA_FUNCTIONS=(
   "sprout-zoom-meeting"
   "sprout-zoom-attendance"
-  "sprout-optima-sync"
+  "sprout-volunteer-management-system-sync"
   "sprout-mailchimp-realtime"
   "sprout-mailchimp-batch"
 )
@@ -213,13 +213,13 @@ ZOOM_MEETING_ID=$(create_resource "$ZOOM_ID" "meeting")
 create_post_integration "$ZOOM_MEETING_ID" "sprout-zoom-meeting"
 echo "  POST /zoom/meeting -> sprout-zoom-meeting"
 
-# --- /optima ---
-OPTIMA_ID=$(create_resource "$ROOT_ID" "optima")
+# --- /volunteer-management-system ---
+VMS_ID=$(create_resource "$ROOT_ID" "volunteer-management-system")
 
-# POST /optima/sync -> sprout-optima-sync
-OPTIMA_SYNC_ID=$(create_resource "$OPTIMA_ID" "sync")
-create_post_integration "$OPTIMA_SYNC_ID" "sprout-optima-sync"
-echo "  POST /optima/sync -> sprout-optima-sync"
+# POST /volunteer-management-system/sync -> sprout-volunteer-management-system-sync
+VMS_SYNC_ID=$(create_resource "$VMS_ID" "sync")
+create_post_integration "$VMS_SYNC_ID" "sprout-volunteer-management-system-sync"
+echo "  POST /volunteer-management-system/sync -> sprout-volunteer-management-system-sync"
 
 # --- /mailchimp ---
 MAILCHIMP_ID=$(create_resource "$ROOT_ID" "mailchimp")
@@ -277,7 +277,7 @@ echo ""
 echo "Lambda Functions:"
 echo "  - sprout-zoom-meeting"
 echo "  - sprout-zoom-attendance"
-echo "  - sprout-optima-sync"
+echo "  - sprout-volunteer-management-system-sync"
 echo "  - sprout-mailchimp-realtime"
 echo "  - sprout-mailchimp-batch"
 echo ""
@@ -290,7 +290,7 @@ echo "  Stage: local"
 echo "  Base URL: http://localhost:4566/restapis/$API_ID/local/_user_request_"
 echo "  Endpoints:"
 echo "    POST /zoom/meeting          -> sprout-zoom-meeting"
-echo "    POST /optima/sync           -> sprout-optima-sync"
+echo "    POST /volunteer-management-system/sync -> sprout-volunteer-management-system-sync"
 echo "    POST /mailchimp/send-email  -> sprout-mailchimp-realtime"
 echo "    POST /mailchimp/send-sms    -> sprout-mailchimp-realtime"
 echo "    POST /mailchimp/member      -> sprout-mailchimp-realtime"
