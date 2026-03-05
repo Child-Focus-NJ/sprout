@@ -8,13 +8,24 @@ services:
     volumes:
       - .:/rails
       - bundle_cache:/usr/local/bundle
+      - localstack_data:/localstack_data:ro
     ports:
       - "3000:3000"
     environment:
       - DATABASE_URL=postgres://sprout:sprout@db:5432/sprout_development
       - RAILS_ENV=development
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - API_GATEWAY_URL_FILE=/localstack_data/api/gateway_url
+      - SQS_ZOOM_ATTENDANCE_URL=http://localstack:4566/000000000000/sprout-zoom-attendance
+      - SQS_MAILCHIMP_BATCH_URL=http://localstack:4566/000000000000/sprout-mailchimp-batch
+      - S3_REPORTS_BUCKET=sprout-reports
     depends_on:
       db:
+        condition: service_healthy
+      localstack:
         condition: service_healthy
     stdin_open: true
     tty: true
@@ -35,6 +46,24 @@ services:
       timeout: 5s
       retries: 5
 
+  localstack:
+    image: localstack/localstack:4
+    ports:
+      - "127.0.0.1:4566:4566"
+      - "127.0.0.1:4510-4559:4510-4559"
+    environment:
+      - DEBUG=${DEBUG:-0}
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./localstack/init:/etc/localstack/init/ready.d
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   postgres_data:
   bundle_cache:
+  localstack_data:
