@@ -71,3 +71,5 @@ group :test do
   gem "cucumber"
   gem "warden"
 end
+
+gem "rspec-expectations", "~> 3.13"

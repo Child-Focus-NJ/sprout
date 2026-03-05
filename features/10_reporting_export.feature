@@ -8,7 +8,7 @@ Feature: Reporting & Exporting
         And I am on the reporting and exporting page
         And the following volunteers exist:
             | email              | first_name | last_name | 
-            | sammy123@gmail.com | Samantha   | Ray       |
+            | sammy123@childfocusnj.org | Samantha   | Ray       |
         
         And the following information sessions exist:
             | capacity | location             | name                          | scheduled_at        | 
@@ -55,4 +55,4 @@ Feature: Reporting & Exporting
             Then an excel file named "Attendees2024" should be in my downloads folder
             And the excel sheet should contain "Samantha Ray"
             And the excel sheet should contain "Attended an Information Session"
-            And the excel sheet should contain "sammy123@gmail.com"
+            And the excel sheet should contain "sammy123@childfocusnj.org"

@@ -3,6 +3,6 @@ FactoryBot.define do
     factory :volunteer do
         first_name { "Test" }
         last_name { "Volunteer" }
-        email { "volunteer@example.com" }
+        email { "volunteer@childfocusnj.org" }
     end
 end

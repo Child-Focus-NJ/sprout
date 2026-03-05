@@ -6,7 +6,7 @@ module VolunteerHelpers
     first_name = parts[0] || "Unknown"
     last_name = parts[1] || ""
 
-    Volunteer.find_or_create_by!(email: "#{name.parameterize}@example.com") do |v|
+    Volunteer.find_or_create_by!(email: "#{name.parameterize}@childfocusnj.org") do |v|
       v.first_name = first_name
       v.last_name = last_name
     end

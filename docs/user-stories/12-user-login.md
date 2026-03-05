@@ -6,4 +6,4 @@
 
 **Acceptance Criteria:**
 - Users sign in via OAuth using their Gmail account
-- Only Gmail accounts affiliated with the CASA email domain are accepted
+- Only Gmail accounts affiliated with the Child Focus NJ email domain are accepted
