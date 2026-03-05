@@ -4,7 +4,7 @@ Date: 2026-02-26
 
 ## Overview
 
-AWS infrastructure for Sprout, a Rails 8.1 volunteer management system. The design decouples external integrations (Zoom, Optima, MailChimp/Mandrill) into Lambda functions while keeping the Rails app focused on the web UI and data layer. All infrastructure is defined with AWS CDK (Python) and testable locally via LocalStack.
+AWS infrastructure for Sprout, a Rails 8.1 volunteer management system. The design decouples external integrations (Zoom, Volunteer Management System, MailChimp/Mandrill) into Lambda functions while keeping the Rails app focused on the web UI and data layer. All infrastructure is defined with AWS CDK (Python) and testable locally via LocalStack.
 
 ---
 
@@ -25,10 +25,10 @@ AWS infrastructure for Sprout, a Rails 8.1 volunteer management system. The desi
 |  +---------------+     +------+--------+                        |
 |  | API Gateway   |---->| Lambda        |                        |
 |  | (sync)        |     | Functions     |-->  Zoom API           |
-|  |               |     | (Ruby 3.3)   |-->  Optima API          |
+|  |               |     | (Ruby 3.3)   |-->  Volunteer Management System API          |
 |  | 4 endpoints:  |     |              |-->  MailChimp/Mandrill  |
 |  | zoom meeting  |     +--------------+                         |
-|  | optima sync   |                                              |
+|  | volunteer mgmt sync   |                                              |
 |  | mailchimp/*   |                                              |
 |  +------^--------+                                              |
 |         |                                                       |
@@ -74,7 +74,7 @@ AWS infrastructure for Sprout, a Rails 8.1 volunteer management system. The desi
 | Function | Endpoint(s) | Purpose |
 |---|---|---|
 | `zoom_meeting` | `POST /zoom/meeting` | Create Zoom meeting via Zoom API, return meeting ID + join URL |
-| `optima_sync` | `POST /optima/sync` | Push volunteer data to Optima API, return sync result |
+| `volunteer_management_system_sync` | `POST /volunteer-management-system/sync` | Push volunteer data to Volunteer Management System API, return sync result |
 | `mailchimp_realtime` | `POST /mailchimp/send-email` | Send transactional email via Mandrill API |
 | | `POST /mailchimp/send-sms` | Send SMS via Mandrill Transactional SMS API |
 | | `POST /mailchimp/member` | Add/update MailChimp audience member |
@@ -125,7 +125,7 @@ sprout/
 |   +-- zoom_attendance/
 |   |   +-- handler.rb
 |   |   +-- Gemfile
-|   +-- optima_sync/
+|   +-- volunteer_management_system_sync/
 |   |   +-- handler.rb
 |   |   +-- Gemfile
 |   +-- mailchimp_realtime/
@@ -239,7 +239,7 @@ network_stack
 - All MailChimp/Mandrill API calls (email, SMS, audience, tags)
 - Zoom meeting creation
 - Zoom attendance sync
-- Optima volunteer data sync
+- Volunteer Management System volunteer data sync
 
 ---
 
