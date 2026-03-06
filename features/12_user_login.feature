@@ -8,7 +8,7 @@ Feature: User Login
         
         Scenario: Successful Login
             Given I have a Child Focus NJ email domain
-            And I click the "Sign In" button
+            And I click the "Sign In with Google" button
             Then I am redirected to the volunteer home page
 
         Scenario: Unsuccessful Login
