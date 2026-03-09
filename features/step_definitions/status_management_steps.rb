@@ -64,6 +64,7 @@ Given("the volunteer {string} is registered for this session") do |name|
   ) do |reg|
     reg.status = :registered
   end
+  visit "/information_sessions/#{@session.id}/sign_in"
 end
 
 

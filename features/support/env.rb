@@ -1,3 +1,6 @@
+ENV['RAILS_ENV'] = 'test'
+ENV['DATABASE_URL'] = ENV['DATABASE_URL']&.sub('_development', '_test')
+
 require 'rspec/expectations'
 World(RSpec::Matchers)
 
