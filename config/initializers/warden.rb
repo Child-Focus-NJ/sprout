@@ -1,7 +1,7 @@
 require "warden"
 
 Rails.application.config.middleware.use Warden::Manager do |manager|
-  manager.failure_app = ->(env) { [302, { "Location" => "/" }, []] }
+  manager.failure_app = ->(env) { [ 302, { "Location" => "/" }, [] ] }
 end
 
 Warden::Manager.serialize_into_session(:user) { |user| user.id }
