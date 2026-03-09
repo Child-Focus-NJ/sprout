@@ -16,9 +16,14 @@ When('I go to the sign-in page for session {string}') do |session_name|
   visit "/information_sessions/#{session.id}/sign_in"
 end
 
-When('I check in the volunteer {string}') do |email|
-  fill_in "Email", with: email
-  click_button "Check in"
+When('I check in the volunteer {string}') do |identifier|
+  if identifier.include?("@")
+    fill_in "Email", with: identifier
+    click_button "Check in"
+  else
+    @volunteer = find_or_create_volunteer_by_name(identifier)
+    click_button "Check in #{@volunteer.full_name}"
+  end
 end
 
 Then('the volunteer should be marked as attended for {string}') do |session_name|
