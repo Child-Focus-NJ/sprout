@@ -8,4 +8,4 @@ Let's place design docs and files here in their own dirs.
 - **[Implementation Roadmap](implementation-roadmap.md)** — 9-phase build plan with dependencies, ordered by priority
 - **[Feature Specifications](feature-specifications.md)** — Detailed implementation specs for each feature (routes, controllers, data flows, UI details)
 - **[Docker Setup](docker-setup.md)** — Development environment setup guide
-- **[Lofidelity Diagrams](Sprout-Lofi-Diagrams.pdf)** — Lofidelity diagrams presented to client to plan software frontend layout and organization
+- **[Low-fidelity Diagrams](Sprout-Lofi-Diagrams.pdf)** — Low-fidelity diagrams presented to client to plan software frontend layout and organization
