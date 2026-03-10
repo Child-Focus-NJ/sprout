@@ -18,6 +18,10 @@ gem "stimulus-rails"
 gem "jbuilder"
 # OmniAuth for Single Sign-On
 gem "omniauth", ">= 2.0.0"
+gem 'omniauth-google-oauth2'
+
+# Allows for .env file
+gem 'dotenv-rails'
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
