@@ -39,6 +39,34 @@ Architecture, gem choices, and integration decisions are detailed in `docs/archi
 
 ## ⚙️ Local Setup (Development)
 
+### Option A: Docker (recommended)
+
+One script starts everything — Rails, PostgreSQL, and LocalStack (AWS emulator) — in Docker containers. No local Ruby, Postgres, or AWS tools needed.
+
+**Prerequisites:** [Docker Desktop](https://docs.docker.com/get-docker/)
+
+```sh
+bin/dev-docker
+```
+
+This will:
+- Build the Rails dev image
+- Start PostgreSQL and run migrations automatically
+- Start LocalStack and provision all AWS resources (SQS queues, S3 bucket, Lambda functions, API Gateway)
+- Start the Rails server on http://localhost:3000
+
+To rebuild after Gemfile or Dockerfile changes:
+```sh
+bin/dev-docker --build
+```
+
+To reset everything (database, LocalStack state):
+```sh
+bin/dev-docker --reset
+```
+
+### Option B: Local Ruby (without AWS services)
+
 1. **Install dependencies**
    ```sh
    bundle install
@@ -54,4 +82,6 @@ Architecture, gem choices, and integration decisions are detailed in `docs/archi
    bin/rails server
    ```
 
-For Docker-based setup and more implementation details, see `docs/docker-setup.md`, `docs/mvp-plan.md`, and `docs/implementation-roadmap.md`.
+Note: AWS integrations (Zoom, Mailchimp, Optima) won't work without LocalStack or real AWS credentials.
+
+For more implementation details, see `docs/docker-setup.md`, `docs/mvp-plan.md`, and `docs/implementation-roadmap.md`.
