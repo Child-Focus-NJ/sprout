@@ -31,7 +31,7 @@ Given("there are volunteers with status {string}") do |status|
   Volunteer.create!(
     first_name: "Vol",
     last_name: "One",
-    email: "vol1@example.com",
+    email: "vol1@childfocusnj.org",
     current_funnel_stage: status.parameterize.underscore.to_sym
   )
 end
