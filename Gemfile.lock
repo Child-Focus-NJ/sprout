@@ -518,8 +518,8 @@ DEPENDENCIES
   cucumber-rails
   debug
   dotenv-rails
-  httparty
   factory_bot_rails
+  httparty
   image_processing (~> 1.2)
   importmap-rails
   jbuilder
