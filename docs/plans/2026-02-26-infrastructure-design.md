@@ -61,7 +61,7 @@ AWS infrastructure for Sprout, a Rails 8.1 volunteer management system. The desi
 | Async messaging | SQS (2 queues + DLQs) | Built-in retry, dead-letter queues, backpressure |
 | Sync integrations | API Gateway + Lambda | Real-time request/response for user-facing operations |
 | Scheduling | EventBridge (single nightly cron rule) | Native cron, triggers mailchimp_batch Lambda |
-| Lambda runtime | Ruby 3.3 | Same language as Rails app, team familiarity |
+| Lambda runtime | Ruby 3.4.5 | Same language as Rails app, team familiarity |
 | Repo structure | Monorepo | Single repo: Rails app + infra/ + lambdas/ |
 | Email/SMS sending | All through mailchimp_realtime Lambda | MailChimp/Mandrill is the organization's comms platform; Rails orchestrates, Lambda sends |
 
