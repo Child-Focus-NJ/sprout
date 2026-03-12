@@ -1,0 +1,7 @@
+<h1>Login</h1>
+
+<% if flash[:alert] %>
+  <p class="alert"><%= flash[:alert] %></p>
+<% end %>
+
+<%= link_to "Sign in with Google", "/auth/google_oauth2" %>
