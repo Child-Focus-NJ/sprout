@@ -33,4 +33,12 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+# LocalStack
+localstack/volume/
+
+# CDK
+infra/.venv/
+infra/cdk.out/
+infra/**/__pycache__/
+infra/**/*.pyc
 .idea/
