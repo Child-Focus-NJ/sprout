@@ -3,7 +3,7 @@ class SessionsController < ApplicationController
   end
 
   def create
-    auth = request.env['omniauth.auth']
+    auth = request.env["omniauth.auth"]
 
     unless auth
       flash[:alert] = "Authentication failed"
@@ -12,7 +12,7 @@ class SessionsController < ApplicationController
 
     email = auth.info.email
 
-    if email && (email.end_with?('@childfocusnj.org') || email.end_with?('@nyu.edu')) #added nyu for testing
+    if email && (email.end_with?("@childfocusnj.org") || email.end_with?("@nyu.edu")) # added nyu for testing
       user = User.find_or_create_by(google_uid: auth.uid) do |u|
         u.email = email
         u.first_name = auth.info.first_name || auth.info.name.split.first
