@@ -1,8 +1,19 @@
 Rails.application.routes.draw do
   get "welcome/index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-  resources :information_sessions # info sessions routes helper
-  resources :volunteers # volunteers routes helper
+  resources :information_sessions do
+    member do
+      get :sign_in
+      post :check_in
+    end
+  end
+  resources :volunteers do
+    member do
+      patch :update_status
+      post :send_application
+      patch :mark_submitted
+    end
+  end
   resources :inquiry_form
   resources :reporting_exporting
   resources :system_management

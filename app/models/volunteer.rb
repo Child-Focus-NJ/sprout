@@ -35,4 +35,18 @@ class Volunteer < ApplicationRecord
   def full_name
     "#{first_name} #{last_name}"
   end
+
+  def change_status!(new_stage, user: nil, trigger: :manual)
+    old_stage = current_funnel_stage
+    new_stage_key = new_stage.to_s
+    return if old_stage == new_stage_key
+
+    update!(current_funnel_stage: new_stage_key)
+    status_changes.create!(
+      from_funnel_stage: old_stage.humanize,
+      to_funnel_stage: new_stage_key.humanize,
+      trigger: trigger,
+      user: user
+    )
+  end
 end

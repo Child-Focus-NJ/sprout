@@ -1,0 +1,63 @@
+<h1><%= @volunteer.full_name %></h1>
+
+<% if flash[:notice] %>
+  <div class="alert-success" role="alert"><%= flash[:notice] %></div>
+<% end %>
+<% if flash[:alert] %>
+  <div class="alert-warning" role="alert"><%= flash[:alert] %></div>
+<% end %>
+
+<section id="volunteer-status">
+  <h2>Current Status</h2>
+  <p><%= @volunteer.current_funnel_stage.humanize %></p>
+</section>
+
+<% if @volunteer.application_sent_at.present? %>
+  <section id="application-info">
+    <p>Application sent: <%= @volunteer.application_sent_at.strftime("%Y-%m-%d") %></p>
+  </section>
+<% end %>
+
+<% if @volunteer.application_submitted_at.present? %>
+  <section id="application-submitted-info">
+    <p>Application submitted: <%= @volunteer.application_submitted_at.strftime("%Y-%m-%d") %></p>
+  </section>
+<% end %>
+
+<section id="status-management">
+  <button type="button">Change Status</button>
+
+  <%= form_with url: update_status_volunteer_path(@volunteer), method: :patch do %>
+    <label for="status">Status</label>
+    <select name="status" id="status">
+      <% Volunteer.current_funnel_stages.keys.each do |stage| %>
+        <option value="<%= stage %>" <%= "selected" if @volunteer.current_funnel_stage == stage %>>
+          <%= stage.humanize %>
+        </option>
+      <% end %>
+    </select>
+    <button type="submit">Update Status</button>
+  <% end %>
+</section>
+
+<section id="actions">
+  <% if @volunteer.application_sent? %>
+    <%= form_with url: mark_submitted_volunteer_path(@volunteer), method: :patch do %>
+      <button type="submit">Mark as Submitted</button>
+    <% end %>
+  <% end %>
+
+  <%= form_with url: send_application_volunteer_path(@volunteer), method: :post do %>
+    <button type="submit">Send Application</button>
+  <% end %>
+</section>
+
+<section id="status-history">
+  <h2>Status History</h2>
+  <% @volunteer.status_changes.recent.each do |change| %>
+    <div class="status-change-entry" data-timestamp="<%= change.created_at.iso8601 %>">
+      <span><%= change.from_funnel_stage %></span> &rarr; <span><%= change.to_funnel_stage %></span>
+      <time datetime="<%= change.created_at.iso8601 %>"><%= change.created_at.strftime("%Y-%m-%d %H:%M") %></time>
+    </div>
+  <% end %>
+</section>

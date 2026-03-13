@@ -1,0 +1,15 @@
+<h1>Sign-In: <%= @session.name %></h1>
+
+<% @session.session_registrations.includes(:volunteer).each do |registration| %>
+  <div class="volunteer-registration">
+    <span><%= registration.volunteer.full_name %></span>
+    <span><%= registration.volunteer.current_funnel_stage.humanize %></span>
+
+    <% unless registration.attended? %>
+      <%= form_with url: check_in_information_session_path(@session), method: :post do %>
+        <input type="hidden" name="volunteer_id" value="<%= registration.volunteer.id %>">
+        <button type="submit">Check in <%= registration.volunteer.full_name %></button>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>
