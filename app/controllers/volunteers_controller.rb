@@ -29,6 +29,5 @@ class VolunteersController < ApplicationController
 
   def set_volunteer
     @volunteer = Volunteer.find(params[:id])
-  def index
   end
 end
