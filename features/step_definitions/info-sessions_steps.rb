@@ -32,7 +32,7 @@ Given('I am on the information session management page') do
     visit information_sessions_path
 end
 
-Given('I am on the create new information session page') do
+Then('I should be on the create new information session page') do
     visit new_information_session_path
 end
 
@@ -40,8 +40,13 @@ Given('I have filled out the {string} field with {string}') do |field_name, valu
     fill_in field_name, with: value
 end
 
+
 Given('I have clicked the {string} button') do |button|
   click_on button
+end
+
+Given('I click the {string} navigation button') do |button| # use for navigation links
+  click_link button
 end
 
 Then('an information session with date {int}\/{int}\/{int} and time {int}:{int} {word} should be on the list of information sessions') do |month, day, year, hour, minute, meridian|
@@ -92,7 +97,7 @@ Given('I edit the {string} field to be {string}') do |field_name, value|
 end
 
 Given('I click the {string} button') do |button|
-  click_button button
+  click_on button
 end
 
 Given('I click the {string} button for attendee with name {string}') do |button, name|

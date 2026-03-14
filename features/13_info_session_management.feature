@@ -18,7 +18,8 @@ Feature: Manage Information Sessions
         And I am on the information session management page
 
         Scenario: Creating an information session successfully
-            Given I am on the create new information session page
+            Given I click the "Create New" navigation button
+            Then I should be on the create new information session page
             And I have filled out the "Location" field with "415 Hamburg Turnpike" 
             And I have filled out the "Name" field with "Monday Morning Info Session"
             And I have filled out the "Date" field with "03/16/26"
@@ -29,7 +30,8 @@ Feature: Manage Information Sessions
             And an information session with date 03/16/26 and time 10:00 AM should be on the inquiry form
 
         Scenario: Creating a Zoom information session
-            Given I am on the create new information session page
+            Given I click the "Create New" navigation button
+            Then I should be on the create new information session page
             And I have filled out the "Location" field with "Zoom" 
             And I have filled out the "Name" field with "Monday Morning Info Session"
             And I have filled out the "Date" field with "04/06/26"
@@ -41,7 +43,8 @@ Feature: Manage Information Sessions
             And the information session with date 03/16/26 and time 10:00 AM should have a Zoom link for the meeting
         
         Scenario: Creating an information session with missing fields
-            Given I am on the create new information session page
+            Given I click the "Create New" navigation button
+            Then I should be on the create new information session page
             And I have filled out the "Location" field with "415 Hamburg Turnpike" 
             And I have filled out the "Name" field with "Monday Morning Info Session"
             And I have left the "Date" field blank
@@ -52,7 +55,8 @@ Feature: Manage Information Sessions
             And an information session with a blank date should not be on the inquiry form
 
         Scenario: Creating an information session in the past
-            Given I am on the create new information session page
+            Given I click the "Create New" navigation button
+            Then I should be on the create new information session page
             And I have filled out the "Location" field with "415 Hamburg Turnpike" 
             And I have filled out the "Name" field with "Monday Morning Info Session"
             And I have filled out the "Date" field with "03/27/24"
