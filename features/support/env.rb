@@ -22,7 +22,4 @@ end
 After do
     Warden.test_reset!
     OmniAuth.config.mock_auth[:google_oauth2] = nil
-
 end
-
-
