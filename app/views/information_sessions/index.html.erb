@@ -1,2 +1,48 @@
 <h1>Information Sessions</h1>
+<div class="filterBox">
+  <%= form_with url: information_sessions_path, method: :get, local: true do |f| %>
+    <div class="filterFields">
+      <div class="filterField">
+        <%= f.label :start_date, "Start Date" %>
+        <%= f.date_field :start_date, value: params[:start_date] %>
+      </div>
+
+      <div class="filterField">
+        <%= f.label :end_date, "End Date" %>
+        <%= f.date_field :end_date, value: params[:end_date] %>
+      </div>
+
+      <div class="filterField">
+        <%= f.label :location, "Location" %>
+        <%= f.select :location, options_for_select([['415 Hamburg Turnpike', '415 Hamburg Turnpike'], ['Zoom', 'Zoom']], selected: params[:location]), include_blank: "All Locations" %>
+      </div>
+
+      <div class="filterField">
+        <%= f.submit "Filter" %>
+      </div>
+    </div>
+  <% end %>
+</div>
+<div class="dataList">
+    <table>
+        <thead>
+            <tr>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Location</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% (@information_sessions || []).each do |session| %>
+            <tr>
+                <td><%= session.name %></td>
+                <td><%= session.scheduled_at.strftime("%b %d, %Y") %></td>
+                <td><%= session.scheduled_at.strftime("%I:%M %p") %></td>
+                <td><%= session.location %></td>
+            </tr>
+            <% end %>
+        </tbody>
+    </table>
+</div>
 <%= link_to "Create New", new_information_session_path %>

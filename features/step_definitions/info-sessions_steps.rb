@@ -1,9 +1,11 @@
-# function to change format of date and time from UI
-def parse_session_datetime(month, day, year, hour, minute, meridian)
-  year += 2000 if year < 100
-  hour += 12 if meridian.upcase == "PM" && hour < 12
-  hour = 0 if meridian.upcase == "AM" && hour == 12
-  DateTime.new(year, month, day, hour, minute)
+def format_session_datetime(month_abbr, day, year, hour, minute, meridian)
+  date_str = "#{month_abbr} #{day.to_s.rjust(2, '0')}, #{year}"
+  time_str = "#{hour.to_s.rjust(2, '0')}:#{minute.to_s.rjust(2, '0')} #{meridian}"
+  [date_str, time_str]
+end
+
+def parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
+  DateTime.parse("#{month_abbr} #{day}, #{year} #{hour}:#{minute.to_s.rjust(2, '0')} #{meridian}")
 end
 
 Given('the following information sessions exist:') do |table|
@@ -36,6 +38,10 @@ Then('I should be on the create new information session page') do
     visit new_information_session_path
 end
 
+Then(/^I have selected "(.*)" from "(.*)"$/) do |option, field|
+  select option, from: field
+end
+
 Given('I have filled out the {string} field with {string}') do |field_name, value|
     fill_in field_name, with: value
 end
@@ -49,47 +55,48 @@ Given('I click the {string} navigation button') do |button| # use for navigation
   click_link button
 end
 
-Then('an information session with date {int}\/{int}\/{int} and time {int}:{int} {word} should be on the list of information sessions') do |month, day, year, hour, minute, meridian|
-    dt = parse_session_datetime(month, day, year, hour, minute, meridian)
-    expect(page).to have_content(dt.strftime("%m/%d/%Y %I:%M %p"))
+Then('an information session with date {word} {int}, {int} and time {int}:{int} {word} should be on the list of information sessions') do |month_abbr, day, year, hour, minute, meridian|
+  date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
+  expect(page).to have_content(date_str)
+  expect(page).to have_content(time_str)
 end
 
-Then('an information session with date {int}\/{int}\/{int} and time {int}:{int} {word} should be on the inquiry form') do |month, day, year, hour, minute, meridian|
+
+Then('an information session with date {word} {int}, {int} and time {int}:{int} {word} should be on the inquiry form') do |month_abbr, day, year, hour, minute, meridian|
     visit inquiry_form_path # might need to change once we implement
-    dt = parse_session_datetime(month, day, year, hour, minute, meridian)
-
-    expect(page).to have_content(dt.strftime("%m/%d/%Y %I:%M %p"))
+    date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
+    expect(page).to have_content(date_str)
+    expect(page).to have_content(time_str)
 end
 
-Then('the information session with date {int}\/{int}\/{int} and time {int}:{int} {word} should have a Zoom link for the meeting') do |month, day, year, hour, minute, meridian|
-    dt = parse_session_datetime(month, day, year, hour, minute, meridian)
-    session_time_str = dt.strftime("%m/%d/%Y %I:%M %p")
-    session_element = find('.information-session', text: session_time_str)
+Then('the information session with date {word} {int}, {int} and time {int}:{int} {word} should have a Zoom link for the meeting') do |month_abbr, day, year, hour, minute, meridian|
+  date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
+  session_element = find('.information-session', text: "#{date_str} #{time_str}")
 
-    expect(session_element).to have_link('Zoom') # might need to change when implemented
+  expect(session_element).to have_link('Zoom')
 end
 
 Then('a message that says {string} will appear') do |message|
     expect(page).to have_content(message)
 end
 
-Then('an information session with date {int}\/{int}\/{int} and time {int}:{int} {word} should not be on the list of information sessions') do |month, day, year, hour, minute, meridian|
-    dt = parse_session_datetime(month, date, year, hour, minute, meridian)
-    displayed_text = session_datetime.strftime("%B %-d, %Y %-l:%M %p").strip
-    expect(page).not_to have_content(displayed_text)
+Then('an information session with date {word} {int}, {int} and time {int}:{int} {word} should not be on the list of information sessions') do |month_abbr, day, year, hour, minute, meridian|
+  date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
+  expect(page).not_to have_content(date_str)
+  expect(page).not_to have_content(time_str)
 end
 
-Then('an information session with date {int}\/{int}\/{int} and time {int}:{int} {word} should not be on the inquiry form') do |month, day, year, hour, minute, meridian|
-    visit inquiry_form_path
-    dt = parse_session_datetime(month, date, year, hour, minute, meridian)
-    displayed_text = session_datetime.strftime("%B %-d, %Y %-l:%M %p").strip
-    expect(page).not_to have_content(displayed_text)
+Then('an information session with date {word} {int}, {int} and time {int}:{int} {word} should not be on the inquiry form') do |month_abbr, day, year, hour, minute, meridian|
+  visit inquiry_form_path
+  date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
+  expect(page).not_to have_content(date_str)
+  expect(page).not_to have_content(time_str)
 end
 
-Given('I am on the edit page for information session with date {int}\/{int}\/{int} and time {int}:{int} {word}') do |month, day, year, hour, minute, meridian|
-    dt = parse_session_datetime(month, day, year, hour, minute, meridian)
-    session = InformationSession.find_by(scheduled_at: dt)
-    visit edit_information_session_path(session.id)
+Given('I am on the edit page for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |month_abbr, day, year, hour, minute, meridian|
+  dt = parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
+  session = InformationSession.find_by(scheduled_at: dt)
+  visit edit_information_session_path(session.id)
 end
 
 Given('I edit the {string} field to be {string}') do |field_name, value|
@@ -112,11 +119,11 @@ Given('I click the {string} button on the confirmation pop-up modal') do |button
   end
 end
 
-Then('{string} should not appear on the list of attendees for information session with date {int}\/{int}\/{int} and time {int}:{int} {word}') do |name, month, day, year, hour, minute, meridian|
-    dt = parse_session_datetime(month, day, year, hour, minute, meridian)
-    session = InformationSession.find_by(scheduled_at: dt)
-    visit information_session_path(session.id)
-    expect(page).not_to have_content(name)
+Then('{string} should not appear on the list of attendees for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |name, month_abbr, day, year, hour, minute, meridian|
+  dt = parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
+  session = InformationSession.find_by(scheduled_at: dt)
+  visit information_session_path(session.id)
+  expect(page).not_to have_content(name)
 end
 
 Then('the status for {string} should change from {string} to {string}') do |full_name, old_status, new_status|
@@ -127,20 +134,20 @@ Then('the status for {string} should change from {string} to {string}') do |full
     expect(page).to have_content(new_status)
 end
 
-Given('John Smith cancels their sign up for information session with date {int}\/{int}\/{int} and time {int}:{int} {word}') do |month, day, year, hour, minute, meridian|
-    dt = parse_session_datetime(month, day, year, hour, minute, meridian)
-    session = InformationSession.find_by(scheduled_at: dt)
-    volunteer = Volunteer.find_by(first_name: "John", last_name: "Smith")
-    if session.volunteers.exists?(volunteer.id)
-        session.volunteers.delete(volunteer)
-    end
+Given('John Smith cancels their sign up for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |month_abbr, day, year, hour, minute, meridian|
+  dt = parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
+  session = InformationSession.find_by(scheduled_at: dt)
+  volunteer = Volunteer.find_by(first_name: "John", last_name: "Smith")
+  if session.volunteers.exists?(volunteer.id)
+    session.volunteers.delete(volunteer)
+  end
 end
 
-Given('I click the {string} button for information session with date {int}\/{int}\/{int} and time {int}:{int} {word}') do |button, month, day, year, hour, minute, meridian|
-    dt = parse_session_datetime(month, day, year, hour, minute, meridian)
-    session_time_str = dt.strftime("%B %-d, %Y %-l:%M %p")
-    row = find('tr', text: session_time_str)
-    row.click_button(button)
+Given('I click the {string} button for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |button, month_abbr, day, year, hour, minute, meridian|
+  dt = parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
+  date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
+  row = find('tr', text: date_str)
+  row.click_button(button)
 end
 
 Then('every attendees status should change from {string} to {string}') do |old_status, new_status|
@@ -155,8 +162,9 @@ Given('I have changed the {string} dropdown to {string}') do |dropdown, value|
   select value, from: dropdown
 end
 
-Given('{string} has signed up for an information session with date {int}\/{int}\/{int} and time {int}:{int} {word}') do |full_name, month, day, year, hour, minute, meridian|
-  dt = parse_session_datetime(month, day, year, hour, minute, meridian)
+
+Given('{string} has signed up for an information session with date {word} {int}, {int} and time {int}:{int} {word}') do |full_name, month_abbr, day, year, hour, minute, meridian|
+  dt = parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
   session = InformationSession.find_by(scheduled_at: dt)
   first_name, last_name = full_name.split(" ", 2)
   volunteer = Volunteer.find_by(first_name: first_name, last_name: last_name)

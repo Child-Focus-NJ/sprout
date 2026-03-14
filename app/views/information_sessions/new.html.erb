@@ -1,0 +1,35 @@
+<div>
+    <h1>New Information Session</h1>
+    <div class="createNewBox">
+        <%= form_with model: @information_session, local: true do |f| %>
+            <div class="filterFields">
+                <div class="filterField">
+                    <%= f.label :name, "Name" %>
+                    <%= f.text_field :name %>
+                </div>
+
+                <div class="filterField">
+                    <%= f.label :scheduled_at, "Date & Time" %>
+                    <%= f.datetime_local_field :scheduled_at %>
+                </div>
+
+                <div class="filterField">
+                    <%= f.label :location, "Location" %>
+                    <%= f.select :location, options_for_select([['415 Hamburg Turnpike', '415 Hamburg Turnpike'], ['Zoom', 'Zoom']], selected: params[:location]), include_blank: "All Locations" %>
+                </div>
+
+                <div class="filterField">
+                    <%= f.submit "Create Event" %>
+                </div>
+            </div>
+        <% end %>
+    </div>
+    
+</div>
+<% if @information_session.errors.any? %>
+  <div class="errors">
+    <% @information_session.errors.full_messages.each do |msg| %>
+      <p><%= msg %></p>
+    <% end %>
+  </div>
+<% end %>
