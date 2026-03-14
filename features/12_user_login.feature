@@ -8,11 +8,11 @@ Feature: User Login
         
         Scenario: Successful Login
             Given I have a Child Focus NJ email domain
-            And I click the "Sign In with Google" button
+            And I click the "Sign in with Google" button
             Then I am redirected to the volunteer home page
 
         Scenario: Unsuccessful Login
             Given I do not have a Child Focus NJ email domain
-            And I click the "Sign In" button
+            And I click the "Sign in with Google" button
             Then I will receive the message "Must use a Child Focus NJ associated email"
             And I will be on the login page

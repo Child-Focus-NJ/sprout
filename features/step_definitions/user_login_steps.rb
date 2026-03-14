@@ -21,5 +21,5 @@ Then('I will receive the message {string}') do |message|
 end
 
 Then('I will be on the login page') do
-  expect(page).to have_current_path(root_path)
+  expect(page).to have_current_path(login_path)
 end

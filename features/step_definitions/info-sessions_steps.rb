@@ -41,7 +41,7 @@ Given('I have filled out the {string} field with {string}') do |field_name, valu
 end
 
 Given('I have clicked the {string} button') do |button|
-  click_button button
+  click_on button
 end
 
 Then('an information session with date {int}\/{int}\/{int} and time {int}:{int} {word} should be on the list of information sessions') do |month, day, year, hour, minute, meridian|
