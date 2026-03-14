@@ -1,5 +1,6 @@
 Given("the volunteer has status {string}") do |status|
   @volunteer.update!(current_funnel_stage: status.parameterize.underscore.to_sym)
+  visit current_path
 end
 
 Given("the volunteer was sent an application on {string}") do |date|
@@ -48,7 +49,7 @@ Then("I should still see application sent date {string}") do |date|
 end
 
 Then("the application email should not be sent") do
-  expect(page).not_to have_content("Application sent")
+  expect(page).not_to have_content("Application email queued")
 end
 
 Then("I should see a message that the application was already sent") do
@@ -57,17 +58,15 @@ end
 
 Given("the volunteer {string} is registered for this session") do |name|
   @volunteer = find_or_create_volunteer_by_name(name)
-  SessionRegistration.create!(
+  SessionRegistration.find_or_create_by!(
     volunteer: @volunteer,
-    information_session: @session,
-    status: :registered
-  )
+    information_session: @session
+  ) do |reg|
+    reg.status = :registered
+  end
+  visit "/information_sessions/#{@session.id}/sign_in"
 end
 
-When("I check in the volunteer {string}") do |name|
-  @volunteer = find_or_create_volunteer_by_name(name)
-  click_button "Check in #{@volunteer.full_name}"
-end
 
 Then("the volunteer's first session attended date should be set") do
   @volunteer.reload
