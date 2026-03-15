@@ -1,0 +1,10 @@
+<h1>Application Dashboard</h1>
+
+<section id="awaiting-submission">
+  <h2>Awaiting submission</h2>
+  <ul class="volunteer-list">
+    <% @awaiting_submission.each do |volunteer| %>
+      <li><%= volunteer.full_name %> — <%= volunteer.current_funnel_stage %></li>
+    <% end %>
+  </ul>
+</section>
