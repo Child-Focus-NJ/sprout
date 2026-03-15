@@ -10,7 +10,7 @@ Feature: Status Management
     Given I am on the volunteer "Jane Doe" profile page
     And the volunteer has status "Inquiry"
     When I change the status to "Application eligible"
-    And I press "Update Status"
+    And I press "Update status"
     Then the volunteer should have status "Application eligible"
     And I should see a status change entry for "Inquiry" to "Application eligible"
     And the status change should include a timestamp
@@ -45,7 +45,7 @@ Feature: Status Management
     And the volunteer has status "Application sent"
     And the volunteer was sent an application on "2026-02-21"
     When I change the status to "Inactive"
-    And I press "Update Status"
+    And I press "Update status"
     Then the volunteer should have status "Inactive"
     And I should still see application sent date "2026-02-21"
 

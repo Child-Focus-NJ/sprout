@@ -20,7 +20,7 @@ When("I press {string}") do |button|
 end
 
 When("I open the status change dropdown") do
-  click_button "Change Status"
+  find("#status").click
 end
 
 When("I attempt to send the application email again") do
@@ -28,7 +28,7 @@ When("I attempt to send the application email again") do
 end
 
 Then("the volunteer should have status {string}") do |status|
-  expect(page).to have_content(status)
+  expect(page).to have_content(/#{Regexp.escape(status)}/i)
 end
 
 Then("I should see a status change entry for {string} to {string}") do |from_status, to_status|
@@ -58,12 +58,13 @@ end
 
 Given("the volunteer {string} is registered for this session") do |name|
   @volunteer = find_or_create_volunteer_by_name(name)
-  SessionRegistration.find_or_create_by!(
+  reg = SessionRegistration.find_or_create_by!(
     volunteer: @volunteer,
     information_session: @session
-  ) do |reg|
-    reg.status = :registered
+  ) do |r|
+    r.status = :registered
   end
+  reg.update!(status: :registered, checked_in_at: nil)
   visit "/information_sessions/#{@session.id}/sign_in"
 end
 
