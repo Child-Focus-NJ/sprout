@@ -9,7 +9,7 @@
 
 <section id="volunteer-status">
   <h2>Current Status</h2>
-  <p><%= @volunteer.current_funnel_stage.humanize %></p>
+  <p><%= @volunteer.applied? ? "Application submitted" : @volunteer.current_funnel_stage.to_s %></p>
 </section>
 
 <% if @volunteer.application_sent_at.present? %>
@@ -19,14 +19,13 @@
 <% end %>
 
 <% if @volunteer.application_submitted_at.present? %>
-  <section id="application-submitted-info">
+  <section id="applied-section">
     <p>Application submitted: <%= @volunteer.application_submitted_at.strftime("%Y-%m-%d") %></p>
   </section>
 <% end %>
 
 <section id="status-management">
-  <button type="button">Change Status</button>
-
+  <h2>Update status</h2>
   <%= form_with url: update_status_volunteer_path(@volunteer), method: :patch do %>
     <label for="status">Status</label>
     <select name="status" id="status">
@@ -36,7 +35,7 @@
         </option>
       <% end %>
     </select>
-    <button type="submit">Update Status</button>
+    <button type="submit">Update status</button>
   <% end %>
 </section>
 
