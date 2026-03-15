@@ -4,4 +4,5 @@
   <p class="alert"><%= flash[:alert] %></p>
 <% end %>
 
-<%= link_to "Sign in with Google", "/auth/google_oauth2" %>
+<%= button_to "Sign in with Google", "/auth/google_oauth2", method: :post %>
+
