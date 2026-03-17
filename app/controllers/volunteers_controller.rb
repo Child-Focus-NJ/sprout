@@ -20,9 +20,9 @@ class VolunteersController < ApplicationController
   end
 
   def mark_submitted
-    @volunteer.change_status!(:applied, user: current_user)
     @volunteer.update!(application_submitted_at: Time.current)
-    redirect_to volunteer_path(@volunteer)
+    @volunteer.change_status!(:applied, user: current_user)
+    redirect_to volunteer_path(@volunteer), notice: "Application recorded. Staff have been notified."
   end
 
   private

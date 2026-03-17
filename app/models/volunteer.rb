@@ -24,6 +24,8 @@ class Volunteer < ApplicationRecord
   scope :application_eligible, -> { where(current_funnel_stage: :application_eligible) }
   scope :never_attended, -> { where(first_session_attended_at: nil) }
 
+  after_save :cancel_pending_reminders_if_applied
+
   def attended_session?
     first_session_attended_at.present?
   end
@@ -48,5 +50,13 @@ class Volunteer < ApplicationRecord
       trigger: trigger,
       user: user
     )
+  end
+
+  private
+
+  def cancel_pending_reminders_if_applied
+    return unless saved_change_to_current_funnel_stage? && applied?
+
+    scheduled_reminders.pending_reminders.update_all(status: ScheduledReminder.statuses[:cancelled])
   end
 end
