@@ -50,7 +50,7 @@ gem "image_processing", "~> 1.2"
 gem "httparty"
 
 # AWS SDK (SQS for async Lambda triggers, S3 for report storage)
-gem "aws-sdk-sqs", "~> 1.0"
+gem "aws-sdk-sqs", "~> 1.112"
 gem "aws-sdk-s3", "~> 1.0"
 
 group :development, :test do
