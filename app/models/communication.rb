@@ -8,4 +8,14 @@ class Communication < ApplicationRecord
 
   scope :recent, -> { order(created_at: :desc) }
   scope :by_status, ->(status) { where(status: status) }
+
+  after_create :mark_sms_delivered_if_seeded
+
+  private
+
+  def mark_sms_delivered_if_seeded
+    return unless sms? && sent_at.present? && pending?
+
+    update!(status: :delivered)
+  end
 end
