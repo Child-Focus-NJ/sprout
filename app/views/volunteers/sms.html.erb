@@ -1,0 +1,25 @@
+<h1>Send SMS</h1>
+
+<%= form_with url: send_sms_volunteer_path(@volunteer), method: :post do %>
+  <label for="message">Message</label>
+  <textarea id="message" name="message" rows="5"><%= @message %></textarea>
+
+  <div id="sms-character-count">
+    Character count: <span id="sms-char-count-value"><%= @message.to_s.length %></span>
+  </div>
+
+  <button type="submit">Send</button>
+<% end %>
+
+<script>
+  (function () {
+    const textarea = document.getElementById("message");
+    const valueEl = document.getElementById("sms-char-count-value");
+    if (!textarea || !valueEl) return;
+
+    const update = () => { valueEl.textContent = String(textarea.value.length); };
+    textarea.addEventListener("input", update);
+    update();
+  })();
+</script>
+
