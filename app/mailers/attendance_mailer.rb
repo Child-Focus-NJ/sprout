@@ -8,4 +8,3 @@ class AttendanceMailer < ApplicationMailer
     )
   end
 end
-
