@@ -78,7 +78,7 @@ Then("I should see the SMS delivery status") do
 end
 
 Then('the status should be one of {string}, {string}, {string}, or {string}') do |s1, s2, s3, s4|
-  statuses = [s1, s2, s3, s4].map(&:downcase)
+  statuses = [ s1, s2, s3, s4 ].map(&:downcase)
   expect(page).to have_content(/\b(#{Regexp.union(statuses)})\b/i)
 end
 
