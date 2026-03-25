@@ -77,8 +77,9 @@ Then("I should see the SMS delivery status") do
   expect(page).to have_content("delivered")
 end
 
-Then("the status should be one of {string}") do |_options|
-  expect(page).to have_content(/\b(queued|sent|delivered|failed)\b/)
+Then('the status should be one of {string}, {string}, {string}, or {string}') do |s1, s2, s3, s4|
+  statuses = [s1, s2, s3, s4].map(&:downcase)
+  expect(page).to have_content(/\b(#{Regexp.union(statuses)})\b/i)
 end
 
 Then("the system should flag the phone number as bad") do
