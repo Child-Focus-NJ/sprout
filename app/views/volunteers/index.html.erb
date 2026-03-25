@@ -1,1 +1,37 @@
-<h1>Welcome</h1>
+<main class="volunteer-page">
+<h1>Volunteers</h1>
+
+<% if flash[:notice] %>
+  <div class="alert-success" role="alert"><%= flash[:notice] %></div>
+<% end %>
+
+<%= form_with url: bulk_add_note_volunteers_path, method: :post, html: { class: "card note-form" } do %>
+  <section id="volunteer-list" class="volunteer-list">
+    <% @volunteers.each do |volunteer| %>
+      <div class="volunteer-row">
+        <input type="checkbox" id="volunteer_<%= volunteer.id %>" name="volunteer_ids[]" value="<%= volunteer.id %>">
+        <div class="volunteer-meta">
+          <label for="volunteer_<%= volunteer.id %>" class="volunteer-name"><%= volunteer.full_name %></label>
+          <div class="volunteer-subtext">
+            <span>Contact: <%= volunteer.phone.presence || volunteer.email %></span>
+            <span>Status: <%= volunteer.current_funnel_stage.to_s.humanize %></span>
+          </div>
+        </div>
+        <div class="volunteer-actions">
+          <%= link_to "View profile", volunteer_path(volunteer), class: "button-link profile-link" %>
+          <%= link_to "Send SMS", sms_volunteer_path(volunteer), class: "button-link" %>
+        </div>
+      </div>
+    <% end %>
+  </section>
+
+  <button type="button" class="btn-note">Add Note to Selected</button>
+
+  <div class="bulk-note-editor">
+    <label for="note">Note</label>
+    <textarea id="note" name="note" rows="3"></textarea>
+  </div>
+
+  <button type="submit">Apply</button>
+<% end %>
+</main>

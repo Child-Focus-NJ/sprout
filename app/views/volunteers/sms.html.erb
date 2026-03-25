@@ -1,4 +1,30 @@
+<main class="volunteer-page">
+<nav class="page-nav card">
+  <%= link_to "← Back to Profile", volunteer_path(@volunteer), class: "button-link" %>
+</nav>
+
 <h1>Send SMS</h1>
+
+<section id="sms-recipient" class="card">
+  <h2>Sending to <%= @volunteer.full_name %></h2>
+  <% if @volunteer.phone.present? %>
+    <p>Phone: <%= @volunteer.phone %></p>
+  <% end %>
+
+  <% if @volunteer.communications.sms.exists? %>
+    <h3>Previous messages</h3>
+    <% @volunteer.communications.sms.recent.each do |comm| %>
+      <div class="communication-entry">
+        <time datetime="<%= comm.sent_at&.iso8601 || comm.created_at.iso8601 %>">
+          <%= (comm.sent_at || comm.created_at).strftime("%Y-%m-%d %H:%M") %>
+        </time>
+        <div class="content"><%= comm.body.to_s %></div>
+      </div>
+    <% end %>
+  <% else %>
+    <p>No previous messages sent yet.</p>
+  <% end %>
+</section>
 
 <%= form_with url: send_sms_volunteer_path(@volunteer), method: :post do %>
   <label for="message">Message</label>
@@ -22,4 +48,6 @@
     update();
   })();
 </script>
+
+</main>
 
