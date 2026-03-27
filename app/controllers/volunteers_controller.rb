@@ -1,7 +1,24 @@
 class VolunteersController < ApplicationController
-  before_action :set_volunteer, only: [ :show, :update_status, :send_application, :mark_submitted ]
+  before_action :set_volunteer, only: [ :show, :update_status, :send_application, :mark_submitted, :sms, :send_sms ]
 
   def show
+  end
+
+  def sms
+    @message = ""
+  end
+
+  def send_sms
+    message = params[:message].to_s
+
+    @volunteer.communications.create!(
+      communication_type: :sms,
+      body: message,
+      sent_at: Time.current,
+      sent_by_user: current_user
+    )
+
+    redirect_to volunteer_path(@volunteer), notice: "SMS sent"
   end
 
   def update_status

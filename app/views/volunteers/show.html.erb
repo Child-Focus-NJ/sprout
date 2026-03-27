@@ -7,6 +7,20 @@
   <div class="alert-warning" role="alert"><%= flash[:alert] %></div>
 <% end %>
 
+<section id="contact-info">
+  <h2>Contact</h2>
+  <% if @volunteer.phone.present? %>
+    <% normalized_phone = @volunteer.phone.to_s.gsub(/\D/, "") %>
+    <% phone_invalid = normalized_phone.length < 10 %>
+    <p class="<%= phone_invalid ? 'bad-phone phone-invalid' : '' %>">
+      Phone: <%= @volunteer.phone %>
+      <% if phone_invalid %>
+        <span>— Phone number may be invalid or unreachable</span>
+      <% end %>
+    </p>
+  <% end %>
+</section>
+
 <section id="volunteer-status">
   <h2>Current Status</h2>
   <p><%= @volunteer.applied? ? "Application submitted" : @volunteer.current_funnel_stage.to_s %></p>
@@ -46,8 +60,26 @@
     <% end %>
   <% end %>
 
+  <%= link_to "Send SMS", sms_volunteer_path(@volunteer) %>
+
   <%= form_with url: send_application_volunteer_path(@volunteer), method: :post do %>
     <button type="submit">Send Application</button>
+  <% end %>
+</section>
+
+<section id="communications">
+  <h2>SMS Communication History</h2>
+  <% @volunteer.communications.sms.recent.each do |comm| %>
+    <div class="communication-entry">
+      <div>
+        <strong>SMS</strong>
+        <span class="delivery-status"><%= comm.status %></span>
+      </div>
+      <% if comm.sent_at.present? %>
+        <time datetime="<%= comm.sent_at.iso8601 %>"><%= comm.sent_at.strftime("%Y-%m-%d %H:%M") %></time>
+      <% end %>
+      <div class="content"><%= comm.body.to_s %></div>
+    </div>
   <% end %>
 </section>
 
