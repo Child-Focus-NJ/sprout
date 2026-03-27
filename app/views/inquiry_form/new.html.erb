@@ -1,0 +1,45 @@
+<main class="volunteer-page">
+  <h1>Inquiry</h1>
+
+  <% if flash[:notice] %>
+    <div class="alert-success" role="alert"><%= flash[:notice] %></div>
+  <% end %>
+  <% if flash[:alert] %>
+    <div class="alert-warning" role="alert"><%= flash[:alert] %></div>
+  <% end %>
+
+  <section class="card">
+    <% if @information_session_id.present? %>
+      <h2>Walk-in: add to the system and record attendance</h2>
+      <p>Per session check-in: collect inquiry details. If this email already exists, we use the existing volunteer record (no duplicate).</p>
+
+      <%= form_with url: inquiry_form_index_path, method: :post do %>
+        <%= hidden_field_tag :information_session_id, @information_session_id %>
+        <div>
+          <label for="first_name">First name</label>
+          <input type="text" id="first_name" name="first_name" value="<%= params[:first_name] %>" required autocomplete="given-name">
+        </div>
+        <div>
+          <label for="last_name">Last name</label>
+          <input type="text" id="last_name" name="last_name" value="<%= params[:last_name] %>" required autocomplete="family-name">
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" value="<%= params[:email] %>" required autocomplete="email">
+        </div>
+        <button type="submit">Submit and record attendance</button>
+      <% end %>
+    <% else %>
+      <h2>Please add them to the system</h2>
+      <p>Enter the volunteer email to continue the inquiry process.</p>
+
+      <%= form_with url: inquiry_form_index_path, method: :post do %>
+        <div>
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" value="<%= params[:email] %>">
+        </div>
+        <button type="submit">Submit</button>
+      <% end %>
+    <% end %>
+  </section>
+</main>

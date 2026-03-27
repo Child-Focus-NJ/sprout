@@ -30,6 +30,15 @@ class Volunteer < ApplicationRecord
     first_session_attended_at.present?
   end
 
+  # User Story 9 expects a `status` method that reflects attendance.
+  # We keep funnel stage tracking in `current_funnel_stage`, but expose an
+  # attendance-focused status for the sign-in flow.
+  def status
+    return :attended_session if attended_session?
+
+    current_funnel_stage
+  end
+
   def can_reactivate?
     inactive?
   end
@@ -50,6 +59,21 @@ class Volunteer < ApplicationRecord
       trigger: trigger,
       user: user
     )
+  end
+
+  # Info session check-in: mark registration attended, set first-session time, advance funnel, send application email.
+  def finalize_check_in_for_session!(information_session, user:)
+    registration = SessionRegistration.find_or_initialize_by(
+      volunteer: self,
+      information_session: information_session
+    )
+    registration.status = :attended
+    registration.checked_in_at = Time.current
+    registration.save!
+
+    update!(first_session_attended_at: Time.current) unless first_session_attended_at.present?
+    change_status!(:application_sent, user: user, trigger: :event)
+    update!(application_sent_at: Time.current) unless application_sent_at.present?
   end
 
   private

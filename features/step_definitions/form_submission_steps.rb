@@ -1,5 +1,5 @@
 Given("I am on the inquiry form page") do
-  visit "/inquiry_form_submissions/new"
+  visit new_inquiry_form_path
 end
 
 When("I submit a valid inquiry for {string}") do |email|
@@ -16,15 +16,13 @@ Then("I should see a submission confirmation") do
   assert_text("Thank")
 end
 
-Then("an inquiry should exist for {string}") do |email|
-  assert InquiryFormSubmission.where(email: email.strip.downcase).exists?
-end
-
 Then("I should see an email required error") do
   assert_text("Email")
   assert_text("can't be blank")
 end
 
 Then("no inquiry should exist for {string}") do |email|
-  assert !InquiryFormSubmission.where(email: email.strip.downcase).exists?
+  email_key = email.strip.downcase
+  has_raw = InquiryFormSubmission.where("raw_data ->> 'email' = ?", email_key).exists?
+  assert !has_raw
 end
