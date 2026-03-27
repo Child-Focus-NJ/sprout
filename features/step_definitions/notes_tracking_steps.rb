@@ -11,7 +11,8 @@ Given("the volunteer {string} has notes, emails, and SMS in the timeline") do |n
 end
 
 When("I enter {string}") do |text|
-  fill_in "Note", with: text
+  # Profile note form + bulk note form both use the same textarea id.
+  fill_in "note", with: text
 end
 
 Then("I should see the note {string}") do |note_text|

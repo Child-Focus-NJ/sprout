@@ -10,12 +10,17 @@ Rails.application.routes.draw do
     end
   end
   resources :volunteers do
+    collection do
+      post :bulk_add_note
+    end
+
     member do
       patch :update_status
       post :send_application
       patch :mark_submitted
       get :sms
       post :send_sms
+      post :add_note
     end
   end
   resources :inquiry_form

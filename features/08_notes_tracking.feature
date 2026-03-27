@@ -8,9 +8,9 @@ Feature: Notes and Communication Tracking
 
   Scenario: Add note to volunteer profile with timestamp and creator
     Given I am on the volunteer "William P" profile page
-    When I click "Add Note"
+    When I view the action buttons
     And I enter "Called to confirm session attendance"
-    And I press "Save Note"
+    And I press "Add Note"
     Then I should see the note "Called to confirm session attendance"
     And the note should display a timestamp
     And the note should display who created it
