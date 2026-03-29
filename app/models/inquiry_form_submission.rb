@@ -8,4 +8,5 @@ class InquiryFormSubmission < ApplicationRecord
   def mark_processed!(volunteer = nil)
     update!(processed: true, processed_at: Time.current, volunteer: volunteer)
   end
+  belongs_to :preferred_session, class_name: "InformationSession", optional: true
 end

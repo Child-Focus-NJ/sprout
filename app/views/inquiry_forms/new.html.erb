@@ -1,0 +1,65 @@
+<h1>Inquiry Form</h1>
+
+<%= form_for @inquiry, url: inquiry_form_path do |f| %>
+  <div>
+    <%= f.label :first_name %><br>
+    <%= f.text_field :first_name %>
+  </div>
+
+  <div>
+    <%= f.label :last_name %><br>
+    <%= f.text_field :last_name %>
+  </div>
+
+  <div>
+    <%= f.label :email %><br>
+    <%= f.email_field :email %>
+  </div>
+
+  <div>
+    <%= f.label :phone %><br>
+    <%= f.telephone_field :phone %>
+  </div>
+
+  <div>
+    <%= f.label :county %><br>
+    <%= f.select :county, ["Passaic", "Union"] %>
+  </div>
+
+  <div>
+    <%= f.label :how_did_you_hear, "How did you hear about us?" %><br>
+    <%= f.select :how_did_you_hear, [
+      "Facebook", "Instagram/LinkedIn", "CASA of NJ", "Flyer/Poster",
+      "Newspaper", "Friend/Family", "Information Table", "Volunteer Match", "Other"
+    ], {}, { id: "how_did_you_hear" } %>
+  </div>
+
+  <div id="other_info_container" style="display:none;">
+    <%= f.label :other_info, "Please specify" %><br>
+    <%= f.text_field :other_info %>
+  </div>
+
+  <div>
+    <%= f.label :preferred_session_id, "Preferred Information Session" %><br>
+    <%= f.select :preferred_session_id, @information_sessions.map { |s| [s.label, s.id] }, include_blank: "Select a session" %>
+  </div>
+
+  <div>
+    <%= f.submit "Submit Inquiry" %>
+  </div>
+<% end %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const howSelect = document.getElementById("how_did_you_hear");
+    const otherContainer = document.getElementById("other_info_container");
+
+    howSelect.addEventListener("change", function() {
+      if (this.value === "Other") {
+        otherContainer.style.display = "block";
+      } else {
+        otherContainer.style.display = "none";
+      }
+    });
+  });
+</script>

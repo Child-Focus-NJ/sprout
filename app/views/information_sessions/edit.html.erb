@@ -1,0 +1,55 @@
+<%= link_to "Back", information_sessions_path, class: "button" %>
+<h1>Edit Information Session</h1>
+
+<%= form_with model: @information_session, local: true do |f| %>
+  <div>
+    <%= f.label :name %><br>
+    <%= f.text_field :name %>
+  </div>
+
+  <div>
+    <%= f.label :scheduled_at, "Date & Time" %><br>
+    <%= f.datetime_local_field :scheduled_at, value: @information_session.scheduled_at.strftime("%Y-%m-%dT%H:%M") %>
+  </div>
+
+  <div>
+    <%= f.label :location %><br>
+    <%= f.text_field :location %>
+  </div>
+
+  <div>
+    <%= f.label :capacity %><br>
+    <%= f.number_field :capacity %>
+  </div>
+
+  <div>
+    <%= f.submit "Save Changes" %>
+  </div>
+<% end %>
+
+<div>
+  <h3>Participants</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @information_session.volunteers.each do |volunteer| %>
+        <tr id="attendee-<%= volunteer.id %>">
+          <td><%= volunteer.full_name %></td>
+          <td><%= volunteer.email %></td>
+        <td>
+          <%= button_to "Remove",
+              remove_attendee_information_session_path(@information_session, volunteer_id: volunteer.id),
+              method: :delete,
+              onclick: "return confirm('Are you sure you want to remove #{volunteer.full_name}?')" %>
+        </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

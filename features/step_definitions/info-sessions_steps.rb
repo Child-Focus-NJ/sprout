@@ -1,22 +1,28 @@
 def format_session_datetime(month_abbr, day, year, hour, minute, meridian)
   date_str = "#{month_abbr} #{day.to_s.rjust(2, '0')}, #{year}"
   time_str = "#{hour.to_s.rjust(2, '0')}:#{minute.to_s.rjust(2, '0')} #{meridian}"
-  [date_str, time_str]
+  [ date_str, time_str ]
 end
 
 def parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
-  DateTime.parse("#{month_abbr} #{day}, #{year} #{hour}:#{minute.to_s.rjust(2, '0')} #{meridian}")
+  day = day.to_s.rjust(2, '0')    # "6" -> "06"
+  hour = hour.to_s.rjust(2, '0')  # "6" -> "06"
+  minute = minute.to_s.rjust(2, '0') # "0" -> "00"
+  Time.zone.parse("#{month_abbr} #{day}, #{year} #{hour}:#{minute} #{meridian}")
 end
 
 Given('the following information sessions exist:') do |table|
-    table.hashes.each do |row|
-        FactoryBot.create(:information_session,
-            capacity: row['capacity'],
-            scheduled_at: Date.parse(row['scheduled_at']),
-            name: row['name'],
-            location: row['location']
-        )
+  table.hashes.each do |row|
+    unless InformationSession.exists?(name: row['name'], scheduled_at: Time.zone.parse(row['scheduled_at']))
+      session = FactoryBot.build(:information_session,
+        name: row['name'],
+        scheduled_at: Time.zone.parse(row['scheduled_at']),
+        capacity: row['capacity'],
+        location: row['location']
+      )
+      session.save(validate: false)
     end
+  end
 end
 
 Given('the following volunteers exist:') do |table|
@@ -56,24 +62,21 @@ Given('I click the {string} navigation button') do |button| # use for navigation
 end
 
 Then('an information session with date {word} {int}, {int} and time {int}:{int} {word} should be on the list of information sessions') do |month_abbr, day, year, hour, minute, meridian|
-  date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
-  expect(page).to have_content(date_str)
-  expect(page).to have_content(time_str)
+  datetime = DateTime.strptime("#{month_abbr} #{day} #{year} #{hour}:#{minute} #{meridian}", "%b %d %Y %I:%M %p")
+  expected_time = datetime.strftime("%b %d, %Y %I:%M %p")
+  expect(page).to have_content(expected_time)
 end
 
 
 Then('an information session with date {word} {int}, {int} and time {int}:{int} {word} should be on the inquiry form') do |month_abbr, day, year, hour, minute, meridian|
-    visit inquiry_form_path # might need to change once we implement
+    visit new_inquiry_form_path
     date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
     expect(page).to have_content(date_str)
     expect(page).to have_content(time_str)
 end
 
 Then('the information session with date {word} {int}, {int} and time {int}:{int} {word} should have a Zoom link for the meeting') do |month_abbr, day, year, hour, minute, meridian|
-  date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
-  session_element = find('.information-session', text: "#{date_str} #{time_str}")
-
-  expect(session_element).to have_link('Zoom')
+  pending # waiting on Zoom
 end
 
 Then('a message that says {string} will appear') do |message|
@@ -81,22 +84,27 @@ Then('a message that says {string} will appear') do |message|
 end
 
 Then('an information session with date {word} {int}, {int} and time {int}:{int} {word} should not be on the list of information sessions') do |month_abbr, day, year, hour, minute, meridian|
-  date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
-  expect(page).not_to have_content(date_str)
-  expect(page).not_to have_content(time_str)
+  datetime = DateTime.strptime("#{month_abbr} #{day} #{year} #{hour}:#{minute} #{meridian}", "%b %d %Y %I:%M %p")
+  expected_time = datetime.strftime("%b %d, %Y %I:%M %p")
+  expect(page).not_to have_content(expected_time)
 end
 
 Then('an information session with date {word} {int}, {int} and time {int}:{int} {word} should not be on the inquiry form') do |month_abbr, day, year, hour, minute, meridian|
-  visit inquiry_form_path
-  date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
-  expect(page).not_to have_content(date_str)
-  expect(page).not_to have_content(time_str)
+  visit new_inquiry_form_path
+  datetime = DateTime.strptime("#{month_abbr} #{day} #{year} #{hour}:#{minute} #{meridian}", "%b %d %Y %I:%M %p")
+  expected_time = datetime.strftime("%b %d, %Y %I:%M %p")
+  expect(page).not_to have_content(expected_time)
 end
 
 Given('I am on the edit page for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |month_abbr, day, year, hour, minute, meridian|
-  dt = parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
-  session = InformationSession.find_by(scheduled_at: dt)
-  visit edit_information_session_path(session.id)
+  naive_time = DateTime.strptime("#{month_abbr} #{day} #{year} #{hour}:#{minute} #{meridian}", "%b %d %Y %I:%M %p")
+  session = InformationSession.all.find do |s|
+    s.scheduled_at.strftime("%b %d %Y %I:%M %p") == naive_time.strftime("%b %d %Y %I:%M %p")
+  end
+
+  raise "No session found at #{naive_time}" unless session
+
+  visit edit_information_session_path(session)
 end
 
 Given('I edit the {string} field to be {string}') do |field_name, value|
@@ -113,16 +121,10 @@ Given('I click the {string} button for attendee with name {string}') do |button,
   row.click_button(button)
 end
 
-Given('I click the {string} button on the confirmation pop-up modal') do |button|
-  within('.modal') do # might have to change .modal to whatever the conformation box is
-    click_button(button)
-  end
-end
-
 Then('{string} should not appear on the list of attendees for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |name, month_abbr, day, year, hour, minute, meridian|
   dt = parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
   session = InformationSession.find_by(scheduled_at: dt)
-  visit information_session_path(session.id)
+  visit edit_information_session_path(session.id)
   expect(page).not_to have_content(name)
 end
 
@@ -134,10 +136,11 @@ Then('the status for {string} should change from {string} to {string}') do |full
     expect(page).to have_content(new_status)
 end
 
-Given('John Smith cancels their sign up for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |month_abbr, day, year, hour, minute, meridian|
+Given('{string} cancels their sign up for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |name, month_abbr, day, year, hour, minute, meridian|
+  first_name, last_name = name.split(" ", 2)
   dt = parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
   session = InformationSession.find_by(scheduled_at: dt)
-  volunteer = Volunteer.find_by(first_name: "John", last_name: "Smith")
+  volunteer = Volunteer.find_by(first_name:, last_name:)
   if session.volunteers.exists?(volunteer.id)
     session.volunteers.delete(volunteer)
   end
@@ -146,15 +149,15 @@ end
 Given('I click the {string} button for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |button, month_abbr, day, year, hour, minute, meridian|
   dt = parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
   date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
-  row = find('tr', text: date_str)
+  row = find('tr', text: /#{Regexp.escape(date_str)}.*#{Regexp.escape(time_str)}/)
   row.click_button(button)
 end
 
 Then('every attendees status should change from {string} to {string}') do |old_status, new_status|
-  InformationSession.all.each do |session|
-    session.volunteers.each do |attendee|
-      expect(attendee.status).to eq(new_status)
-    end
+  volunteers = Volunteer.joins(:session_registrations).distinct
+
+  volunteers.each do |attendee|
+    expect(attendee.reload.current_funnel_stage).to eq(new_status)
   end
 end
 
@@ -181,7 +184,7 @@ Then('an information session with a blank date should not be on the list of info
 end
 
 Then('an information session with a blank date should not be on the inquiry form') do
-  visit inquiry_form_path
+  visit new_inquiry_form_path
   expect(page).not_to have_selector('.information-session', text: '')
 end
 
