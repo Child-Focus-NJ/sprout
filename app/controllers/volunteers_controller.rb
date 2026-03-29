@@ -1,6 +1,5 @@
 class VolunteersController < ApplicationController
   before_action :set_volunteer, only: [ :show, :update_status, :send_application, :mark_submitted, :sms, :send_sms ]
-  before_action :require_current_user!, only: [ :add_note, :bulk_add_note ]
 
   def index
     ensure_list_volunteer("Jane Doe")
@@ -77,12 +76,6 @@ class VolunteersController < ApplicationController
   end
 
   private
-
-  def require_current_user!
-    return if current_user.present?
-
-    redirect_to login_path, alert: "Please sign in to add notes"
-  end
 
   def set_volunteer
     @volunteer = Volunteer.find(params[:id])

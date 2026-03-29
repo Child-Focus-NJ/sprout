@@ -531,7 +531,7 @@ DEPENDENCIES
   pg (~> 1.5)
   propshaft
   puma (>= 5.0)
-  rails (>= 8.1.2.1, < 9.0)
+  rails (~> 8.1.2, >= 8.1.2.1)
   rspec-expectations (~> 3.13)
   rubocop-rails-omakase
   selenium-webdriver

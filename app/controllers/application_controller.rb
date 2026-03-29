@@ -5,9 +5,36 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
+  before_action :require_authenticated_and_authorized_user!
+
   helper_method :current_user
 
   private
+
+  def require_authenticated_and_authorized_user!
+    return if allow_unauthenticated_access?
+
+    unless current_user.present?
+      redirect_to login_path, alert: "Please sign in to continue."
+      return
+    end
+
+    return if current_user.active?
+
+    reset_session
+    redirect_to login_path, alert: "Your account is inactive."
+  end
+
+  def allow_unauthenticated_access?
+    (controller_name == "sessions" && %w[new create failure].include?(action_name)) ||
+      request.path == "/up"
+  end
+
+  def deliver_application_queued_email!(volunteer)
+    return if volunteer.email.blank?
+
+    AttendanceMailer.application_queued(volunteer.email).deliver_now
+  end
 
   def current_user
     return @current_user if defined?(@current_user)
