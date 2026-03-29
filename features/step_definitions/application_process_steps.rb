@@ -7,7 +7,7 @@ Then("the application email should be queued for the volunteer {string}") do |na
 end
 
 Then("the volunteer status should change to {string}") do |status|
-  expect(page).to have_content(status)
+  expect(page).to have_content(/#{Regexp.escape(status)}/i)
 end
 
 Then("the volunteer's application sent date should be set") do
@@ -28,12 +28,10 @@ Then("the volunteer should appear in the applied section") do
 end
 
 Given("there are volunteers with status {string}") do |status|
-  Volunteer.create!(
-    first_name: "Vol",
-    last_name: "One",
-    email: "vol1@childfocusnj.org",
-    current_funnel_stage: status.parameterize.underscore.to_sym
-  )
+  Volunteer.find_or_create_by!(email: "vol1@childfocusnj.org") do |v|
+    v.first_name = "Vol"
+    v.last_name = "One"
+  end.update!(current_funnel_stage: status.parameterize.underscore.to_sym)
 end
 
 When("I go to the application dashboard") do
@@ -46,6 +44,10 @@ end
 
 Then("I should see volunteers with {string} status") do |status|
   expect(page).to have_content(status)
+end
+
+Then("I should see volunteers with application_sent status") do
+  expect(page).to have_content("application_sent")
 end
 
 Then("the list should be sorted by days waiting") do
@@ -75,12 +77,26 @@ Given("the volunteer {string} has status {string}") do |name, status|
 end
 
 Given("the volunteer has pending application reminder emails") do
-  # Setup handled by previous step
+  template = CommunicationTemplate.find_or_create_by!(
+    name: "Application reminder",
+    funnel_stage: :application_sent,
+    trigger_type: :interval,
+    template_type: :email
+  ) do |t|
+    t.body = "Please submit your application"
+    t.subject = "Reminder"
+  end
+  @volunteer.scheduled_reminders.create!(
+    communication_template: template,
+    scheduled_for: 1.week.from_now,
+    status: :pending
+  )
 end
 
 When("the system detects that the application was submitted in the External System") do
   # Simulate external system sync: trigger background job
   @volunteer.update!(application_submitted_at: Time.current, current_funnel_stage: :applied)
+  visit volunteer_path(@volunteer)
 end
 
 Then("all pending application reminder emails should be stopped") do

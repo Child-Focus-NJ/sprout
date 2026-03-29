@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
   get "welcome/index"
+  get "application_dashboard", to: "application_dashboard#index"
+  get "admin/settings", to: "admin/settings#index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   resources :information_sessions do
     member do
@@ -8,10 +10,17 @@ Rails.application.routes.draw do
     end
   end
   resources :volunteers do
+    collection do
+      post :bulk_add_note
+    end
+
     member do
       patch :update_status
       post :send_application
       patch :mark_submitted
+      get :sms
+      post :send_sms
+      post :add_note
     end
   end
   resources :inquiry_form

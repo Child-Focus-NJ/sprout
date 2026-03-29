@@ -8,3 +8,155 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.4;
+  color: #1f2937;
+}
+
+.volunteer-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.card {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  background: #fff;
+}
+
+.inline-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.note-form textarea {
+  width: 100%;
+  max-width: 100%;
+  min-height: 88px;
+  resize: vertical;
+}
+
+.page-nav {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#actions {
+  display: grid;
+  gap: 14px;
+}
+
+button,
+.button-link {
+  display: inline-block;
+  box-sizing: border-box;
+  min-height: 38px;
+  border: 1px solid #9ca3af;
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: #f9fafb;
+  color: #111827;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1.2;
+}
+
+.btn-note {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+.btn-delete {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.communication-entry,
+.timeline .entry,
+.status-change-entry,
+.volunteer-row {
+  border-top: 1px solid #e5e7eb;
+  padding: 8px 0;
+}
+
+.volunteer-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.volunteer-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.volunteer-name {
+  font-weight: 600;
+}
+
+.volunteer-subtext {
+  font-size: 0.9rem;
+  color: #4b5563;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.volunteer-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.profile-link {
+  margin-left: 0;
+}
+
+.timeline h2,
+#communications h2,
+#status-history h2 {
+  margin-top: 0;
+}
+
+.subtle {
+  color: #4b5563;
+  font-size: 0.95rem;
+  margin-top: 4px;
+}
+
+.action-toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.inline-action-form {
+  margin: 0;
+}
+
+.inline-action-form button {
+  margin: 0;
+}
+
+.delete-action {
+  margin-left: auto;
+}
+
+.delete-action form {
+  margin: 0;
+}
+
+.note-entry-panel h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}

@@ -1,4 +1,8 @@
+<main class="volunteer-page">
 <h1><%= @volunteer.full_name %></h1>
+<nav class="page-nav card">
+  <%= link_to "← Back to Volunteers", volunteers_path, class: "button-link" %>
+</nav>
 
 <% if flash[:notice] %>
   <div class="alert-success" role="alert"><%= flash[:notice] %></div>
@@ -7,9 +11,34 @@
   <div class="alert-warning" role="alert"><%= flash[:alert] %></div>
 <% end %>
 
+<section id="contact-info">
+  <h2>Contact</h2>
+  <% if @volunteer.phone.present? %>
+    <% normalized_phone = @volunteer.phone.to_s.gsub(/\D/, "") %>
+    <% phone_invalid = normalized_phone.length < 10 %>
+    <p class="<%= phone_invalid ? 'bad-phone phone-invalid' : '' %>">
+      Phone: <%= @volunteer.phone %>
+      <% if phone_invalid %>
+        <span>— Phone number may be invalid or unreachable</span>
+      <% end %>
+    </p>
+  <% elsif @volunteer.email.present? %>
+    <p>Email: <%= @volunteer.email %></p>
+  <% end %>
+</section>
+
 <section id="volunteer-status">
   <h2>Current Status</h2>
-  <p><%= @volunteer.current_funnel_stage.humanize %></p>
+  <% if @volunteer.applied? %>
+    <p>Application submitted</p>
+  <% elsif @volunteer.application_sent? %>
+    <p>Application Sent</p>
+    <% if @volunteer.application_sent_at.present? %>
+      <p class="subtle">Sent: <%= @volunteer.application_sent_at.strftime("%Y-%m-%d %H:%M") %></p>
+    <% end %>
+  <% else %>
+    <p><%= @volunteer.current_funnel_stage.to_s.humanize %></p>
+  <% end %>
 </section>
 
 <% if @volunteer.application_sent_at.present? %>
@@ -19,15 +48,14 @@
 <% end %>
 
 <% if @volunteer.application_submitted_at.present? %>
-  <section id="application-submitted-info">
+  <section id="applied-section">
     <p>Application submitted: <%= @volunteer.application_submitted_at.strftime("%Y-%m-%d") %></p>
   </section>
 <% end %>
 
-<section id="status-management">
-  <button type="button">Change Status</button>
-
-  <%= form_with url: update_status_volunteer_path(@volunteer), method: :patch do %>
+<section id="status-management" class="card">
+  <h2>Update status</h2>
+  <%= form_with url: update_status_volunteer_path(@volunteer), method: :patch, html: { class: "inline-form" } do %>
     <label for="status">Status</label>
     <select name="status" id="status">
       <% Volunteer.current_funnel_stages.keys.each do |stage| %>
@@ -36,23 +64,104 @@
         </option>
       <% end %>
     </select>
-    <button type="submit">Update Status</button>
+    <button type="submit">Update status</button>
   <% end %>
 </section>
 
-<section id="actions">
-  <% if @volunteer.application_sent? %>
-    <%= form_with url: mark_submitted_volunteer_path(@volunteer), method: :patch do %>
-      <button type="submit">Mark as Submitted</button>
+<section id="actions" class="card">
+  <h2>Actions</h2>
+  <div class="action-toolbar">
+    <button type="submit" form="add-note-form" class="btn-note">Add Note</button>
+    <%= link_to "Send SMS", sms_volunteer_path(@volunteer), class: "button-link" %>
+    <%= form_with url: send_application_volunteer_path(@volunteer), method: :post, html: { class: "inline-action-form" } do %>
+      <button type="submit">Send Application</button>
     <% end %>
-  <% end %>
+    <% if @volunteer.application_sent? %>
+      <%= form_with url: mark_submitted_volunteer_path(@volunteer), method: :patch, html: { class: "inline-action-form" } do %>
+        <button type="submit">Mark as Submitted</button>
+      <% end %>
+    <% end %>
+    <div class="delete-action">
+      <%= button_to "Delete", volunteer_path(@volunteer), method: :delete, data: { confirm: "Are you sure?" }, class: "btn-delete" %>
+    </div>
+  </div>
 
-  <%= form_with url: send_application_volunteer_path(@volunteer), method: :post do %>
-    <button type="submit">Send Application</button>
+  <div class="note-entry-panel">
+    <h3>Add a note</h3>
+    <%= form_with url: add_note_volunteer_path(@volunteer), method: :post, html: { class: "note-form", id: "add-note-form" } do %>
+      <textarea id="note" name="note" rows="3"></textarea>
+    <% end %>
+  </div>
+</section>
+
+<section id="communications" class="card">
+  <h2>SMS Communication History</h2>
+  <% @volunteer.communications.sms.recent.each do |comm| %>
+    <div class="communication-entry">
+      <div>
+        <strong>SMS</strong>
+        <span class="delivery-status"><%= comm.status %></span>
+      </div>
+      <% if comm.sent_at.present? %>
+        <time datetime="<%= comm.sent_at.iso8601 %>"><%= comm.sent_at.strftime("%Y-%m-%d %H:%M") %></time>
+      <% end %>
+      <div class="content"><%= comm.body.to_s %></div>
+    </div>
   <% end %>
 </section>
 
-<section id="status-history">
+<section class="timeline card" data-timeline="true">
+  <h2>Timeline</h2>
+  <p>This timeline includes reminder activity, info sessions, and manual notes.</p>
+
+  <%= form_with url: volunteer_path(@volunteer), method: :get, local: true, html: { class: "inline-form" } do %>
+    <label for="filter">Filter</label>
+    <select id="filter" name="filter" onchange="this.form.submit()">
+      <option value="all" <%= "selected" if @timeline_filter == "all" %>>All</option>
+      <option value="notes" <%= "selected" if @timeline_filter == "notes" %>>Notes</option>
+    </select>
+  <% end %>
+
+  <% @timeline_entries.each do |entry| %>
+    <% css_class = case entry[:kind]
+    when :note then "entry note-entry"
+    when :email then "entry communication-email"
+    when :sms then "entry communication-sms"
+    when :info_session then "entry info-session-entry"
+    else "entry"
+    end %>
+    <div class="<%= css_class %>">
+      <strong><%= entry[:kind].to_s.humanize %></strong>
+      <div><%= entry[:text] %></div>
+      <% if entry[:byline].present? %>
+        <div>By <%= entry[:byline] %></div>
+      <% end %>
+      <% if entry[:time].present? %>
+        <time datetime="<%= entry[:time].iso8601 %>"><%= entry[:time].strftime("%m/%d/%Y %H:%M") %></time>
+      <% end %>
+    </div>
+  <% end %>
+</section>
+
+<script>
+  (function () {
+    const filter = document.getElementById("filter");
+    if (!filter) return;
+
+    const applyFilter = () => {
+      const notesOnly = filter.value === "notes";
+      document.querySelectorAll(".timeline .entry").forEach((entry) => {
+        const isNote = entry.classList.contains("note-entry");
+        entry.style.display = notesOnly && !isNote ? "none" : "";
+      });
+    };
+
+    filter.addEventListener("change", applyFilter);
+    applyFilter();
+  })();
+</script>
+
+<section id="status-history" class="card">
   <h2>Status History</h2>
   <% @volunteer.status_changes.recent.each do |change| %>
     <div class="status-change-entry" data-timestamp="<%= change.created_at.iso8601 %>">
@@ -61,3 +170,4 @@
     </div>
   <% end %>
 </section>
+</main>
