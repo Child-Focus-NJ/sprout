@@ -19,6 +19,15 @@ Before do
   Warden.test_mode!
 end
 
+Before("@sign_in_attendance") do
+  InformationSession.destroy_all
+  Volunteer.destroy_all
+end
+
+After do
+  ActionMailer::Base.deliveries.clear
+end
+
 After do
     Warden.test_reset!
     OmniAuth.config.mock_auth[:google_oauth2] = nil

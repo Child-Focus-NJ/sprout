@@ -1,5 +1,7 @@
 Given('an information session exists named {string}') do |name|
-  @session = InformationSession.find_or_create_by!(name: name)
+  @session = InformationSession.find_or_create_by!(name: name) do |s|
+    s.scheduled_at = 1.day.from_now
+  end
 end
 
 
@@ -18,8 +20,10 @@ end
 
 When('I check in the volunteer {string}') do |identifier|
   if identifier.include?("@")
-    fill_in "Email", with: identifier
-    click_button "Check in"
+    within("#walkin-sign-in") do
+      fill_in "Email", with: identifier
+      click_button "Check in walk-in"
+    end
   else
     @volunteer = find_or_create_volunteer_by_name(identifier)
     click_button "Check in #{@volunteer.full_name}"
@@ -56,19 +60,48 @@ Then('the attendance should record a date and time') do
 end
 
 Then('an application email should be triggered for {string}') do |email|
-  recipients = ActionMailer::Base.deliveries.map(&:to).flatten.compact.map(&:downcase)
-  assert recipients.include?(email.downcase)
+  recipients = ActionMailer::Base.deliveries.flat_map { |m| Array.wrap(m.to) }.compact.map(&:downcase)
+  assert_includes recipients, email.downcase
 end
 
 When('I attempt to check in an unregistered volunteer {string}') do |email|
-  fill_in "Email", with: email
-  click_button "Check in"
+  within("#walkin-sign-in") do
+    fill_in "Email", with: email
+    click_button "Check in walk-in"
+  end
 end
 
 Then('I should be redirected to the inquiry form') do
-  assert_current_path(/inquiry|inquiries|inquiry_form/i)
+  assert_match(/inquiry_form/i, current_path)
 end
 
 Then('I should see a prompt to add them to the system') do
-  assert_text(/add|sign up|inquiry/i)
+  assert_text(/add|sign up|inquiry|walk-in|attendance/i)
+end
+
+When('I complete the walk-in inquiry for {string} with first name {string} and last name {string}') do |email, first_name, last_name|
+  @walk_in_email = email
+  fill_in "First name", with: first_name
+  fill_in "Last name", with: last_name
+  fill_in "Email", with: email
+  click_button "Submit and record attendance"
+end
+
+Then('a volunteer should exist for {string}') do |email|
+  assert Volunteer.exists?(email: email)
+end
+
+Then('they should be marked as attended for {string}') do |session_name|
+  session = InformationSession.find_by!(name: session_name)
+  volunteer = Volunteer.find_by!(email: @walk_in_email)
+
+  registration = SessionRegistration.find_by!(volunteer: volunteer, information_session: session)
+
+  assert registration.respond_to?(:attended) && registration.attended
+end
+
+Then('the walk-in volunteer status should reflect attended session') do
+  volunteer = Volunteer.find_by!(email: @walk_in_email)
+
+  assert_equal "attended session", volunteer.status.to_s.tr("_", " ")
 end
