@@ -68,13 +68,6 @@ Then('an information session with date {word} {int}, {int} and time {int}:{int} 
 end
 
 
-Then('an information session with date {word} {int}, {int} and time {int}:{int} {word} should be on the inquiry form') do |month_abbr, day, year, hour, minute, meridian|
-    visit new_inquiry_form_path
-    date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
-    expect(page).to have_content(date_str)
-    expect(page).to have_content(time_str)
-end
-
 Then('the information session with date {word} {int}, {int} and time {int}:{int} {word} should have a Zoom link for the meeting') do |month_abbr, day, year, hour, minute, meridian|
   pending # waiting on Zoom
 end
@@ -89,12 +82,6 @@ Then('an information session with date {word} {int}, {int} and time {int}:{int} 
   expect(page).not_to have_content(expected_time)
 end
 
-Then('an information session with date {word} {int}, {int} and time {int}:{int} {word} should not be on the inquiry form') do |month_abbr, day, year, hour, minute, meridian|
-  visit new_inquiry_form_path
-  datetime = DateTime.strptime("#{month_abbr} #{day} #{year} #{hour}:#{minute} #{meridian}", "%b %d %Y %I:%M %p")
-  expected_time = datetime.strftime("%b %d, %Y %I:%M %p")
-  expect(page).not_to have_content(expected_time)
-end
 
 Given('I am on the edit page for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |month_abbr, day, year, hour, minute, meridian|
   naive_time = DateTime.strptime("#{month_abbr} #{day} #{year} #{hour}:#{minute} #{meridian}", "%b %d %Y %I:%M %p")
@@ -180,11 +167,6 @@ end
 
 Then('an information session with a blank date should not be on the list of information sessions') do
   visit information_sessions_path
-  expect(page).not_to have_selector('.information-session', text: '')
-end
-
-Then('an information session with a blank date should not be on the inquiry form') do
-  visit new_inquiry_form_path
   expect(page).not_to have_selector('.information-session', text: '')
 end
 

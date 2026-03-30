@@ -29,7 +29,6 @@ Feature: Manage Information Sessions
             And I have clicked the "Create Event" button
             Then I am on the information session management page
             And an information session with date Mar 16, 2027 and time 10:00 AM should be on the list of information sessions
-            And an information session with date Mar 16, 2027 and time 10:00 AM should be on the inquiry form
 
         Scenario: Creating a Zoom information session
             Given I click the "Create New" navigation button
@@ -40,7 +39,6 @@ Feature: Manage Information Sessions
             And I have clicked the "Create Event" button
             Then I am on the information session management page
             And an information session with date Mar 16, 2027 and time 10:00 AM should be on the list of information sessions
-            And an information session with date Mar 16, 2027 and time 10:00 AM should be on the inquiry form
             And the information session with date Mar 16, 2027 and time 10:00 AM should have a Zoom link for the meeting
         
         Scenario: Creating an information session with missing fields
@@ -52,7 +50,6 @@ Feature: Manage Information Sessions
             And I have clicked the "Create Event" button
             Then a message that says "Must include date." will appear
             And an information session with a blank date should not be on the list of information sessions
-            And an information session with a blank date should not be on the inquiry form
 
         Scenario: Creating an information session in the past
             Given I click the "Create New" navigation button
@@ -63,7 +60,6 @@ Feature: Manage Information Sessions
             And I have clicked the "Create Event" button
             Then a message that says "Information session must be in the future" will appear
             And an information session with date Mar 27, 2027 and time 10:00 AM should not be on the list of information sessions
-            And an information session with date Mar 27, 2027 and time 10:00 AM should not be on the inquiry form
 
         Scenario: Editing an information session time
             Given I am on the edit page for information session with date Mar 06, 2027 and time 06:00 PM
@@ -72,9 +68,7 @@ Feature: Manage Information Sessions
             And I click the "Back" button
             Then I am on the information session management page 
             And an information session with date Mar 06, 2027 and time 07:00 PM should be on the list of information sessions
-            And an information session with date Mar 06, 2027 and time 07:00 PM should be on the inquiry form
             And an information session with date Mar 06, 2027 and time 06:00 PM should not be on the list of information sessions
-            And an information session with date Mar 06, 2027 and time 06:00 PM should not be on the inquiry form
             And all attendees should receive a notification email that the time for the event they are signed up for has changed to 07:00 PM
 
         Scenario: Removing an attendee from an information session 

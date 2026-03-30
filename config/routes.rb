@@ -24,7 +24,7 @@ Rails.application.routes.draw do
       post :add_note
     end
   end
-  resource :inquiry_form, only: [ :new, :create ]
+  resource :inquiry_form, controller: "inquiry_form"
   resources :reporting_exporting
   resources :system_management
 
