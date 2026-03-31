@@ -28,7 +28,7 @@ RSpec.describe Vms::Resources::Lookup do
     end
 
     it "normalizes records to consistent shape" do
-      data = [{ "CountyID" => 1, "EncryptedID" => "a==", "CountyName" => "Passaic", "Active" => true }]
+      data = [ { "CountyID" => 1, "EncryptedID" => "a==", "CountyName" => "Passaic", "Active" => true } ]
       http.stub_response(:post_json, "/County/_Index", stub_lookup_response(data))
       result = lookup.list("County")
       body = JSON.parse(result[:body])
