@@ -97,6 +97,8 @@ LAMBDA_FUNCTIONS=(
   "sprout-volunteer-management-system-sync"
   "sprout-mailchimp-realtime"
   "sprout-mailchimp-batch"
+  "sprout-vms"
+  "sprout-vms-session-refresh"
 )
 
 for fn in "${LAMBDA_FUNCTIONS[@]}"; do
@@ -221,6 +223,80 @@ VMS_SYNC_ID=$(create_resource "$VMS_ID" "sync")
 create_post_integration "$VMS_SYNC_ID" "sprout-volunteer-management-system-sync"
 echo "  POST /volunteer-management-system/sync -> sprout-volunteer-management-system-sync"
 
+# --- /vms ---
+VMS_ROOT_ID=$(create_resource "$ROOT_ID" "vms")
+
+# Helper for wiring any HTTP method -> Lambda integration
+create_method_integration() {
+  local resource_id="$1"
+  local http_method="$2"
+  local lambda_name="$3"
+  local lambda_arn="arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${lambda_name}"
+
+  awslocal apigateway put-method \
+    --rest-api-id "$API_ID" \
+    --resource-id "$resource_id" \
+    --http-method "$http_method" \
+    --authorization-type NONE \
+    --region "$REGION" > /dev/null
+
+  awslocal apigateway put-integration \
+    --rest-api-id "$API_ID" \
+    --resource-id "$resource_id" \
+    --http-method "$http_method" \
+    --type AWS_PROXY \
+    --integration-http-method POST \
+    --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations" \
+    --region "$REGION" > /dev/null
+}
+
+# POST /vms/session/refresh -> sprout-vms-session-refresh
+VMS_SESSION_ID=$(create_resource "$VMS_ROOT_ID" "session")
+VMS_SESSION_REFRESH_ID=$(create_resource "$VMS_SESSION_ID" "refresh")
+create_post_integration "$VMS_SESSION_REFRESH_ID" "sprout-vms-session-refresh"
+echo "  POST /vms/session/refresh -> sprout-vms-session-refresh"
+
+# GET, POST /vms/inquiries -> sprout-vms
+VMS_INQUIRIES_ID=$(create_resource "$VMS_ROOT_ID" "inquiries")
+create_method_integration "$VMS_INQUIRIES_ID" "GET" "sprout-vms"
+create_post_integration "$VMS_INQUIRIES_ID" "sprout-vms"
+echo "  GET /vms/inquiries -> sprout-vms"
+echo "  POST /vms/inquiries -> sprout-vms"
+
+# PUT, DELETE /vms/inquiries/{id} -> sprout-vms
+VMS_INQUIRY_ID_RES=$(create_resource "$VMS_INQUIRIES_ID" "{id}")
+create_method_integration "$VMS_INQUIRY_ID_RES" "PUT" "sprout-vms"
+create_method_integration "$VMS_INQUIRY_ID_RES" "DELETE" "sprout-vms"
+echo "  PUT /vms/inquiries/{id} -> sprout-vms"
+echo "  DELETE /vms/inquiries/{id} -> sprout-vms"
+
+# GET, POST /vms/volunteers -> sprout-vms
+VMS_VOLUNTEERS_ID=$(create_resource "$VMS_ROOT_ID" "volunteers")
+create_method_integration "$VMS_VOLUNTEERS_ID" "GET" "sprout-vms"
+create_post_integration "$VMS_VOLUNTEERS_ID" "sprout-vms"
+echo "  GET /vms/volunteers -> sprout-vms"
+echo "  POST /vms/volunteers -> sprout-vms"
+
+# GET /vms/lookups/{type} -> sprout-vms
+VMS_LOOKUPS_ID=$(create_resource "$VMS_ROOT_ID" "lookups")
+VMS_LOOKUP_TYPE_ID=$(create_resource "$VMS_LOOKUPS_ID" "{type}")
+create_method_integration "$VMS_LOOKUP_TYPE_ID" "GET" "sprout-vms"
+echo "  GET /vms/lookups/{type} -> sprout-vms"
+
+# --- Secrets Manager for VMS session ---
+echo ""
+echo "--- Creating Secrets Manager secret for VMS session ---"
+awslocal secretsmanager delete-secret \
+  --secret-id "sprout/vms-session" \
+  --force-delete-without-recovery \
+  --region "$REGION" 2>/dev/null || true
+
+awslocal secretsmanager create-secret \
+  --name "sprout/vms-session" \
+  --secret-string '{"base_url":"https://nj-passaic.evintotraining.com","username":"","password":"","cookies":{},"refreshed_at":""}' \
+  --region "$REGION" > /dev/null
+echo "  Created: sprout/vms-session (populate credentials manually)"
+
 # --- /mailchimp ---
 MAILCHIMP_ID=$(create_resource "$ROOT_ID" "mailchimp")
 
@@ -280,20 +356,33 @@ echo "  - sprout-zoom-attendance"
 echo "  - sprout-volunteer-management-system-sync"
 echo "  - sprout-mailchimp-realtime"
 echo "  - sprout-mailchimp-batch"
+echo "  - sprout-vms"
+echo "  - sprout-vms-session-refresh"
 echo ""
 echo "Event Source Mappings:"
 echo "  - sprout-zoom-attendance queue -> sprout-zoom-attendance Lambda"
 echo "  - sprout-mailchimp-batch queue -> sprout-mailchimp-batch Lambda"
 echo ""
+echo "Secrets Manager:"
+echo "  - sprout/vms-session (VMS session cookies + credentials)"
+echo ""
 echo "API Gateway: sprout-api (ID: $API_ID)"
 echo "  Stage: local"
 echo "  Base URL: http://localhost:4566/restapis/$API_ID/local/_user_request_"
 echo "  Endpoints:"
-echo "    POST /zoom/meeting          -> sprout-zoom-meeting"
-echo "    POST /volunteer-management-system/sync -> sprout-volunteer-management-system-sync"
-echo "    POST /mailchimp/send-email  -> sprout-mailchimp-realtime"
-echo "    POST /mailchimp/send-sms    -> sprout-mailchimp-realtime"
-echo "    POST /mailchimp/member      -> sprout-mailchimp-realtime"
-echo "    POST /mailchimp/tags        -> sprout-mailchimp-realtime"
+echo "    POST /zoom/meeting                      -> sprout-zoom-meeting"
+echo "    POST /volunteer-management-system/sync   -> sprout-volunteer-management-system-sync"
+echo "    POST /mailchimp/send-email               -> sprout-mailchimp-realtime"
+echo "    POST /mailchimp/send-sms                 -> sprout-mailchimp-realtime"
+echo "    POST /mailchimp/member                   -> sprout-mailchimp-realtime"
+echo "    POST /mailchimp/tags                     -> sprout-mailchimp-realtime"
+echo "    POST /vms/session/refresh                -> sprout-vms-session-refresh"
+echo "    GET  /vms/inquiries                      -> sprout-vms"
+echo "    POST /vms/inquiries                      -> sprout-vms"
+echo "    PUT  /vms/inquiries/{id}                 -> sprout-vms"
+echo "    DELETE /vms/inquiries/{id}               -> sprout-vms"
+echo "    GET  /vms/volunteers                     -> sprout-vms"
+echo "    POST /vms/volunteers                     -> sprout-vms"
+echo "    GET  /vms/lookups/{type}                 -> sprout-vms"
 echo ""
 echo "============================================"
