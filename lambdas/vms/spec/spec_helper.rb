@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "webmock/rspec"
 require "json"
 require "net/http"
 
@@ -15,8 +16,15 @@ module Shared
   end
 end
 
+require "session_manager"
+require "http_client"
+require "resources/inquiry"
+require "resources/volunteer"
+require "resources/lookup"
 require "transformers/field_normalizer"
 require "transformers/kendo_response"
+
+require_relative "support/fake_http_client"
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
@@ -29,4 +37,7 @@ RSpec.configure do |config|
 
   config.order = :random
   config.shared_context_metadata_behavior = :apply_to_host_groups
+
+  # Disable all external HTTP by default
+  WebMock.disable_net_connect!
 end
