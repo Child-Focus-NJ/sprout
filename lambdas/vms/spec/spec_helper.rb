@@ -24,6 +24,9 @@ require "resources/lookup"
 require "transformers/field_normalizer"
 require "transformers/kendo_response"
 
+# Load handler (defines top-level methods)
+require "handler"
+
 require_relative "support/fake_http_client"
 
 RSpec.configure do |config|
