@@ -5,14 +5,14 @@ RSpec.describe Vms::Transformers::KendoResponse do
     it "parses PascalCase keys (Data/Total)" do
       json = '{"Data": [{"Name": "A"}], "Total": 1}'
       result = described_class.parse(json)
-      expect(result["data"]).to eq([{ "Name" => "A" }])
+      expect(result["data"]).to eq([ { "Name" => "A" } ])
       expect(result["total"]).to eq(1)
     end
 
     it "parses lowercase keys (data/total)" do
       json = '{"data": [{"Name": "B"}], "total": 2}'
       result = described_class.parse(json)
-      expect(result["data"]).to eq([{ "Name" => "B" }])
+      expect(result["data"]).to eq([ { "Name" => "B" } ])
       expect(result["total"]).to eq(2)
     end
 

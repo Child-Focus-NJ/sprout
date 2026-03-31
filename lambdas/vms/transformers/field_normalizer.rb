@@ -61,7 +61,6 @@ module Vms
         timestamp_ms = match[1].to_i
         Time.at(timestamp_ms / 1000).utc.strftime("%Y-%m-%d")
       end
-
     end
   end
 end
