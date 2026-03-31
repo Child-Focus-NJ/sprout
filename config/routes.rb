@@ -7,6 +7,7 @@ Rails.application.routes.draw do
     member do
       get :sign_in
       post :check_in
+      delete "remove_attendee/:volunteer_id", to: "information_sessions#remove_attendee", as: "remove_attendee"
     end
   end
   resources :volunteers do
@@ -23,7 +24,7 @@ Rails.application.routes.draw do
       post :add_note
     end
   end
-  resources :inquiry_form
+  resource :inquiry_form, controller: "inquiry_form"
   resources :reporting_exporting
   resources :system_management
 

@@ -13,7 +13,7 @@
       <h2>Walk-in: add to the system and record attendance</h2>
       <p>Per session check-in: collect inquiry details. If this email already exists, we use the existing volunteer record (no duplicate).</p>
 
-      <%= form_with url: inquiry_form_index_path, method: :post do %>
+      <%= form_with url: inquiry_form_path, method: :post do %>
         <%= hidden_field_tag :information_session_id, @information_session_id %>
         <div>
           <label for="first_name">First name</label>
@@ -33,7 +33,7 @@
       <h2>Please add them to the system</h2>
       <p>Enter the volunteer email to continue the inquiry process.</p>
 
-      <%= form_with url: inquiry_form_index_path, method: :post do %>
+      <%= form_with url: inquiry_form_path, method: :post do %>
         <div>
           <label for="email">Email</label>
           <input type="email" id="email" name="email" value="<%= params[:email] %>">
