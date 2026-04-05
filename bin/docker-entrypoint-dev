@@ -16,4 +16,7 @@ fi
 # Run migrations
 bin/rails db:migrate
 
+# Tailwind output (Propshaft serves app/assets/builds/tailwind.css)
+bin/rails tailwindcss:build
+
 exec "$@"
