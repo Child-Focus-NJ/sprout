@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# User story 5 / volunteer status — model + request specs (avoid long copy-paste typos).
+set -euo pipefail
+exec bundle exec rspec \
+  spec/models/volunteer_spec.rb \
+  spec/requests/volunteers_status_management_spec.rb \
+  "$@"
