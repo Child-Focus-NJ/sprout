@@ -1,8 +1,8 @@
 # used for cucumber testing involving volunteers in the system
 FactoryBot.define do
-    factory :volunteer do
-        first_name { "Test" }
-        last_name { "Volunteer" }
-        email { "volunteer@childfocusnj.org" }
-    end
+  factory :volunteer do
+    sequence(:email) { |n| "volunteer#{n}@childfocusnj.org" }
+    first_name { "Test" }
+    last_name { "Volunteer" }
+  end
 end
