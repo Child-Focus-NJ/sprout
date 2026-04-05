@@ -12,8 +12,8 @@ Feature: Application Process
     And the volunteer has status "inquiry"
     When I check in the volunteer "Jane Doe"
     Then the application email should be queued for the volunteer "Jane Doe"
-    And the volunteer status should change to "Application Sent"
-    And the volunteer's application sent date should be set
+    And the volunteer status should change to "Application eligible"
+    And the volunteer's first session attended date should be set
 
   Scenario: Application submission is tracked and staff is notified
     Given I am on the volunteer "Jane Doe" profile page
