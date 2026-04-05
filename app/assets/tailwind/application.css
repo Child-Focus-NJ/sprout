@@ -1,0 +1,226 @@
+@import "tailwindcss";
+
+/*
+ * Sprout component classes (legacy-friendly names + Tailwind @apply).
+ * Prefer utilities in new markup; keep these for existing ERB and Cucumber selectors.
+ */
+
+@layer base {
+  body {
+    @apply font-sans text-gray-900 leading-snug antialiased;
+  }
+}
+
+@layer components {
+  .volunteer-page {
+    @apply max-w-4xl mx-auto p-4 text-base text-gray-900;
+  }
+
+  .page-title {
+    @apply text-2xl font-semibold mb-3 text-gray-900;
+  }
+
+  .card {
+    @apply border border-gray-300 rounded-lg p-3 mb-4 bg-white shadow-sm;
+  }
+
+  .inline-form {
+    @apply flex items-center gap-2 flex-wrap;
+  }
+
+  .note-form textarea {
+    @apply w-full max-w-full min-h-[5.5rem] resize-y border border-gray-400 rounded-md p-2 text-base;
+  }
+
+  .page-nav {
+    @apply flex gap-2 items-center;
+  }
+
+  #actions {
+    @apply grid gap-3.5;
+  }
+
+  button,
+  .button-link {
+    @apply inline-block box-border min-h-[38px] border border-gray-400 rounded-md px-2.5 py-1.5 bg-gray-50 text-gray-900 no-underline cursor-pointer text-base leading-tight font-[inherit];
+  }
+
+  .btn-note {
+    @apply bg-sky-100 border-sky-300;
+  }
+
+  .btn-delete {
+    @apply bg-red-100 border-red-300;
+  }
+
+  .communication-entry,
+  .timeline .entry,
+  .status-change-entry,
+  .volunteer-row {
+    @apply border-t border-gray-200 py-2;
+  }
+
+  .volunteer-row {
+    @apply flex items-start gap-2.5;
+  }
+
+  .volunteer-meta {
+    @apply grid gap-1;
+  }
+
+  .volunteer-name {
+    @apply font-semibold;
+  }
+
+  .volunteer-subtext {
+    @apply text-sm text-gray-600 flex gap-3 flex-wrap;
+  }
+
+  .volunteer-actions {
+    @apply ml-auto flex gap-2;
+  }
+
+  .profile-link {
+    @apply ml-0;
+  }
+
+  .timeline h2,
+  #communications h2,
+  #status-history h2 {
+    @apply mt-0;
+  }
+
+  .subtle {
+    @apply text-gray-600 text-[0.95rem] mt-1;
+  }
+
+  .action-toolbar {
+    @apply flex gap-2 flex-wrap items-center;
+  }
+
+  .inline-action-form {
+    @apply m-0;
+  }
+
+  .inline-action-form button {
+    @apply m-0;
+  }
+
+  .delete-action {
+    @apply ml-auto;
+  }
+
+  .delete-action form {
+    @apply m-0;
+  }
+
+  .note-entry-panel h3 {
+    @apply m-0 mb-2 text-base font-semibold;
+  }
+
+  .section-heading {
+    @apply text-xl font-semibold mb-2.5 text-gray-900;
+  }
+
+  .subsection-heading {
+    @apply text-[1.05rem] font-semibold mb-2;
+  }
+
+  .status-panel {
+    @apply mb-[18px];
+  }
+
+  .status-panel h2 {
+    @apply mt-0;
+  }
+
+  .help-text {
+    @apply text-gray-700 mb-3 max-w-2xl text-base;
+  }
+
+  .status-current {
+    @apply text-lg font-semibold mb-2 text-gray-900;
+  }
+
+  .status-update-form {
+    @apply flex flex-col items-start gap-3;
+  }
+
+  .status-update-form .form-row {
+    @apply flex flex-col gap-1.5;
+  }
+
+  .status-update-form label {
+    @apply font-semibold text-gray-800;
+  }
+
+  .input-large,
+  .status-update-form select {
+    @apply min-h-[42px] w-full max-w-md text-base px-2.5 py-1.5 border border-gray-400 rounded-md bg-white;
+  }
+
+  .button-primary {
+    @apply min-h-11 px-4 py-2 font-semibold border border-blue-600 rounded-md bg-blue-50 text-blue-900 cursor-pointer text-base;
+  }
+
+  .timeline-filter-form {
+    @apply flex items-center gap-2.5 flex-wrap mb-3;
+  }
+
+  .status-change-entry {
+    @apply grid gap-1 py-2.5;
+  }
+
+  .status-change-entry .status-arrow {
+    @apply mx-1.5;
+  }
+
+  .alert-success {
+    @apply border border-green-300 bg-green-50 text-green-900 rounded-md px-3 py-2 mb-4;
+  }
+
+  .alert-warning {
+    @apply border border-amber-300 bg-amber-50 text-amber-950 rounded-md px-3 py-2 mb-4;
+  }
+
+  .alert {
+    @apply text-red-800 bg-red-50 border border-red-200 rounded px-2 py-1 mb-3;
+  }
+
+  .bad-phone,
+  .phone-invalid {
+    @apply text-amber-800 font-medium;
+  }
+
+  .volunteer-list {
+    @apply list-none p-0 m-0;
+  }
+
+  .bulk-note-editor {
+    @apply mt-3;
+  }
+
+  /* Information sessions & inquiry (legacy class names) */
+  .filterBox,
+  .filterFields,
+  .walkin-sign-in,
+  .volunteer-registration {
+    @apply mb-4;
+  }
+
+  .filterField {
+    @apply mb-2;
+  }
+
+  .createNewBox {
+    @apply border border-gray-300 rounded-lg p-4 mb-4 bg-white;
+  }
+
+  .dataList {
+    @apply mt-4;
+  }
+
+  .errors {
+    @apply text-red-700 text-sm mt-2;
+  }
+}
