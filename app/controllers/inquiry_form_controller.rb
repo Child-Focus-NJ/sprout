@@ -79,6 +79,14 @@ class InquiryFormController < ApplicationController
       return
     end
 
+    InquiryFormSubmission.create!(
+      source: "public_inquiry_form",
+      raw_data: {
+        email: email
+      },
+      processed: false
+    )
+
     redirect_to new_inquiry_form_path, notice: "Thanks! Your inquiry has been submitted."
   end
 end

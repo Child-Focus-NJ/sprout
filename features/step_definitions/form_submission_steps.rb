@@ -26,3 +26,8 @@ Then("no inquiry should exist for {string}") do |email|
   has_raw = InquiryFormSubmission.where("raw_data ->> 'email' = ?", email_key).exists?
   assert !has_raw
 end
+
+Then("an inquiry should exist for {string}") do |email|
+  inquiry = InquiryFormSubmission.where("LOWER(raw_data ->> 'email') = ?", email.strip.downcase).first
+  expect(inquiry).not_to be_nil
+end
