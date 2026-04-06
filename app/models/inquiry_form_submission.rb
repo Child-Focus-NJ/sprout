@@ -1,5 +1,6 @@
 class InquiryFormSubmission < ApplicationRecord
   belongs_to :volunteer, optional: true
+  belongs_to :preferred_session, class_name: "InformationSession", optional: true
 
   scope :unprocessed, -> { where(processed: false) }
   scope :processed_submissions, -> { where(processed: true) }
