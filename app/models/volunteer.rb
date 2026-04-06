@@ -21,7 +21,7 @@ class Volunteer < ApplicationRecord
 
   scope :active, -> { where.not(current_funnel_stage: :inactive) }
   scope :inactive_volunteers, -> { where(current_funnel_stage: :inactive) }
-  scope :application_eligible, -> { where(current_funnel_stage: :application_eligible) }
+  # `application_eligible` scope is already provided by enum `current_funnel_stage`
   scope :never_attended, -> { where(first_session_attended_at: nil) }
 
   after_save :cancel_pending_reminders_if_applied
@@ -47,6 +47,17 @@ class Volunteer < ApplicationRecord
     "#{first_name} #{last_name}"
   end
 
+  # Single label for the profile "Current status" block (matches user-facing copy elsewhere).
+  def profile_status_label
+    if applied?
+      "Application submitted"
+    elsif application_sent?
+      "Application sent"
+    else
+      current_funnel_stage.to_s.humanize
+    end
+  end
+
   def change_status!(new_stage, user: nil, trigger: :manual)
     old_stage = current_funnel_stage
     new_stage_key = new_stage.to_s
@@ -61,7 +72,8 @@ class Volunteer < ApplicationRecord
     )
   end
 
-  # Info session check-in: mark registration attended, set first-session time, advance funnel, send application email.
+  # Info session check-in: mark registration attended, set first-session time, advance to eligible.
+  # Application is sent separately (staff action or automation); see +send_application+.
   def finalize_check_in_for_session!(information_session, user:)
     registration = SessionRegistration.find_or_initialize_by(
       volunteer: self,
@@ -72,8 +84,7 @@ class Volunteer < ApplicationRecord
     registration.save!
 
     update!(first_session_attended_at: Time.current) unless first_session_attended_at.present?
-    change_status!(:application_sent, user: user, trigger: :event)
-    update!(application_sent_at: Time.current) unless application_sent_at.present?
+    change_status!(:application_eligible, user: user, trigger: :event)
   end
 
   private

@@ -56,6 +56,10 @@ class InquiryFormController < ApplicationController
 
       InquiryFormSubmission.create!(
         volunteer: volunteer,
+        preferred_session: info_session,
+        first_name: first_name,
+        last_name: last_name,
+        email: email,
         source: "walk_in_check_in",
         raw_data: {
           information_session_id: info_session.id,

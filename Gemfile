@@ -5,6 +5,7 @@ gem "rails", "~> 8.1.2", ">= 8.1.2.1"
 
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
+gem "tailwindcss-rails", "~> 4.0"
 # Use PostgreSQL as the database for Active Record
 gem "pg", "~> 1.5"
 # Use the Puma web server [https://github.com/puma/puma]
@@ -77,11 +78,14 @@ end
 
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
-  gem "capybara"
+  # require: false — do not load during Bundler.require when running RSpec; Cucumber loads these from features/support/env.rb
+  gem "capybara", require: false
   gem "cucumber-rails", require: false
-  gem "selenium-webdriver"
-  gem "cucumber"
+  gem "selenium-webdriver", require: false
+  gem "cucumber", require: false
   gem "warden"
+  gem "rspec-rails", "~> 8.0"
+  gem "simplecov", require: false
 end
 
 gem "rspec-expectations", "~> 3.13"

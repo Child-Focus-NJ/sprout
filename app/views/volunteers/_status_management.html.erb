@@ -1,0 +1,58 @@
+<section id="volunteer-status" class="card status-panel" aria-labelledby="status-heading">
+  <h2 id="status-heading" class="section-heading">Current status</h2>
+  <p class="status-current" id="current-status-label"><%= @volunteer.profile_status_label %></p>
+  <% if @volunteer.application_sent? && @volunteer.application_sent_at.present? %>
+    <p class="subtle">Sent: <%= @volunteer.application_sent_at.strftime("%Y-%m-%d %H:%M") %></p>
+  <% end %>
+</section>
+
+<% if @volunteer.application_sent_at.present? %>
+  <section id="application-info" class="card status-panel" aria-labelledby="application-sent-heading">
+    <h2 id="application-sent-heading" class="section-heading">Application materials</h2>
+    <p>Application sent on <%= @volunteer.application_sent_at.strftime("%Y-%m-%d") %></p>
+  </section>
+<% end %>
+
+<% if @volunteer.application_submitted_at.present? %>
+  <section id="applied-section" class="card status-panel" aria-labelledby="application-submitted-heading">
+    <h2 id="application-submitted-heading" class="section-heading">Application submitted</h2>
+    <p><%= @volunteer.application_submitted_at.strftime("%Y-%m-%d") %></p>
+  </section>
+<% end %>
+
+<section id="status-management" class="card status-panel">
+  <h2 class="section-heading">Change status</h2>
+  <p class="help-text">Choose the volunteer’s stage, then press Update status.</p>
+  <%= form_with url: update_status_volunteer_path(@volunteer), method: :patch, html: { class: "status-update-form" } do %>
+    <div class="form-row">
+      <label for="status">Status</label>
+      <select name="status" id="status" class="input-large">
+        <% Volunteer.current_funnel_stages.keys.each do |stage| %>
+          <option value="<%= stage %>" <%= "selected" if @volunteer.current_funnel_stage == stage %>>
+            <%= stage.to_s.humanize %>
+          </option>
+        <% end %>
+      </select>
+    </div>
+    <button type="submit" class="button-primary">Update status</button>
+  <% end %>
+</section>
+
+<section id="status-history" class="card status-panel" aria-labelledby="status-history-heading">
+  <h2 id="status-history-heading" class="section-heading">Status history</h2>
+  <p class="help-text">Newest changes appear first.</p>
+  <% if @volunteer.status_changes.recent.any? %>
+    <% @volunteer.status_changes.recent.each do |change| %>
+      <div class="status-change-entry" data-timestamp="<%= change.created_at.iso8601 %>">
+        <span class="status-from"><%= change.from_funnel_stage %></span>
+        <span class="status-arrow" aria-hidden="true">→</span>
+        <span class="status-to"><%= change.to_funnel_stage %></span>
+        <div>
+          <time datetime="<%= change.created_at.iso8601 %>"><%= change.created_at.strftime("%Y-%m-%d %H:%M") %></time>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <p class="subtle">No status changes recorded yet.</p>
+  <% end %>
+</section>

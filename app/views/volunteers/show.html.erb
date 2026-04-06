@@ -1,18 +1,18 @@
 <main class="volunteer-page">
-<h1><%= @volunteer.full_name %></h1>
-<nav class="page-nav card">
-  <%= link_to "← Back to Volunteers", volunteers_path, class: "button-link" %>
+<h1 class="page-title"><%= @volunteer.full_name %></h1>
+<nav class="page-nav card" aria-label="Page">
+  <%= link_to "← Back to volunteer list", volunteers_path, class: "button-link" %>
 </nav>
 
 <% if flash[:notice] %>
-  <div class="alert-success" role="alert"><%= flash[:notice] %></div>
+  <div class="alert-success" role="status"><%= flash[:notice] %></div>
 <% end %>
 <% if flash[:alert] %>
   <div class="alert-warning" role="alert"><%= flash[:alert] %></div>
 <% end %>
 
-<section id="contact-info">
-  <h2>Contact</h2>
+<section id="contact-info" class="card status-panel">
+  <h2 class="section-heading">Contact</h2>
   <% if @volunteer.phone.present? %>
     <% normalized_phone = @volunteer.phone.to_s.gsub(/\D/, "") %>
     <% phone_invalid = normalized_phone.length < 10 %>
@@ -27,49 +27,10 @@
   <% end %>
 </section>
 
-<section id="volunteer-status">
-  <h2>Current Status</h2>
-  <% if @volunteer.applied? %>
-    <p>Application submitted</p>
-  <% elsif @volunteer.application_sent? %>
-    <p>Application Sent</p>
-    <% if @volunteer.application_sent_at.present? %>
-      <p class="subtle">Sent: <%= @volunteer.application_sent_at.strftime("%Y-%m-%d %H:%M") %></p>
-    <% end %>
-  <% else %>
-    <p><%= @volunteer.current_funnel_stage.to_s.humanize %></p>
-  <% end %>
-</section>
+<%= render "status_management" %>
 
-<% if @volunteer.application_sent_at.present? %>
-  <section id="application-info">
-    <p>Application sent: <%= @volunteer.application_sent_at.strftime("%Y-%m-%d") %></p>
-  </section>
-<% end %>
-
-<% if @volunteer.application_submitted_at.present? %>
-  <section id="applied-section">
-    <p>Application submitted: <%= @volunteer.application_submitted_at.strftime("%Y-%m-%d") %></p>
-  </section>
-<% end %>
-
-<section id="status-management" class="card">
-  <h2>Update status</h2>
-  <%= form_with url: update_status_volunteer_path(@volunteer), method: :patch, html: { class: "inline-form" } do %>
-    <label for="status">Status</label>
-    <select name="status" id="status">
-      <% Volunteer.current_funnel_stages.keys.each do |stage| %>
-        <option value="<%= stage %>" <%= "selected" if @volunteer.current_funnel_stage == stage %>>
-          <%= stage.humanize %>
-        </option>
-      <% end %>
-    </select>
-    <button type="submit">Update status</button>
-  <% end %>
-</section>
-
-<section id="actions" class="card">
-  <h2>Actions</h2>
+<section id="actions" class="card status-panel">
+  <h2 class="section-heading">Actions</h2>
   <div class="action-toolbar">
     <button type="submit" form="add-note-form" class="btn-note">Add Note</button>
     <%= link_to "Send SMS", sms_volunteer_path(@volunteer), class: "button-link" %>
@@ -87,15 +48,16 @@
   </div>
 
   <div class="note-entry-panel">
-    <h3>Add a note</h3>
+    <h3 class="subsection-heading">Add a note</h3>
     <%= form_with url: add_note_volunteer_path(@volunteer), method: :post, html: { class: "note-form", id: "add-note-form" } do %>
-      <textarea id="note" name="note" rows="3"></textarea>
+      <label for="note" class="sr-only">Note text</label>
+      <textarea id="note" name="note" rows="4" placeholder="Type your note here, then press Add note above."></textarea>
     <% end %>
   </div>
 </section>
 
-<section id="communications" class="card">
-  <h2>SMS Communication History</h2>
+<section id="communications" class="card status-panel">
+  <h2 class="section-heading">SMS communication history</h2>
   <% @volunteer.communications.sms.recent.each do |comm| %>
     <div class="communication-entry">
       <div>
@@ -108,17 +70,20 @@
       <div class="content"><%= comm.body.to_s %></div>
     </div>
   <% end %>
+  <% if @volunteer.communications.sms.recent.empty? %>
+    <p class="subtle">No SMS messages yet.</p>
+  <% end %>
 </section>
 
-<section class="timeline card" data-timeline="true">
-  <h2>Timeline</h2>
-  <p>This timeline includes reminder activity, info sessions, and manual notes.</p>
+<section class="timeline card status-panel" data-timeline="true">
+  <h2 class="section-heading">Timeline</h2>
+  <p class="help-text">Reminders, info sessions, and notes in one place. Use the filter to show only notes.</p>
 
-  <%= form_with url: volunteer_path(@volunteer), method: :get, local: true, html: { class: "inline-form" } do %>
-    <label for="filter">Filter</label>
-    <select id="filter" name="filter" onchange="this.form.submit()">
-      <option value="all" <%= "selected" if @timeline_filter == "all" %>>All</option>
-      <option value="notes" <%= "selected" if @timeline_filter == "notes" %>>Notes</option>
+  <%= form_with url: volunteer_path(@volunteer), method: :get, local: true, html: { class: "timeline-filter-form" } do %>
+    <label for="filter">Show</label>
+    <select id="filter" name="filter" onchange="this.form.submit()" class="input-large">
+      <option value="all" <%= "selected" if @timeline_filter == "all" %>>All activity</option>
+      <option value="notes" <%= "selected" if @timeline_filter == "notes" %>>Notes only</option>
     </select>
   <% end %>
 
@@ -160,14 +125,4 @@
     applyFilter();
   })();
 </script>
-
-<section id="status-history" class="card">
-  <h2>Status History</h2>
-  <% @volunteer.status_changes.recent.each do |change| %>
-    <div class="status-change-entry" data-timestamp="<%= change.created_at.iso8601 %>">
-      <span><%= change.from_funnel_stage %></span> &rarr; <span><%= change.to_funnel_stage %></span>
-      <time datetime="<%= change.created_at.iso8601 %>"><%= change.created_at.strftime("%Y-%m-%d %H:%M") %></time>
-    </div>
-  <% end %>
-</section>
 </main>
