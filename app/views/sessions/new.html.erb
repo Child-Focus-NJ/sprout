@@ -1,8 +1,4 @@
 <h1>Login</h1>
 
-<% if flash[:alert] %>
-  <p class="alert"><%= flash[:alert] %></p>
-<% end %>
-
 <%= button_to "Sign in with Google", "/auth/google_oauth2", method: :post %>
 
