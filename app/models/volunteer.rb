@@ -23,6 +23,9 @@ class Volunteer < ApplicationRecord
   scope :inactive_volunteers, -> { where(current_funnel_stage: :inactive) }
   # `application_eligible` scope is already provided by enum `current_funnel_stage`
   scope :never_attended, -> { where(first_session_attended_at: nil) }
+  scope :awaiting_application_submission, lambda {
+    where(current_funnel_stage: :application_sent).order(application_sent_at: :asc)
+  }
 
   after_save :cancel_pending_reminders_if_applied
 
@@ -85,6 +88,24 @@ class Volunteer < ApplicationRecord
 
     update!(first_session_attended_at: Time.current) unless first_session_attended_at.present?
     change_status!(:application_eligible, user: user, trigger: :event)
+  end
+
+  # Staff action or automation: move to application_sent and record send time (idempotent on duplicate send).
+  def record_application_sent!(user:)
+    return false if application_sent_at.present?
+
+    ActiveRecord::Base.transaction do
+      change_status!(:application_sent, user: user)
+      update!(application_sent_at: Time.current)
+    end
+    true
+  end
+
+  def mark_application_submitted!(user:)
+    ActiveRecord::Base.transaction do
+      update!(application_submitted_at: Time.current)
+      change_status!(:applied, user: user)
+    end
   end
 
   private
