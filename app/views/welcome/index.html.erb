@@ -1,6 +1,5 @@
-<% if current_user&.admin? %>
-  <h1>Admin Dashboard</h1>
-<% else %>
-  <h1>Welcome to Project Sprout</h1>
-<% end %>
-<%= image_tag "sprout_logo.jpg" %>
+<main class="welcome-home">
+  <%= image_tag "/icon.svg",
+      alt: "Sprout",
+      class: "h-40 w-40 object-contain sm:h-52 sm:w-52" %>
+</main>
