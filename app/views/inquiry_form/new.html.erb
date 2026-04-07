@@ -1,13 +1,6 @@
 <main class="volunteer-page">
   <h1>Inquiry</h1>
 
-  <% if flash[:notice] %>
-    <div class="alert-success" role="alert"><%= flash[:notice] %></div>
-  <% end %>
-  <% if flash[:alert] %>
-    <div class="alert-warning" role="alert"><%= flash[:alert] %></div>
-  <% end %>
-
   <section class="card">
     <% if @information_session_id.present? %>
       <h2>Walk-in: add to the system and record attendance</h2>
