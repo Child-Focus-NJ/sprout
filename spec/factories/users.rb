@@ -4,5 +4,13 @@ FactoryBot.define do
     first_name { "Admin" }
     last_name  { "User" }
     role       { :admin }
+
+    trait :staff do
+      role { :staff }
+    end
+
+    trait :viewer do
+      role { :viewer }
+    end
   end
 end
