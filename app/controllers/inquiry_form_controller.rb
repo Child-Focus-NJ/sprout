@@ -83,6 +83,11 @@ class InquiryFormController < ApplicationController
       return
     end
 
+    if Volunteer.exists?(email: email)
+      redirect_to new_inquiry_form_path, alert: "You've already signed up."
+      return
+    end
+
     InquiryFormSubmission.create!(
       source: "public_inquiry_form",
       raw_data: {
