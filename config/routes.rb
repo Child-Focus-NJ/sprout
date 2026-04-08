@@ -1,7 +1,8 @@
 Rails.application.routes.draw do
   get "welcome/index"
-  get "application_dashboard", to: "application_dashboard#index"
-  get "admin/settings", to: "admin/settings#index"
+  get "application_dashboard", to: "application_dashboard#index", as: :application_dashboard
+  get "admin/settings", to: "admin/settings#index", as: :admin_settings
+  patch "admin/settings", to: "admin/settings#update"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   resources :information_sessions do
     member do

@@ -1,0 +1,20 @@
+<%# One banner per request: alert wins over notice. Dismissible; subtle styling. %>
+<% alert_text = flash[:alert].presence %>
+<% notice_text = flash[:notice].presence %>
+<% if alert_text || notice_text %>
+  <% is_alert = alert_text.present? %>
+  <% message = is_alert ? alert_text : notice_text %>
+  <div
+    data-flash-banner
+    class="flash-banner <%= is_alert ? "flash-banner--alert" : "flash-banner--notice" %>"
+    role="<%= is_alert ? "alert" : "status" %>"
+  >
+    <span class="flash-banner__text"><%= message %></span>
+    <button
+      type="button"
+      class="flash-banner__dismiss"
+      aria-label="Dismiss"
+      onclick="this.closest('[data-flash-banner]').remove()"
+    >&times;</button>
+  </div>
+<% end %>

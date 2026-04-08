@@ -41,7 +41,7 @@ Then("the SMS should be sent to the volunteer's phone") do
 end
 
 Then("I should see a confirmation message") do
-  expect(page).to have_css(".alert-success, .notice, [role='alert']")
+  expect(page).to have_css(".flash-banner--notice, .alert-success, .notice, [role='alert'], [role='status']")
 end
 
 Then("I should see a message composition field") do

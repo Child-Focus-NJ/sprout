@@ -60,18 +60,15 @@ class VolunteersController < ApplicationController
   end
 
   def send_application
-    if @volunteer.application_sent_at.present?
-      redirect_to volunteer_path(@volunteer), alert: "Application was already sent"
-    else
-      @volunteer.change_status!(:application_sent, user: current_user)
-      @volunteer.update!(application_sent_at: Time.current)
+    if @volunteer.record_application_sent!(user: current_user)
       redirect_to volunteer_path(@volunteer), notice: "Application email queued for #{@volunteer.full_name}"
+    else
+      redirect_to volunteer_path(@volunteer), alert: "Application was already sent"
     end
   end
 
   def mark_submitted
-    @volunteer.update!(application_submitted_at: Time.current)
-    @volunteer.change_status!(:applied, user: current_user)
+    @volunteer.mark_application_submitted!(user: current_user)
     redirect_to volunteer_path(@volunteer), notice: "Application recorded. Staff have been notified."
   end
 
