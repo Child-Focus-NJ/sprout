@@ -10,5 +10,5 @@ Then("there should still be only {int} volunteer with email {string}") do |count
 end
 
 Then("I should see a duplicate email message") do
-  assert_text("already").or assert_text("taken").or assert_text("duplicate")
+  expect(page).to have_text(/already|taken|duplicate/i)
 end

@@ -2,6 +2,15 @@ Rails.application.routes.draw do
   get "welcome/index"
   get "application_dashboard", to: "application_dashboard#index"
   get "admin/settings", to: "admin/settings#index"
+
+  namespace :admin do
+    resources :communication_templates do
+      member do
+        get :preview
+        post :preview
+      end
+    end
+  end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   resources :information_sessions do
     member do
