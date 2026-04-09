@@ -16,12 +16,15 @@ Given('an email template exists named {string} with subject {string} and body {s
   CommunicationTemplate.find_or_create_by!(name: name) do |t|
     t.subject = subject
     t.body = body
+    t.funnel_stage = :inquiry
+    t.template_type = :email
+    t.trigger_type = :manual
   end
 end
 
 When('I preview the template {string} using a sample volunteer named {string}') do |template_name, first_name|
   visit "/admin/communication_templates"
-  click_link template_name
+  first(".template-name-link", text: template_name).click
   click_link "Preview"
 
   fill_in "First name", with: first_name

@@ -49,3 +49,4 @@ infra/**/*.pyc
 
 # SimpleCov HTML report (generate with COVERAGE=true bundle exec rspec)
 /coverage/
+.env
