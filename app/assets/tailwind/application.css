@@ -9,6 +9,25 @@
   body {
     @apply font-sans text-gray-900 leading-snug antialiased;
   }
+
+  /* Keep all textareas a fixed size; scroll content instead of drag-resizing. */
+  textarea {
+    @apply resize-none overflow-y-auto;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  textarea {
+    @apply border border-gray-400 rounded-md bg-white;
+  }
+
+  input[type="text"]:invalid,
+  input[type="email"]:invalid,
+  input[type="tel"]:invalid,
+  textarea:invalid {
+    @apply border-red-500 ring-1 ring-red-200;
+  }
 }
 
 @layer components {
@@ -29,7 +48,24 @@
   }
 
   .note-form textarea {
-    @apply w-full max-w-full min-h-[5.5rem] resize-y border border-gray-400 rounded-md p-2 text-base;
+    @apply w-full max-w-full min-h-[5.5rem] border border-gray-400 rounded-md p-2 text-base;
+  }
+
+  /* SMS compose: visible field, bounded height (no endless vertical resize). */
+  .sms-compose-form {
+    @apply grid gap-3;
+  }
+
+  .sms-compose-form textarea {
+    @apply w-full max-w-full box-border min-h-[7.5rem] max-h-[13rem] resize-none overflow-y-auto border border-gray-400 rounded-md p-2.5 text-base bg-white text-gray-900;
+  }
+
+  .sms-compose-form label {
+    @apply font-semibold text-gray-800;
+  }
+
+  .sms-compose-form #sms-character-count {
+    @apply text-sm text-gray-600;
   }
 
   .page-nav {
@@ -224,6 +260,34 @@
 
   .errors {
     @apply text-red-700 text-sm mt-2;
+  }
+
+  .inquiry-form {
+    @apply grid gap-3 max-w-2xl;
+  }
+
+  .inquiry-form__row {
+    @apply grid gap-1.5;
+  }
+
+  .inquiry-form label {
+    @apply font-semibold text-gray-800;
+  }
+
+  .inquiry-form .input-large {
+    @apply max-w-xl border-gray-400 bg-white;
+  }
+
+  .inquiry-form__inline {
+    @apply grid gap-3 md:grid-cols-2;
+  }
+
+  .field-invalid {
+    @apply border-red-500 ring-1 ring-red-200;
+  }
+
+  .field-error {
+    @apply text-red-700 text-sm mt-1;
   }
 
   /* App-wide top bar: one row, nav left / profile right */
