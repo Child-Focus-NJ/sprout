@@ -19,27 +19,32 @@ class VolunteersController < ApplicationController
   end
 
   def send_sms
-    message = params[:message].to_s
-
-    @volunteer.communications.create!(
-      communication_type: :sms,
-      body: message,
-      sent_at: Time.current,
+    Sms::MailchimpOutbound.deliver!(
+      volunteer: @volunteer,
+      body: params[:message],
       sent_by_user: current_user
     )
-
     redirect_to volunteer_path(@volunteer), notice: "SMS sent"
+  rescue Sms::MailchimpOutbound::BlankMessageError,
+         Sms::MailchimpOutbound::MissingPhoneError,
+         Sms::MailchimpOutbound::MessageTooLongError => e
+    redirect_to sms_volunteer_path(@volunteer), alert: e.message
+  rescue Sms::MailchimpOutbound::Error => e
+    redirect_to volunteer_path(@volunteer), alert: e.message
   end
 
   def add_note
     volunteer = Volunteer.find(params[:id])
-    volunteer.notes.create!(
+    note = volunteer.notes.create(
       content: params[:note].to_s,
       user: current_user,
       note_type: :general
     )
-
-    redirect_to volunteer_path(volunteer), notice: "Note saved"
+    if note.persisted?
+      redirect_to volunteer_path(volunteer), notice: "Note saved"
+    else
+      redirect_to volunteer_path(volunteer), alert: note.errors.full_messages.to_sentence
+    end
   end
 
   def bulk_add_note
@@ -47,8 +52,18 @@ class VolunteersController < ApplicationController
     note_content = params[:note].to_s
     volunteers = Volunteer.where(id: ids)
 
+    if note_content.blank?
+      redirect_to volunteers_path, alert: "Content can't be blank"
+      return
+    end
+
+    if note_content.length > Note::MAX_CONTENT_LENGTH
+      redirect_to volunteers_path, alert: "Content is too long (maximum is #{Note::MAX_CONTENT_LENGTH} characters)"
+      return
+    end
+
     volunteers.each do |volunteer|
-      volunteer.notes.create!(content: note_content, user: current_user, note_type: :general)
+      volunteer.notes.create(content: note_content, user: current_user, note_type: :general)
     end
 
     redirect_to volunteers_path, notice: "Note added to #{volunteers.count} volunteers"
@@ -60,18 +75,15 @@ class VolunteersController < ApplicationController
   end
 
   def send_application
-    if @volunteer.application_sent_at.present?
-      redirect_to volunteer_path(@volunteer), alert: "Application was already sent"
-    else
-      @volunteer.change_status!(:application_sent, user: current_user)
-      @volunteer.update!(application_sent_at: Time.current)
+    if @volunteer.record_application_sent!(user: current_user)
       redirect_to volunteer_path(@volunteer), notice: "Application email queued for #{@volunteer.full_name}"
+    else
+      redirect_to volunteer_path(@volunteer), alert: "Application was already sent"
     end
   end
 
   def mark_submitted
-    @volunteer.update!(application_submitted_at: Time.current)
-    @volunteer.change_status!(:applied, user: current_user)
+    @volunteer.mark_application_submitted!(user: current_user)
     redirect_to volunteer_path(@volunteer), notice: "Application recorded. Staff have been notified."
   end
 

@@ -1,5 +1,8 @@
 Rails.application.routes.draw do
   get "welcome/index"
+  get "application_dashboard", to: "application_dashboard#index", as: :application_dashboard
+  get "admin/settings", to: "admin/settings#index", as: :admin_settings
+  patch "admin/settings", to: "admin/settings#update"
   get "application_dashboard", to: "application_dashboard#index"
   get "admin/settings", to: "admin/settings#index"
 

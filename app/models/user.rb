@@ -12,4 +12,8 @@ class User < ApplicationRecord
   def full_name
     [ first_name, last_name ].compact.join(" ")
   end
+
+  def display_name
+    full_name.presence || email.to_s.split("@").first.presence || "User"
+  end
 end

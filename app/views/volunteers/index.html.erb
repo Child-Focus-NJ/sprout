@@ -1,10 +1,6 @@
 <main class="volunteer-page">
 <h1>Volunteers</h1>
 
-<% if flash[:notice] %>
-  <div class="alert-success" role="alert"><%= flash[:notice] %></div>
-<% end %>
-
 <%= form_with url: bulk_add_note_volunteers_path, method: :post, html: { class: "card note-form" } do %>
   <section id="volunteer-list" class="volunteer-list">
     <% @volunteers.each do |volunteer| %>
@@ -29,7 +25,8 @@
 
   <div class="bulk-note-editor">
     <label for="note">Note</label>
-    <textarea id="note" name="note" rows="3"></textarea>
+    <textarea id="note" name="note" rows="3" maxlength="1000"></textarea>
+    <p class="subtle">Maximum 1000 characters.</p>
   </div>
 
   <button type="submit">Apply</button>

@@ -1,6 +1,7 @@
 class ApplicationDashboardController < ApplicationController
+  before_action :require_admin!
+
   def index
-    @awaiting_submission = Volunteer.where(current_funnel_stage: :application_sent)
-                                    .order(application_sent_at: :asc)
+    @awaiting_submission = Volunteer.awaiting_application_submission
   end
 end

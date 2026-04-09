@@ -9,6 +9,25 @@
   body {
     @apply font-sans text-gray-900 leading-snug antialiased;
   }
+
+  /* Keep all textareas a fixed size; scroll content instead of drag-resizing. */
+  textarea {
+    @apply resize-none overflow-y-auto;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  textarea {
+    @apply border border-gray-400 rounded-md bg-white;
+  }
+
+  input[type="text"]:invalid,
+  input[type="email"]:invalid,
+  input[type="tel"]:invalid,
+  textarea:invalid {
+    @apply border-red-500 ring-1 ring-red-200;
+  }
 }
 
 @layer components {
@@ -29,7 +48,24 @@
   }
 
   .note-form textarea {
-    @apply w-full max-w-full min-h-[5.5rem] resize-y border border-gray-400 rounded-md p-2 text-base;
+    @apply w-full max-w-full min-h-[5.5rem] border border-gray-400 rounded-md p-2 text-base;
+  }
+
+  /* SMS compose: visible field, bounded height (no endless vertical resize). */
+  .sms-compose-form {
+    @apply grid gap-3;
+  }
+
+  .sms-compose-form textarea {
+    @apply w-full max-w-full box-border min-h-[7.5rem] max-h-[13rem] resize-none overflow-y-auto border border-gray-400 rounded-md p-2.5 text-base bg-white text-gray-900;
+  }
+
+  .sms-compose-form label {
+    @apply font-semibold text-gray-800;
+  }
+
+  .sms-compose-form #sms-character-count {
+    @apply text-sm text-gray-600;
   }
 
   .page-nav {
@@ -146,10 +182,12 @@
     @apply flex flex-col items-start gap-3;
   }
 
+  .form-row,
   .status-update-form .form-row {
     @apply flex flex-col gap-1.5;
   }
 
+  .form-row label,
   .status-update-form label {
     @apply font-semibold text-gray-800;
   }
@@ -222,5 +260,107 @@
 
   .errors {
     @apply text-red-700 text-sm mt-2;
+  }
+
+  .inquiry-form {
+    @apply grid gap-3 max-w-2xl;
+  }
+
+  .inquiry-form__row {
+    @apply grid gap-1.5;
+  }
+
+  .inquiry-form label {
+    @apply font-semibold text-gray-800;
+  }
+
+  .inquiry-form .input-large {
+    @apply max-w-xl border-gray-400 bg-white;
+  }
+
+  .inquiry-form__inline {
+    @apply grid gap-3 md:grid-cols-2;
+  }
+
+  .field-invalid {
+    @apply border-red-500 ring-1 ring-red-200;
+  }
+
+  .field-error {
+    @apply text-red-700 text-sm mt-1;
+  }
+
+  /* App-wide top bar: one row, nav left / profile right */
+  .app-navbar {
+    @apply sticky top-0 z-40 mb-4 border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-sm;
+  }
+
+  .app-navbar__inner {
+    @apply mx-auto flex max-w-7xl flex-nowrap items-center justify-between gap-3 px-3 py-2 sm:px-4;
+  }
+
+  .app-navbar__links {
+    @apply flex min-h-[2.5rem] min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden;
+  }
+
+  .app-navbar__link {
+    @apply shrink-0 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  .app-navbar__link--active {
+    @apply bg-sky-100 text-sky-950 shadow-sm;
+  }
+
+  .app-navbar__profile {
+    @apply flex max-w-[40%] shrink-0 flex-nowrap items-center justify-end gap-2 border-l border-slate-200 pl-3 sm:max-w-none sm:pl-4;
+  }
+
+  .app-navbar__avatar {
+    @apply h-9 w-9 shrink-0 rounded-full object-cover ring-2 ring-slate-100;
+  }
+
+  .app-navbar__profile-text {
+    @apply flex min-w-0 max-w-[min(100%,22rem)] flex-col items-end gap-0.5 text-right sm:max-w-[min(100%,32rem)] sm:flex-row sm:items-baseline sm:gap-1.5;
+  }
+
+  .app-navbar__name {
+    @apply max-w-full truncate text-sm font-semibold text-slate-900 sm:max-w-[11rem];
+  }
+
+  .app-navbar__sep {
+    @apply hidden text-slate-300 sm:inline;
+  }
+
+  .app-navbar__email {
+    @apply max-w-full truncate text-xs font-normal text-slate-500 sm:max-w-[18rem] sm:text-sm;
+  }
+
+  .welcome-home {
+    @apply mx-auto flex max-w-7xl flex-col items-center justify-center px-4 py-16 sm:min-h-[min(70vh,36rem)] sm:py-24;
+  }
+
+  .admin-settings-form .form-actions {
+    @apply mt-4;
+  }
+
+  /* Single dismissible flash strip (at most one message: alert over notice) */
+  .flash-banner {
+    @apply flex items-start gap-3 justify-between text-sm leading-snug py-2 px-4 max-w-5xl mx-auto border-b;
+  }
+
+  .flash-banner__text {
+    @apply flex-1 min-w-0 pt-0.5;
+  }
+
+  .flash-banner__dismiss {
+    @apply shrink-0 -mr-1 -mt-0.5 min-w-[2rem] min-h-[2rem] rounded border border-transparent text-lg leading-none text-gray-500 hover:bg-black/5 hover:text-gray-800 cursor-pointer;
+  }
+
+  .flash-banner--notice {
+    @apply bg-gray-50 text-gray-800 border-gray-200;
+  }
+
+  .flash-banner--alert {
+    @apply bg-amber-50/90 text-amber-950 border-amber-200;
   }
 }
