@@ -84,7 +84,7 @@ class InquiryFormController < ApplicationController
     end
 
     if Volunteer.exists?(email: email)
-      redirect_to new_inquiry_form_path, alert: "A volunteer with this email already exists."
+      redirect_to new_inquiry_form_path, alert: "You've already signed up."
       return
     end
 
@@ -96,6 +96,7 @@ class InquiryFormController < ApplicationController
       processed: false
     )
     InquiryMailer.confirmation(email).deliver_now
+
     redirect_to new_inquiry_form_path, notice: "Thanks! Your inquiry has been submitted."
   end
 end
