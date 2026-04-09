@@ -1,0 +1,10 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "b5b27e094688e0f555b384427b62073e23e9b7d261aafd99dd3ac3e55ef18183",
+      "note": "Intentional: Legacy VMS site (evintotraining.com) has certificate CRL issues. Controlled via VMS_SSL_VERIFY env var."
+    }
+  ],
+  "updated": "2026-03-31",
+  "brakeman_version": "8.0.4"
+}
