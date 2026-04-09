@@ -95,6 +95,7 @@ class InquiryFormController < ApplicationController
       },
       processed: false
     )
+    InquiryMailer.confirmation(email).deliver_now
 
     redirect_to new_inquiry_form_path, notice: "Thanks! Your inquiry has been submitted."
   end
