@@ -2,7 +2,7 @@
 
 ## Overview
 
-The eVinto volunteer management system (VMS) at `nj-passaic.evintotraining.com` has no API. It is a legacy ASP.NET MVC application with Kendo UI grids. Sprout needs to push and pull volunteer data to/from this system as part of the volunteer funnel (inquiry → info session → application → active).
+The volunteer management system (VMS) at `nj-passaic.evintotraining.com` has no API. It is a legacy ASP.NET MVC application with Kendo UI grids. Sprout needs to push and pull volunteer data to/from this system as part of the volunteer funnel (inquiry → info session → application → active).
 
 This design wraps programmatic HTTP access to the VMS website behind a clean REST-like API using AWS Lambda, API Gateway, and Secrets Manager — consistent with the existing Zoom and MailChimp integration patterns.
 
@@ -550,7 +550,7 @@ The volunteer detail page also exposes inline checkbox fields: `PermissionToCall
 
 ### Integration Test Results (2026-03-26)
 
-Full CRUD lifecycle verified against the real VMS at `nj-passaic.evintotraining.com`:
+Full CRUD lifecycle verified against the VMS at `nj-passaic.evintotraining.com`:
 
 | Test | Result |
 |------|--------|
