@@ -1,0 +1,9 @@
+<h1>Email Templates</h1>
+<%= link_to "New Template", new_admin_communication_template_path %>
+<table>
+  <% @templates.each do |template| %>
+    <tr class="template-row">
+      <td><%= link_to template.name, admin_communication_template_path(template), class: "template-name-link" %></td>
+    </tr>
+  <% end %>
+</table>

@@ -1,0 +1,9 @@
+<h1>Preview: <%= @template.name %></h1>
+<%= form_with url: preview_admin_communication_template_path(@template), method: :post do |f| %>
+  <div><%= f.label :first_name, "First name" %><%= f.text_field :first_name %></div>
+  <%= f.submit "Preview" %>
+<% end %>
+<% if @preview_subject %>
+  <div><%= @preview_subject %></div>
+  <div><%= @preview_body %></div>
+<% end %>

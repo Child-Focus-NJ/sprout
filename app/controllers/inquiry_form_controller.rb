@@ -82,6 +82,16 @@ class InquiryFormController < ApplicationController
       return
     end
 
+    if email.blank?
+      redirect_to new_inquiry_form_path, alert: "Email can't be blank."
+      return
+    end
+
+    if Volunteer.exists?(email: email)
+      redirect_to new_inquiry_form_path, alert: "You've already signed up."
+      return
+    end
+
     InquiryFormSubmission.create!(
       source: "public_inquiry_form",
       raw_data: {
@@ -92,6 +102,7 @@ class InquiryFormController < ApplicationController
       },
       processed: false
     )
+    InquiryMailer.confirmation(email).deliver_now
 
     redirect_to new_inquiry_form_path, notice: "Thanks! Your inquiry has been submitted."
   end
