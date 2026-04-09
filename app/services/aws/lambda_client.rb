@@ -48,6 +48,43 @@ module Aws
       post("/mailchimp/tags", { email: email, tags: tags })
     end
 
+    # --- VMS ---
+
+    def vms_list_inquiries(status: "active", page: 1, page_size: 50)
+      get("/vms/inquiries", { status: status, page: page, page_size: page_size })
+    end
+
+    def vms_create_inquiry(first_name:, last_name:, phone:, email:, gender:, inquired:, **attrs)
+      post("/vms/inquiries", {
+        first_name: first_name, last_name: last_name, phone: phone,
+        email: email, gender: gender, inquired: inquired, **attrs
+      })
+    end
+
+    def vms_edit_inquiry(encrypted_id:, active: nil, party_id: nil)
+      put("/vms/inquiries/#{encrypted_id}", { active: active, party_id: party_id }.compact)
+    end
+
+    def vms_delete_inquiry(encrypted_id:)
+      delete("/vms/inquiries/#{encrypted_id}")
+    end
+
+    def vms_list_volunteers(status: "yes", page: 1, page_size: 50)
+      get("/vms/volunteers", { status: status, page: page, page_size: page_size })
+    end
+
+    def vms_create_volunteer(first_name:, last_name:, gender:, **attrs)
+      post("/vms/volunteers", { first_name: first_name, last_name: last_name, gender: gender, **attrs })
+    end
+
+    def vms_list_lookup(type:)
+      get("/vms/lookups/#{type}")
+    end
+
+    def vms_refresh_session
+      post("/vms/session/refresh", {})
+    end
+
     private
 
     def base_url
@@ -73,18 +110,69 @@ module Aws
       raise "API Gateway URL file #{url_file} not found (LocalStack bootstrap may have failed)"
     end
 
-    def post(path, body)
-      response = HTTParty.post(
-        "#{base_url}#{path}",
+    def get(path, query = {})
+      url = "#{base_url}#{path}"
+      response = HTTParty.get(
+        url,
+        query: query,
         headers: { "Content-Type" => "application/json" },
-        body: body.to_json,
-        timeout: 30
+        timeout: 60
       )
 
       parsed = JSON.parse(response.body)
 
       unless response.success?
-        raise LambdaError, "Lambda #{path} returned #{response.code}: #{parsed}"
+        raise LambdaError, "Lambda GET #{path} returned #{response.code}: #{parsed}"
+      end
+
+      parsed
+    end
+
+    def post(path, body)
+      response = HTTParty.post(
+        "#{base_url}#{path}",
+        headers: { "Content-Type" => "application/json" },
+        body: body.to_json,
+        timeout: 60
+      )
+
+      parsed = JSON.parse(response.body)
+
+      unless response.success?
+        raise LambdaError, "Lambda POST #{path} returned #{response.code}: #{parsed}"
+      end
+
+      parsed
+    end
+
+    def put(path, body)
+      response = HTTParty.put(
+        "#{base_url}#{path}",
+        headers: { "Content-Type" => "application/json" },
+        body: body.to_json,
+        timeout: 60
+      )
+
+      parsed = JSON.parse(response.body)
+
+      unless response.success?
+        raise LambdaError, "Lambda PUT #{path} returned #{response.code}: #{parsed}"
+      end
+
+      parsed
+    end
+
+    def delete(path)
+      response = HTTParty.delete(
+        "#{base_url}#{path}",
+        headers: { "Content-Type" => "application/json" },
+        timeout: 60
+      )
+
+      parsed = JSON.parse(response.body)
+
+      unless response.success?
+        raise LambdaError, "Lambda DELETE #{path} returned #{response.code}: #{parsed}"
       end
 
       parsed

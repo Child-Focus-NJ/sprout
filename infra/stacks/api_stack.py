@@ -35,6 +35,51 @@ class ApiStack(Stack):
             apigw.LambdaIntegration(lambdas.volunteer_management_system_sync_fn),
         )
 
+        # /vms
+        vms_root = api.root.add_resource("vms")
+
+        # POST /vms/session/refresh -> VMS Session Refresh Lambda
+        vms_session = vms_root.add_resource("session")
+        vms_session_refresh = vms_session.add_resource("refresh")
+        vms_session_refresh.add_method(
+            "POST",
+            apigw.LambdaIntegration(lambdas.vms_session_refresh_fn),
+        )
+
+        # GET, POST /vms/inquiries -> VMS Lambda
+        vms_inquiries = vms_root.add_resource("inquiries")
+        vms_inquiries.add_method(
+            "GET", apigw.LambdaIntegration(lambdas.vms_fn)
+        )
+        vms_inquiries.add_method(
+            "POST", apigw.LambdaIntegration(lambdas.vms_fn)
+        )
+
+        # PUT, DELETE /vms/inquiries/{id} -> VMS Lambda
+        vms_inquiry_id = vms_inquiries.add_resource("{id}")
+        vms_inquiry_id.add_method(
+            "PUT", apigw.LambdaIntegration(lambdas.vms_fn)
+        )
+        vms_inquiry_id.add_method(
+            "DELETE", apigw.LambdaIntegration(lambdas.vms_fn)
+        )
+
+        # GET, POST /vms/volunteers -> VMS Lambda
+        vms_volunteers = vms_root.add_resource("volunteers")
+        vms_volunteers.add_method(
+            "GET", apigw.LambdaIntegration(lambdas.vms_fn)
+        )
+        vms_volunteers.add_method(
+            "POST", apigw.LambdaIntegration(lambdas.vms_fn)
+        )
+
+        # GET /vms/lookups/{type} -> VMS Lambda
+        vms_lookups = vms_root.add_resource("lookups")
+        vms_lookup_type = vms_lookups.add_resource("{type}")
+        vms_lookup_type.add_method(
+            "GET", apigw.LambdaIntegration(lambdas.vms_fn)
+        )
+
         # /mailchimp
         mailchimp = api.root.add_resource("mailchimp")
 
