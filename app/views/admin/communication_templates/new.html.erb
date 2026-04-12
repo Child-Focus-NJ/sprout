@@ -1,0 +1,10 @@
+<h1>New Email Template</h1>
+<%= form_with model: [:admin, @template] do |f| %>
+  <div><%= f.label :name %><%= f.text_field :name %></div>
+  <div><%= f.label :subject %><%= f.text_field :subject %></div>
+  <div><%= f.label :body %><%= f.text_area :body %></div>
+  <div><%= f.label :funnel_stage %><%= f.select :funnel_stage, CommunicationTemplate.funnel_stages.keys %></div>
+  <div><%= f.label :template_type %><%= f.select :template_type, CommunicationTemplate.template_types.keys %></div>
+  <div><%= f.label :trigger_type %><%= f.select :trigger_type, CommunicationTemplate.trigger_types.keys %></div>
+  <%= f.submit "Create" %>
+<% end %>
