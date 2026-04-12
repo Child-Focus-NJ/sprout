@@ -1,10 +1,9 @@
 Given('an information session exists named {string}') do |name|
-  @session = InformationSession.find_or_create_by!(name: name) do |s|
-    s.scheduled_at = 1.day.from_now
-  end
+  @session = InformationSession.find_or_initialize_by(name: name)
+  @session.scheduled_at ||= 1.day.from_now
+  @session.location ||= "415 Hamburg Turnpike"
+  @session.save!
 end
-
-
 
 Given('the volunteer is registered for the session {string}') do |session_name|
   session = InformationSession.find_by!(name: session_name)
@@ -36,7 +35,7 @@ Then('the volunteer should be marked as attended for {string}') do |session_name
 
   registration = SessionRegistration.find_by!(volunteer: volunteer, information_session: session)
 
-  assert registration.respond_to?(:attended) && registration.attended
+  assert registration.attended?
 end
 
 Then('the volunteer status should update to {string}') do |status_text|
@@ -50,13 +49,7 @@ Then('the attendance should record a date and time') do
   session   = InformationSession.find_by!(name: "March 2025 Info Session")
   registration = SessionRegistration.find_by!(volunteer: volunteer, information_session: session)
 
-  timestamp =
-    if registration.respond_to?(:checked_in_at) then registration.checked_in_at
-    elsif registration.respond_to?(:attended_at) then registration.attended_at
-    else nil
-    end
-
-  assert !timestamp.nil?
+  assert registration.checked_in_at.present?
 end
 
 Then('an application email should be triggered for {string}') do |email|
@@ -98,7 +91,7 @@ Then('they should be marked as attended for {string}') do |session_name|
 
   registration = SessionRegistration.find_by!(volunteer: volunteer, information_session: session)
 
-  assert registration.respond_to?(:attended) && registration.attended
+  assert registration.attended?
 end
 
 Then('the walk-in volunteer status should reflect attended session') do
