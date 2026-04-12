@@ -11,7 +11,7 @@ class VolunteersController < ApplicationController
   def show
     filter = params[:filter].to_s
     @timeline_filter = filter.presence || "all"
-    @timeline_entries = timeline_entries(@volunteer, filter: @timeline_filter)
+    @timeline_entries = VolunteerTimeline.entries_for(@volunteer, filter: @timeline_filter)
   end
 
   def sms
@@ -35,7 +35,7 @@ class VolunteersController < ApplicationController
 
   def add_note
     volunteer = Volunteer.find(params[:id])
-    note = volunteer.notes.create(
+    note = volunteer.add_staff_note(
       content: params[:note].to_s,
       user: current_user,
       note_type: :general
@@ -63,7 +63,7 @@ class VolunteersController < ApplicationController
     end
 
     volunteers.each do |volunteer|
-      volunteer.notes.create(content: note_content, user: current_user, note_type: :general)
+      volunteer.add_staff_note(content: note_content, user: current_user, note_type: :general)
     end
 
     redirect_to volunteers_path, notice: "Note added to #{volunteers.count} volunteers"
@@ -91,50 +91,6 @@ class VolunteersController < ApplicationController
 
   def set_volunteer
     @volunteer = Volunteer.find(params[:id])
-  end
-
-  def timeline_entries(volunteer, filter:)
-    entries = []
-    notes = volunteer.notes.includes(:user)
-    communications = volunteer.communications
-
-    notes.each do |note|
-      entries << {
-        kind: :note,
-        time: note.created_at,
-        text: note.content,
-        byline: note.user&.full_name.to_s,
-        note: note
-      }
-    end
-
-    communications.each do |comm|
-      entries << {
-        kind: comm.communication_type.to_sym,
-        time: comm.sent_at || comm.created_at,
-        text: comm.body.to_s,
-        status: comm.status
-      }
-    end
-
-    volunteer.session_registrations.includes(:information_session).each do |registration|
-      next unless registration.information_session
-
-      entries << {
-        kind: :info_session,
-        time: registration.created_at,
-        text: "Info session: #{registration.information_session.name}"
-      }
-    end
-
-    filtered = case filter
-    when "notes"
-      entries.select { |entry| entry[:kind] == :note }
-    else
-      entries
-    end
-
-    filtered.sort_by { |entry| entry[:time] || Time.at(0) }.reverse
   end
 
   def ensure_list_volunteer(full_name)

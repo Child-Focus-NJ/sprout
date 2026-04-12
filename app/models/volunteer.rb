@@ -50,6 +50,15 @@ class Volunteer < ApplicationRecord
     "#{first_name} #{last_name}"
   end
 
+  # Staff-authored or system-captured notes (profile form, bulk list, communication callbacks).
+  def add_staff_note(content:, user:, note_type: :general)
+    notes.create(content: content.to_s, user: user, note_type: note_type)
+  end
+
+  def add_staff_note!(content:, user:, note_type: :general)
+    notes.create!(content: content.to_s, user: user, note_type: note_type)
+  end
+
   # Single label for the profile "Current status" block (matches user-facing copy elsewhere).
   def profile_status_label
     if applied?

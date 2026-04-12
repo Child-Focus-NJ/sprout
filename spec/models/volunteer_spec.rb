@@ -3,6 +3,31 @@
 require "rails_helper"
 
 RSpec.describe Volunteer, type: :model do
+  describe "#add_staff_note!" do
+    it "creates a note with the given user and type" do
+      user = create(:user)
+      volunteer = create(:volunteer)
+
+      expect do
+        volunteer.add_staff_note!(content: "Left voicemail", user: user, note_type: :general)
+      end.to change { volunteer.notes.count }.by(1)
+
+      n = volunteer.notes.last
+      expect(n.content).to eq("Left voicemail")
+      expect(n.user).to eq(user)
+      expect(n.general?).to be true
+    end
+
+    it "raises when content is blank (model validation)" do
+      user = create(:user)
+      volunteer = create(:volunteer)
+
+      expect do
+        volunteer.add_staff_note!(content: "", user: user)
+      end.to raise_error(ActiveRecord::RecordInvalid)
+    end
+  end
+
   describe "#profile_status_label" do
     it "returns a clear label for applied" do
       v = build(:volunteer, current_funnel_stage: :applied)

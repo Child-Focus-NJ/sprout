@@ -14,6 +14,7 @@ if ENV["COVERAGE"] == "true"
     add_group "Mailers", "app/mailers"
     add_group "Helpers", "app/helpers"
     add_group "Jobs", "app/jobs"
+    add_group "Services", "app/services"
   end
 end
 

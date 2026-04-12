@@ -24,6 +24,7 @@ RSpec.configure do |config|
 
   config.include FactoryBot::Syntax::Methods
   config.include Warden::Test::Helpers, type: :request
+  config.include ActiveSupport::Testing::TimeHelpers
 
   config.before(:suite) { Warden.test_mode! }
   config.after(:each, type: :request) { Warden.test_reset! }
