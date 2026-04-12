@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# Must run before Rails loads (via rails_helper). Enable with COVERAGE=true (see user-story-5-refactor-pr.md).
-if ENV["COVERAGE"] == "true"
+# Must run before Rails loads (via rails_helper). Enable with SIMPLECOV=true
+if ENV["SIMPLECOV"] == "true"
   require "simplecov"
   SimpleCov.start "rails" do
     add_filter "/spec/"
