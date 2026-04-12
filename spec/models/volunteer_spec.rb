@@ -28,6 +28,18 @@ RSpec.describe Volunteer, type: :model do
     end
   end
 
+  describe "#status" do
+    it "returns attended_session when first-session attendance is recorded" do
+      v = build(:volunteer, first_session_attended_at: 1.day.ago, current_funnel_stage: :inquiry)
+      expect(v.status).to eq(:attended_session)
+    end
+
+    it "reflects funnel stage when the volunteer has not yet attended a session" do
+      v = build(:volunteer, first_session_attended_at: nil, current_funnel_stage: :application_eligible)
+      expect(v.status).to eq(:application_eligible)
+    end
+  end
+
   describe "#profile_status_label" do
     it "returns a clear label for applied" do
       v = build(:volunteer, current_funnel_stage: :applied)
@@ -134,8 +146,8 @@ RSpec.describe Volunteer, type: :model do
 
   describe "#finalize_check_in_for_session!" do
     before do
-      # Avoid PK sequence drift when other tests leave rows (e.g. id=1 exists but sequence still returns 1).
       SessionRegistration.delete_all
+      InquiryFormSubmission.delete_all
       InformationSession.delete_all
       ActiveRecord::Base.connection.reset_pk_sequence!("information_sessions")
     end
