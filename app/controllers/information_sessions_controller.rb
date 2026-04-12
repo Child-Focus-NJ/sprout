@@ -2,7 +2,7 @@ class InformationSessionsController < ApplicationController
   SESSIONS_PER_PAGE = 10
 
   before_action :set_information_sessions_list_filters,
-    only: [:index, :new, :create, :edit, :sign_in, :update, :destroy, :remove_attendee]
+    only: [ :index, :new, :create, :edit, :sign_in, :update, :destroy, :remove_attendee ]
 
   def index
     rel = InformationSession.includes(:created_by_user).all

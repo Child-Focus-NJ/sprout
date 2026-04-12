@@ -1,7 +1,7 @@
 class InformationSession < ApplicationRecord
   enum :session_type, { in_person: 0, virtual: 1 }
 
-  LOCATION_CHOICES = ["415 Hamburg Turnpike", "Zoom"].freeze
+  LOCATION_CHOICES = [ "415 Hamburg Turnpike", "Zoom" ].freeze
 
   attribute :capacity, :integer, default: 10
 
@@ -16,7 +16,7 @@ class InformationSession < ApplicationRecord
   validates :zoom_link,
     presence: true,
     format: {
-      with: /\Ahttps?:\/\/.+/i,
+      with: /\Ahttps?:\/\/.+\z/i,
       message: "must be a URL starting with http:// or https://"
     },
     if: :zoom_location?

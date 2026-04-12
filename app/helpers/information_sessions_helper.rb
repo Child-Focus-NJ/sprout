@@ -10,9 +10,9 @@ module InformationSessionsHelper
   end
 
   def information_session_location_select_options(session)
-    choices = InformationSession::LOCATION_CHOICES.map { |l| [l, l] }
+    choices = InformationSession::LOCATION_CHOICES.map { |l| [ l, l ] }
     if session.location.present? && InformationSession::LOCATION_CHOICES.exclude?(session.location)
-      choices.unshift([session.location, session.location])
+      choices.unshift([ session.location, session.location ])
     end
     choices
   end
