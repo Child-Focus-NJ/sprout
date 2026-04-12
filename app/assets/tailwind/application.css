@@ -390,8 +390,6 @@
     @apply gap-0 px-4 py-2;
   }
 
-  /* FIX 2: Allow actions to wrap below content on narrow screens so the card
-     never clips. Items stay top-aligned so long names don't misalign buttons. */
   .session-history-card.volunteer-row {
     @apply py-4 flex-wrap items-start;
   }
@@ -408,7 +406,6 @@
     @apply m-0 mt-2 text-sm leading-snug text-gray-600;
   }
 
-  /* FIX 3: Participants table — column separators stop name/email from smushing. */
   .sessions-participants-wrap {
     @apply mt-2;
   }
