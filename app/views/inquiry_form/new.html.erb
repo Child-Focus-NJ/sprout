@@ -1,4 +1,12 @@
 <main class="volunteer-page">
+  <nav class="page-nav page-nav--back" aria-label="Back">
+    <% if @information_session_id.present? %>
+      <%= back_nav_link sign_in_information_session_path(@information_session_id), "Back to session check-in" %>
+    <% else %>
+      <%= back_nav_link volunteers_path, "Back to volunteers" %>
+    <% end %>
+  </nav>
+
   <h1 class="page-title">Inquiry</h1>
 
   <section class="card">
@@ -42,7 +50,7 @@
             <% end %>
           </div>
         </div>
-        <button type="submit">Submit and record attendance</button>
+        <button type="submit" class="button-primary">Submit and record attendance</button>
       <% end %>
     <% else %>
       <h2>Please add them to the system</h2>
@@ -79,7 +87,7 @@
             <% end %>
           </div>
         </div>
-        <button type="submit">Submit</button>
+        <button type="submit" class="button-primary">Submit</button>
       <% end %>
     <% end %>
   </section>

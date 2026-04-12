@@ -37,15 +37,15 @@ class InquiryFormController < ApplicationController
 
       if volunteer
         registration = SessionRegistration.find_by(volunteer: volunteer, information_session: info_session)
-        if registration&.attended?
-          redirect_to volunteer_path(volunteer), notice: "#{volunteer.full_name} is already checked in for this session."
+        if redirect_if_already_attended_for_session!(
+          volunteer: volunteer,
+          information_session: info_session,
+          registration: registration
+        )
           return
         end
 
-        volunteer.finalize_check_in_for_session!(info_session, user: current_user)
-        deliver_application_queued_email!(volunteer)
-
-        redirect_to volunteer_path(volunteer), notice: "Application queued for #{volunteer.full_name}"
+        complete_info_session_check_in_success!(volunteer: volunteer, information_session: info_session)
         return
       end
 
@@ -75,10 +75,7 @@ class InquiryFormController < ApplicationController
         processed_at: Time.current
       )
 
-      volunteer.finalize_check_in_for_session!(info_session, user: current_user)
-      deliver_application_queued_email!(volunteer)
-
-      redirect_to volunteer_path(volunteer), notice: "Application queued for #{volunteer.full_name}"
+      complete_info_session_check_in_success!(volunteer: volunteer, information_session: info_session)
       return
     end
 

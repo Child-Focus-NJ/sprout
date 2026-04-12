@@ -1,8 +1,8 @@
 <main class="volunteer-page">
-<h1 class="page-title"><%= @volunteer.full_name %></h1>
-<nav class="page-nav card" aria-label="Page">
-  <%= link_to "← Back to volunteer list", volunteers_path, class: "button-link" %>
+<nav class="page-nav page-nav--back" aria-label="Back">
+  <%= back_nav_link volunteers_path, "Back to volunteers" %>
 </nav>
+<h1 class="page-title"><%= @volunteer.full_name %></h1>
 
 <section id="contact-info" class="card status-panel">
   <h2 class="section-heading">Contact</h2>
@@ -15,7 +15,8 @@
         <span>— Phone number may be invalid or unreachable</span>
       <% end %>
     </p>
-  <% elsif @volunteer.email.present? %>
+  <% end %>
+  <% if @volunteer.email.present? %>
     <p>Email: <%= @volunteer.email %></p>
   <% end %>
 </section>

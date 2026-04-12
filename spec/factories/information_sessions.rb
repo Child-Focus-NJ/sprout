@@ -5,5 +5,9 @@ FactoryBot.define do
     scheduled_at { 1.day.from_now }
     sequence(:name) { |n| "Info session #{n}" }
     location { "415 Hamburg Turnpike" }
+
+    trait :with_creator do
+      association :created_by_user, factory: :user
+    end
   end
 end

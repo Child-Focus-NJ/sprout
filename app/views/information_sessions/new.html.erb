@@ -1,35 +1,29 @@
-<div>
-    <h1>New Information Session</h1>
-    <div class="createNewBox">
-        <%= form_with model: @information_session, local: true do |f| %>
-            <div class="filterFields">
-                <div class="filterField">
-                    <%= f.label :name, "Name" %>
-                    <%= f.text_field :name %>
-                </div>
+<main class="volunteer-page">
+  <nav class="page-nav page-nav--back" aria-label="Back">
+    <%= back_nav_link information_sessions_path(@list_filter_params.compact_blank), "Back to information sessions" %>
+  </nav>
 
-                <div class="filterField">
-                    <%= f.label :scheduled_at, "Date & Time" %>
-                    <%= f.datetime_local_field :scheduled_at %>
-                </div>
+  <h1 class="page-title">New Information Session</h1>
 
-                <div class="filterField">
-                    <%= f.label :location, "Location" %>
-                    <%= f.select :location, options_for_select([['415 Hamburg Turnpike', '415 Hamburg Turnpike'], ['Zoom', 'Zoom']], selected: params[:location]), include_blank: "All Locations" %>
-                </div>
-
-                <div class="filterField">
-                    <%= f.submit "Create Event" %>
-                </div>
-            </div>
+  <section class="card">
+    <% if @information_session.errors.any? %>
+      <div class="errors" role="alert">
+        <% @information_session.errors.full_messages.each do |msg| %>
+          <p><%= msg %></p>
         <% end %>
-    </div>
-    
-</div>
-<% if @information_session.errors.any? %>
-  <div class="errors">
-    <% @information_session.errors.full_messages.each do |msg| %>
-      <p><%= msg %></p>
+      </div>
     <% end %>
-  </div>
-<% end %>
+
+    <%= form_with model: @information_session, local: true, html: { class: "status-update-form information-session-form" } do |f| %>
+      <% (@list_filter_params || {}).each do |key, val| %>
+        <% next if val.blank? %>
+        <%= hidden_field_tag key, val %>
+      <% end %>
+      <%= render partial: "session_fields", locals: { f: f } %>
+
+      <div class="form-row">
+        <%= f.submit "Create Event", class: "button-primary sessions-toolbar-btn" %>
+      </div>
+    <% end %>
+  </section>
+</main>
