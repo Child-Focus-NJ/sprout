@@ -60,6 +60,18 @@ class VolunteerTimeline
       }
     end
 
+    @volunteer.scheduled_reminders.includes(:communication_template).each do |reminder|
+      template = reminder.communication_template
+      next unless template
+
+      anchor = reminder.sent_at.presence || reminder.scheduled_for.presence || reminder.created_at
+      entries << {
+        kind: :scheduled_reminder,
+        time: anchor,
+        text: "#{template.name} — scheduled reminder for #{anchor.in_time_zone.strftime('%m/%d/%Y %H:%M')}"
+      }
+    end
+
     entries
   end
 end

@@ -73,22 +73,23 @@
 
 <section class="timeline card status-panel" data-timeline="true">
   <h2 class="section-heading">Timeline</h2>
-  <p class="help-text">Reminders, info sessions, and notes in one place. Use the filter to show only notes.</p>
+  <p class="help-text">Reminders, info sessions, and notes in one place. Use the Filter control and choose Notes to show only manual notes.</p>
 
   <%= form_with url: volunteer_path(@volunteer), method: :get, local: true, html: { class: "timeline-filter-form" } do %>
-    <label for="filter">Show</label>
-    <select id="filter" name="filter" onchange="this.form.submit()" class="input-large">
+    <label for="filter">Filter</label>
+    <select id="filter" name="filter" class="input-large" onchange="this.form.submit()">
       <option value="all" <%= "selected" if @timeline_filter == "all" %>>All activity</option>
-      <option value="notes" <%= "selected" if @timeline_filter == "notes" %>>Notes only</option>
+      <option value="notes" <%= "selected" if @timeline_filter == "notes" %>>Notes</option>
     </select>
   <% end %>
 
   <% @timeline_entries.each do |entry| %>
     <% css_class = case entry[:kind]
     when :note then "entry note-entry"
-    when :email then "entry communication-email"
-    when :sms then "entry communication-sms"
+    when :email then "entry communication-email email-entry"
+    when :sms then "entry communication-sms sms-entry"
     when :info_session then "entry info-session-entry"
+    when :scheduled_reminder then "entry scheduled-reminder-entry"
     else "entry"
     end %>
     <div class="<%= css_class %>">

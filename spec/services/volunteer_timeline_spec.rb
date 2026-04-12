@@ -40,6 +40,25 @@ RSpec.describe VolunteerTimeline do
       expect(texts).to include("Called volunteer", "See you Saturday", "Info session: Spring Orientation")
     end
 
+    it "includes scheduled reminders with reminder copy in the feed" do
+      template = CommunicationTemplate.create!(
+        name: "Nudge A",
+        body: "Please follow up",
+        funnel_stage: :inquiry
+      )
+      volunteer.scheduled_reminders.create!(
+        communication_template: template,
+        scheduled_for: Time.zone.parse("2024-07-01 09:00"),
+        status: :pending
+      )
+
+      entries = described_class.entries_for(volunteer.reload, filter: VolunteerTimeline::FILTER_ALL)
+      reminder_entry = entries.find { |e| e[:kind] == :scheduled_reminder }
+      expect(reminder_entry).to be_present
+      expect(reminder_entry[:text]).to match(/scheduled reminder/i)
+      expect(reminder_entry[:text]).to include("Nudge A")
+    end
+
     it "returns newest-first ordering" do
       travel_to(Time.zone.parse("2024-01-10 10:00")) do
         volunteer.add_staff_note!(content: "Oldest", user: user, note_type: :general)
@@ -72,6 +91,16 @@ RSpec.describe VolunteerTimeline do
       )
       session = create(:information_session)
       SessionRegistration.create!(volunteer: volunteer, information_session: session, status: :registered)
+      template = CommunicationTemplate.create!(
+        name: "Timeline filter spec",
+        body: "Body",
+        funnel_stage: :inquiry
+      )
+      volunteer.scheduled_reminders.create!(
+        communication_template: template,
+        scheduled_for: 1.day.from_now,
+        status: :pending
+      )
 
       entries = described_class.entries_for(volunteer.reload, filter: VolunteerTimeline::FILTER_NOTES)
       expect(entries.map { |e| e[:kind] }).to eq([ :note ])
