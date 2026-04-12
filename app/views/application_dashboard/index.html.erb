@@ -1,10 +1,27 @@
-<h1>Application Dashboard</h1>
+<main class="volunteer-page">
+  <h1 class="page-title">Application dashboard</h1>
 
-<section id="awaiting-submission">
-  <h2>Awaiting submission</h2>
-  <ul class="volunteer-list">
-    <% @awaiting_submission.each do |volunteer| %>
-      <li><%= volunteer.full_name %> — <%= volunteer.current_funnel_stage %></li>
-    <% end %>
-  </ul>
-</section>
+  <section id="awaiting-submission" class="card status-panel">
+    <h2 class="section-heading">Awaiting submission</h2>
+    <p class="help-text">Volunteers who have been sent application materials but have not yet submitted.</p>
+    <ul class="volunteer-list">
+      <% @awaiting_submission.each do |volunteer| %>
+        <li class="volunteer-row">
+          <div class="volunteer-meta">
+            <span class="volunteer-name"><%= volunteer.full_name %></span>
+            <div class="volunteer-subtext">
+              <span>Email: <%= volunteer.email %></span>
+              <span>Application sent</span>
+              <% if volunteer.application_sent_at.present? %>
+                <span>Sent: <%= volunteer.application_sent_at.strftime("%Y-%m-%d") %></span>
+              <% end %>
+            </div>
+          </div>
+          <div class="volunteer-actions">
+            <%= link_to "View profile", volunteer_path(volunteer), class: "button-link profile-link" %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+</main>

@@ -4,13 +4,6 @@
   <%= link_to "← Back to volunteer list", volunteers_path, class: "button-link" %>
 </nav>
 
-<% if flash[:notice] %>
-  <div class="alert-success" role="status"><%= flash[:notice] %></div>
-<% end %>
-<% if flash[:alert] %>
-  <div class="alert-warning" role="alert"><%= flash[:alert] %></div>
-<% end %>
-
 <section id="contact-info" class="card status-panel">
   <h2 class="section-heading">Contact</h2>
   <% if @volunteer.phone.present? %>

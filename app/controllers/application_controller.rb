@@ -12,6 +12,12 @@ class ApplicationController < ActionController::Base
 
   private
 
+  def require_admin!
+    return if current_user&.admin?
+
+    redirect_to root_path, alert: "You are not authorized to view that page."
+  end
+
   def require_authenticated_and_authorized_user!
     return if allow_unauthenticated_access?
 

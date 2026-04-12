@@ -21,7 +21,7 @@
 <% end %>
 
 <section id="status-management" class="card status-panel">
-  <h2 class="section-heading">Change status</h2>
+  <h2 class="section-heading">Update status</h2>
   <p class="help-text">Choose the volunteer’s stage, then press Update status.</p>
   <%= form_with url: update_status_volunteer_path(@volunteer), method: :patch, html: { class: "status-update-form" } do %>
     <div class="form-row">

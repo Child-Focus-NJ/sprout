@@ -6,5 +6,5 @@ Given("I am a signed-in system administrator") do
   end
   login_as(@user, scope: :user)
   visit root_path
-  expect(page).to have_content("Admin Dashboard")
+  expect(page).to have_css('img[alt="Sprout"]')
 end
