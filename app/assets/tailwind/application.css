@@ -18,6 +18,10 @@
   input[type="text"],
   input[type="email"],
   input[type="tel"],
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="number"],
+  select,
   textarea {
     @apply border border-gray-400 rounded-md bg-white;
   }
@@ -51,6 +55,10 @@
     @apply w-full max-w-full min-h-[5.5rem] border border-gray-400 rounded-md p-2 text-base;
   }
 
+  .note-form .button-primary {
+    @apply mt-3;
+  }
+
   /* SMS compose: visible field, bounded height (no endless vertical resize). */
   .sms-compose-form {
     @apply grid gap-3;
@@ -72,21 +80,40 @@
     @apply flex gap-2 items-center;
   }
 
+  /* Primary destination link: lighter than a faux button; chevron reads as “up” navigation. */
+  .page-nav--back {
+    @apply mb-3;
+  }
+
+  .nav-back {
+    @apply group inline-flex max-w-full items-center gap-2.5 rounded-lg py-1 pr-2 text-left text-sm font-medium text-slate-700 no-underline transition-colors hover:bg-slate-100 hover:text-slate-950;
+  }
+
+  .nav-back:focus-visible {
+    @apply rounded-lg outline outline-2 outline-offset-2 outline-indigo-500;
+  }
+
+  .nav-back__chevron {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-base leading-none text-slate-500 shadow-sm transition group-hover:border-slate-300 group-hover:text-slate-800;
+  }
+
   #actions {
     @apply grid gap-3.5;
   }
 
+  /* One sizing contract for default actions (see .button-primary for primary). */
   button,
   .button-link {
-    @apply inline-block box-border min-h-[38px] border border-gray-400 rounded-md px-2.5 py-1.5 bg-gray-50 text-gray-900 no-underline cursor-pointer text-base leading-tight font-[inherit];
+    @apply m-0 inline-flex h-11 shrink-0 items-center justify-center box-border border border-gray-400 rounded-md bg-gray-50 px-4 text-center text-sm font-semibold text-gray-900 no-underline cursor-pointer;
   }
 
+  /* Full contract: used on <button> and on button_to <input type="submit"> (not covered by `button`). */
   .btn-note {
-    @apply bg-sky-100 border-sky-300;
+    @apply m-0 inline-flex h-11 shrink-0 items-center justify-center box-border rounded-md border border-sky-300 bg-sky-100 px-4 text-center text-sm font-semibold text-gray-900 cursor-pointer;
   }
 
   .btn-delete {
-    @apply bg-red-100 border-red-300;
+    @apply m-0 inline-flex h-11 shrink-0 items-center justify-center box-border rounded-md border border-red-300 bg-red-100 px-4 text-center text-sm font-semibold text-red-900 cursor-pointer appearance-none;
   }
 
   .communication-entry,
@@ -182,6 +209,20 @@
     @apply flex flex-col items-start gap-3;
   }
 
+  /* New / edit information session: use full card width for fields (see .input-large max-w-md). */
+  .volunteer-page .information-session-form {
+    @apply w-full max-w-none items-stretch;
+  }
+
+  .volunteer-page .information-session-form .form-row {
+    @apply w-full min-w-0;
+  }
+
+  .volunteer-page .information-session-form .input-large,
+  .volunteer-page .information-session-form select {
+    @apply w-full max-w-none;
+  }
+
   .form-row,
   .status-update-form .form-row {
     @apply flex flex-col gap-1.5;
@@ -198,7 +239,7 @@
   }
 
   .button-primary {
-    @apply min-h-11 px-4 py-2 font-semibold border border-blue-600 rounded-md bg-blue-50 text-blue-900 cursor-pointer text-base;
+    @apply m-0 inline-flex h-11 shrink-0 items-center justify-center box-border border border-indigo-600 rounded-md bg-indigo-600 px-4 text-center text-sm font-semibold text-white no-underline cursor-pointer appearance-none;
   }
 
   .timeline-filter-form {
@@ -258,6 +299,199 @@
     @apply mt-4;
   }
 
+  /* Information sessions index */
+  .sessions-page {
+    @apply max-w-6xl mx-auto p-4 pb-10 text-base text-gray-900;
+  }
+
+  .sessions-index .card {
+    @apply mb-0;
+  }
+
+  .sessions-index__title,
+  .sessions-page-header {
+    @apply mb-0;
+  }
+
+  .sessions-filter-card {
+    @apply p-4;
+  }
+
+  .sessions-filter-card .sessions-filter-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4;
+  }
+
+  .sessions-filter-card .form-row {
+    @apply min-w-0 flex flex-col gap-2;
+  }
+
+  .sessions-filter-card .input-large {
+    @apply w-full max-w-none;
+  }
+
+  .sessions-filter-card .form-row label {
+    @apply mb-0 block text-sm font-semibold text-gray-800;
+  }
+
+  .sessions-filter-card input[type="date"],
+  .sessions-filter-card select {
+    @apply w-full min-h-[42px] text-base px-2.5 py-1.5 box-border;
+  }
+
+  .sessions-filter-card .sessions-filter-actions {
+    @apply col-span-full flex flex-col gap-3 border-t border-gray-200 pt-4;
+  }
+
+  @media (width >= 40rem) {
+    .sessions-filter-card .sessions-filter-actions {
+      @apply flex-row;
+    }
+  }
+
+  .sessions-filter-card .sessions-filter-actions .button-primary,
+  .sessions-filter-card .sessions-filter-actions button[type="submit"],
+  .sessions-filter-card .sessions-filter-actions .button-link {
+    @apply min-w-0 max-w-none h-11 w-full;
+  }
+
+  @media (width >= 40rem) {
+    .sessions-filter-card .sessions-filter-actions .button-primary,
+    .sessions-filter-card .sessions-filter-actions button[type="submit"],
+    .sessions-filter-card .sessions-filter-actions .button-link {
+      @apply flex-1 basis-0;
+    }
+  }
+
+  .sessions-toolbar-btn {
+    @apply max-w-full whitespace-normal text-center [overflow-wrap:anywhere];
+  }
+
+  .sessions-page-create {
+    @apply mb-0;
+  }
+
+  .sessions-page-create__btn {
+    @apply w-full sm:w-auto;
+  }
+
+  .sessions-session-actions {
+    @apply flex max-w-full flex-wrap justify-end gap-2;
+  }
+
+  .sessions-history-heading {
+    @apply mb-2 mt-0;
+  }
+
+  .sessions-history-help {
+    @apply mb-4 mt-0;
+  }
+
+  .sessions-history-list {
+    @apply gap-0 px-4 py-2;
+  }
+
+  /* FIX 2: Allow actions to wrap below content on narrow screens so the card
+     never clips. Items stay top-aligned so long names don't misalign buttons. */
+  .session-history-card.volunteer-row {
+    @apply py-4 flex-wrap items-start;
+  }
+
+  .session-history-card .volunteer-meta {
+    @apply gap-2 pr-2 min-w-0 flex-1;
+  }
+
+  .session-history-meta {
+    @apply mt-2 flex-wrap gap-x-3 gap-y-1;
+  }
+
+  .session-history-created-by {
+    @apply m-0 mt-2 text-sm leading-snug text-gray-600;
+  }
+
+  /* FIX 3: Participants table — column separators stop name/email from smushing. */
+  .sessions-participants-wrap {
+    @apply mt-2;
+  }
+
+  .sessions-participants-table {
+    @apply w-full table-fixed border-collapse text-left text-base;
+  }
+
+  .sessions-participants-table th,
+  .sessions-participants-table td {
+    @apply border-b border-gray-200 px-4 py-3 align-middle;
+  }
+
+  /* Vertical divider between columns */
+  .sessions-participants-table th:not(:last-child),
+  .sessions-participants-table td:not(:last-child) {
+    @apply border-r border-gray-100;
+  }
+
+  .sessions-participants-table thead th {
+    @apply bg-gray-50 text-sm font-semibold text-gray-800;
+  }
+
+  .sessions-participants-col-name {
+    @apply w-[28%];
+  }
+
+  .sessions-participants-col-email {
+    @apply w-[52%];
+  }
+
+  .sessions-participants-col-actions {
+    @apply w-[20%];
+  }
+
+  .sessions-participants-name {
+    @apply whitespace-normal break-words pr-2 font-medium text-gray-900;
+  }
+
+  .sessions-participants-email {
+    @apply min-w-0 whitespace-normal break-all text-gray-800;
+  }
+
+  .sessions-participants-actions {
+    @apply text-right align-middle;
+  }
+
+  .sessions-table-wrap {
+    @apply overflow-x-auto rounded-lg border border-gray-300 bg-white shadow-sm;
+  }
+
+  .sessions-table {
+    @apply w-full min-w-[36rem] border-collapse text-left text-sm;
+  }
+
+  .sessions-table thead th {
+    @apply border-b border-gray-300 bg-gray-50 px-3 py-2.5 font-semibold text-gray-800 whitespace-nowrap;
+  }
+
+  .sessions-table tbody td {
+    @apply border-b border-gray-200 px-3 py-2.5 align-middle text-gray-900;
+  }
+
+  .sessions-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .sessions-table .sessions-actions {
+    @apply flex flex-wrap items-center justify-end gap-2 whitespace-nowrap;
+  }
+
+  .sessions-empty {
+    @apply text-gray-600 py-6 px-3 text-center text-base border border-dashed border-gray-300 rounded-lg bg-gray-50/80;
+  }
+
+  .sessions-page-header {
+    @apply mb-0 flex flex-row flex-wrap items-center justify-between gap-3;
+  }
+
+  .sessions-page-header .page-title {
+    @apply mb-0;
+  }
+
   .errors {
     @apply text-red-700 text-sm mt-2;
   }
@@ -276,6 +510,10 @@
 
   .inquiry-form .input-large {
     @apply max-w-xl border-gray-400 bg-white;
+  }
+
+  .inquiry-form .button-primary {
+    @apply mt-1;
   }
 
   .inquiry-form__inline {
@@ -362,5 +600,29 @@
 
   .flash-banner--alert {
     @apply bg-amber-50/90 text-amber-950 border-amber-200;
+  }
+
+  .sessions-pagination {
+    @apply mt-6 flex flex-wrap items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm;
+  }
+
+  .sessions-pagination__pages {
+    @apply m-0 flex list-none flex-wrap items-center gap-1 p-0;
+  }
+
+  .sessions-pagination__pages li {
+    @apply m-0 p-0;
+  }
+
+  .sessions-pagination__current {
+    @apply inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-md border border-sky-300 bg-sky-50 px-2.5 text-sm font-semibold text-sky-900;
+  }
+
+  .sessions-pagination__link.button-link {
+    @apply h-9 min-w-[2.25rem] border-gray-200 bg-transparent px-2.5 text-sm text-gray-700 hover:bg-gray-50;
+  }
+
+  .sessions-pagination__control {
+    @apply h-9 shrink-0 gap-1.5 border-gray-200 bg-transparent px-3 text-sm text-gray-700 hover:bg-gray-50;
   }
 }
