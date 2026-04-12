@@ -33,13 +33,10 @@ class Volunteer < ApplicationRecord
     first_session_attended_at.present?
   end
 
-  # User Story 9 expects a `status` method that reflects attendance.
-  # We keep funnel stage tracking in `current_funnel_stage`, but expose an
-  # attendance-focused status for the sign-in flow.
   def status
     return :attended_session if attended_session?
 
-    current_funnel_stage
+    current_funnel_stage.to_sym
   end
 
   def can_reactivate?
@@ -48,6 +45,15 @@ class Volunteer < ApplicationRecord
 
   def full_name
     "#{first_name} #{last_name}"
+  end
+
+  # Staff-authored or system-captured notes (profile form, bulk list, communication callbacks).
+  def add_staff_note(content:, user:, note_type: :general)
+    notes.create(content: content.to_s, user: user, note_type: note_type)
+  end
+
+  def add_staff_note!(content:, user:, note_type: :general)
+    notes.create!(content: content.to_s, user: user, note_type: note_type)
   end
 
   # Single label for the profile "Current status" block (matches user-facing copy elsewhere).
@@ -75,8 +81,6 @@ class Volunteer < ApplicationRecord
     )
   end
 
-  # Info session check-in: mark registration attended, set first-session time, advance to eligible.
-  # Application is sent separately (staff action or automation); see +send_application+.
   def finalize_check_in_for_session!(information_session, user:)
     registration = SessionRegistration.find_or_initialize_by(
       volunteer: self,

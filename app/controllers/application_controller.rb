@@ -43,6 +43,20 @@ class ApplicationController < ActionController::Base
     AttendanceMailer.application_queued(volunteer.email).deliver_now
   end
 
+  def complete_info_session_check_in_success!(volunteer:, information_session:)
+    volunteer.finalize_check_in_for_session!(information_session, user: current_user)
+    deliver_application_queued_email!(volunteer)
+    redirect_to volunteer_path(volunteer), notice: "Application queued for #{volunteer.full_name}"
+  end
+
+  def redirect_if_already_attended_for_session!(volunteer:, information_session:, registration: nil)
+    registration ||= SessionRegistration.find_by(volunteer: volunteer, information_session: information_session)
+    return false unless registration&.attended?
+
+    redirect_to volunteer_path(volunteer), notice: "#{volunteer.full_name} is already checked in for this session."
+    true
+  end
+
   def current_user
     return @current_user if defined?(@current_user)
     # In the browser flow, we set `session[:user_id]` in `SessionsController`.

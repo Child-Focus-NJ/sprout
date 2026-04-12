@@ -21,7 +21,7 @@ Feature: Manage Information Sessions
         And "Jane Doe" has signed up for an information session with date Mar 06, 2027 and time 06:00 PM
 
         Scenario: Creating an information session successfully
-            Given I click the "Create New" navigation button
+            Given I click the "Create New Information Session" navigation button
             Then I should be on the create new information session page
             And I have selected "415 Hamburg Turnpike" from "Location"
             And I have filled out the "Name" field with "Monday Morning Info Session"
@@ -31,18 +31,19 @@ Feature: Manage Information Sessions
             And an information session with date Mar 16, 2027 and time 10:00 AM should be on the list of information sessions
 
         Scenario: Creating a Zoom information session
-            Given I click the "Create New" navigation button
+            Given I click the "Create New Information Session" navigation button
             Then I should be on the create new information session page
             And I have selected "Zoom" from "Location"
+            And I have filled out the "Zoom link" field with "https://zoom.us/j/123456"
             And I have filled out the "Name" field with "Monday Morning Info Session"
             And I have filled out the "Date & Time" field with "2027-04-06T10:00"
             And I have clicked the "Create Event" button
             Then I am on the information session management page
-            And an information session with date Mar 16, 2027 and time 10:00 AM should be on the list of information sessions
-            And the information session with date Mar 16, 2027 and time 10:00 AM should have a Zoom link for the meeting
+            And an information session with date Apr 6, 2027 and time 10:00 AM should be on the list of information sessions
+            And the information session with date Apr 6, 2027 and time 10:00 AM should have a Zoom link for the meeting
         
         Scenario: Creating an information session with missing fields
-            Given I click the "Create New" navigation button
+            Given I click the "Create New Information Session" navigation button
             Then I should be on the create new information session page
             And I have selected "415 Hamburg Turnpike" from "Location"
             And I have filled out the "Name" field with "Monday Morning Info Session"
@@ -52,7 +53,7 @@ Feature: Manage Information Sessions
             And an information session with a blank date should not be on the list of information sessions
 
         Scenario: Creating an information session in the past
-            Given I click the "Create New" navigation button
+            Given I click the "Create New Information Session" navigation button
             Then I should be on the create new information session page
             And I have selected "415 Hamburg Turnpike" from "Location"
             And I have filled out the "Name" field with "Monday Morning Info Session"
@@ -65,7 +66,7 @@ Feature: Manage Information Sessions
             Given I am on the edit page for information session with date Mar 06, 2027 and time 06:00 PM
             And I have filled out the "Date & Time" field with "2027-03-06T19:00"
             And I click the "Save Changes" button
-            And I click the "Back" button
+            And I click the "Back to information sessions" button
             Then I am on the information session management page 
             And an information session with date Mar 06, 2027 and time 07:00 PM should be on the list of information sessions
             And an information session with date Mar 06, 2027 and time 06:00 PM should not be on the list of information sessions
@@ -106,7 +107,7 @@ Feature: Manage Information Sessions
 
         Scenario: Filtering information sessions by Upcoming/Past
             Given I am on the information session management page
-            And I have changed the "Upcoming" dropdown to "Past" 
+            And I have changed the "Time range" dropdown to "Past only"
             And I have clicked the "Filter" button
             Then an information session with date Mar 06, 2027 and time 06:00 PM should not be on the list of information sessions
             And an information session with date Apr 16, 2027 and time 06:00 PM should not be on the list of information sessions

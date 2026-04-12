@@ -28,7 +28,7 @@ class Communication < ApplicationRecord
     prev, curr = saved_change_to_sent_at
     return if prev.present? || curr.blank?
 
-    volunteer.notes.create!(
+    volunteer.add_staff_note!(
       user: sent_by_user,
       note_type: :communication,
       content: "Reminder #{communication_type} sent at #{sent_at.strftime('%m/%d/%Y %H:%M')}"

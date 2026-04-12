@@ -20,7 +20,9 @@ Before do
 end
 
 Before("@sign_in_attendance") do
-  InformationSession.destroy_all
+  SessionRegistration.delete_all
+  InquiryFormSubmission.delete_all
+  InformationSession.delete_all
   Volunteer.destroy_all
 end
 

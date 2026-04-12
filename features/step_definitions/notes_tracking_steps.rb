@@ -1,6 +1,29 @@
 Given("the volunteer {string} has notes, reminders, and info session entries") do |name|
   @volunteer = find_or_create_volunteer_by_name(name)
   Note.create!(volunteer: @volunteer, content: "Test note", user: @user)
+
+  template = CommunicationTemplate.create!(
+    name: "Cucumber reminder template #{@volunteer.id}",
+    body: "Automated follow-up body",
+    funnel_stage: :inquiry
+  )
+  @volunteer.scheduled_reminders.create!(
+    communication_template: template,
+    scheduled_for: 1.week.from_now,
+    status: :pending
+  )
+
+  session = InformationSession.create!(
+    name: "Cucumber info session #{@volunteer.id}",
+    capacity: 20,
+    scheduled_at: 2.weeks.from_now,
+    location: "HQ"
+  )
+  SessionRegistration.create!(
+    volunteer: @volunteer,
+    information_session: session,
+    status: :registered
+  )
 end
 
 Given("the volunteer {string} has notes, emails, and SMS in the timeline") do |name|
@@ -66,7 +89,9 @@ Then("I should see a filter by type option") do
 end
 
 When("I filter the timeline to show only notes") do
-  select "Notes", from: "Filter"
+  # rack_test does not execute timeline JavaScript; apply the filter via GET so the
+  # server-rendered timeline matches what the UI would show after choosing Notes.
+  visit volunteer_path(@volunteer, filter: "notes")
 end
 
 Then("I should see only manual notes") do

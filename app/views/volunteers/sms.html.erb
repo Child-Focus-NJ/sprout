@@ -1,6 +1,6 @@
 <main class="volunteer-page">
-<nav class="page-nav card">
-  <%= link_to "← Back to Profile", volunteer_path(@volunteer), class: "button-link" %>
+<nav class="page-nav page-nav--back" aria-label="Back">
+  <%= back_nav_link volunteer_path(@volunteer), "Back to profile" %>
 </nav>
 
 <h1 class="page-title">Send SMS</h1>
