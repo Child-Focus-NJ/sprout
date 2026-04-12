@@ -86,7 +86,7 @@
   }
 
   .nav-back {
-    @apply group inline-flex max-w-full items-center gap-2.5 rounded-lg py-1 pr-2 text-left text-sm font-medium text-slate-700 no-underline transition-colors hover:bg-slate-100 hover:text-slate-950;
+    @apply inline-flex max-w-full items-center gap-2.5 rounded-lg py-1 pr-2 text-left text-sm font-medium text-slate-700 no-underline transition-colors hover:bg-slate-100 hover:text-slate-950;
   }
 
   .nav-back:focus-visible {
@@ -94,7 +94,11 @@
   }
 
   .nav-back__chevron {
-    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-base leading-none text-slate-500 shadow-sm transition group-hover:border-slate-300 group-hover:text-slate-800;
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-base leading-none text-slate-500 shadow-sm transition;
+  }
+
+  .nav-back:hover .nav-back__chevron {
+    @apply border-slate-300 text-slate-800;
   }
 
   #actions {
