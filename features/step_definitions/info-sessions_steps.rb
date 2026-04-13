@@ -134,10 +134,9 @@ Given('{string} cancels their sign up for information session with date {word} {
 end
 
 Given('I click the {string} button for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |button, month_abbr, day, year, hour, minute, meridian|
-  dt = parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
   date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
-  row = find('tr', text: /#{Regexp.escape(date_str)}.*#{Regexp.escape(time_str)}/)
-  row.click_button(button)
+  session_el = find("[data-session-list-item]", text: /#{Regexp.escape(date_str)}.*#{Regexp.escape(time_str)}/)
+  session_el.click_button(button)
 end
 
 Then('every attendees status should change from {string} to {string}') do |old_status, new_status|

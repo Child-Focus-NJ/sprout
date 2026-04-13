@@ -1,62 +1,125 @@
-<h1>Information Sessions</h1>
-<div class="filterBox">
-  <%= form_with url: information_sessions_path, method: :get, local: true do |f| %>
-    <div class="filterFields">
-      <div class="filterField">
-        <%= f.label :start_date, "Start Date" %>
-        <%= f.date_field :start_date, value: params[:start_date] %>
-      </div>
+<main class="volunteer-page sessions-index flex flex-col gap-6">
+  <header class="sessions-page-header">
+    <h1 class="page-title sessions-index__title">Information Sessions</h1>
+  </header>
 
-      <div class="filterField">
-        <%= f.label :end_date, "End Date" %>
-        <%= f.date_field :end_date, value: params[:end_date] %>
+  <section class="card sessions-filter-card" aria-label="Filter sessions">
+    <%= form_with url: information_sessions_path, method: :get, local: true do |f| %>
+      <div class="sessions-filter-grid">
+        <div class="form-row">
+          <%= f.label :start_date, "Start Date" %>
+          <%= f.date_field :start_date, value: params[:start_date], class: "input-large" %>
+        </div>
+        <div class="form-row">
+          <%= f.label :end_date, "End Date" %>
+          <%= f.date_field :end_date, value: params[:end_date], class: "input-large" %>
+        </div>
+        <div class="form-row">
+          <%= f.label :location, "Location" %>
+          <%= f.select :location,
+              options_for_select(
+                [["415 Hamburg Turnpike", "415 Hamburg Turnpike"], ["Zoom", "Zoom"]],
+                selected: params[:location]
+              ),
+              { include_blank: "All locations" },
+              { class: "input-large" } %>
+        </div>
+        <div class="form-row">
+          <%= f.label :upcoming_past, "Time range" %>
+          <%= f.select :upcoming_past,
+              options_for_select(
+                [
+                  ["All sessions", "All"],
+                  ["Upcoming only", "Upcoming"],
+                  ["Past only", "Past"]
+                ],
+                selected: params[:upcoming_past].presence || "All"
+              ),
+              {},
+              { class: "input-large" } %>
+        </div>
+        <div class="sessions-filter-actions">
+          <%= f.button "Filter", type: "submit", class: "button-primary" %>
+          <%= link_to "Clear filters", information_sessions_path, class: "button-link" %>
+        </div>
       </div>
+    <% end %>
+  </section>
 
-      <div class="filterField">
-        <%= f.label :location, "Location" %>
-        <%= f.select :location, options_for_select([['415 Hamburg Turnpike', '415 Hamburg Turnpike'], ['Zoom', 'Zoom']], selected: params[:location]), include_blank: "All Locations" %>
-      </div>
+  <div class="sessions-page-create">
+    <%= link_to "Create New Information Session",
+        new_information_session_path(information_sessions_filter_params.compact_blank),
+        class: "button-primary sessions-page-create__btn" %>
+  </div>
+  <% sessions = @information_sessions || [] %>
+  <% if sessions.empty? %>
+    <section class="sessions-empty" aria-live="polite">
+      <h2 class="subsection-heading">No sessions found</h2>
+      <p class="subtle">Try different dates or location, or use the Clear filters control in the section above.</p>
+    </section>
+  <% else %>
+    <% filter_opts = information_sessions_filter_params.compact_blank %>
+    <h2 class="section-heading sessions-history-heading">Information Session History</h2>
+    <section id="information-session-list" class="card volunteer-list sessions-history-list" aria-label="Information sessions">
+      <% sessions.each do |session| %>
+        <% tz = session.scheduled_at.in_time_zone %>
+        <% date_part = tz.strftime("%b %d, %Y") %>
+        <% time_part = tz.strftime("%I:%M %p") %>
+        <article
+          data-session-list-item
+          class="volunteer-row session-history-card">
+          <div class="volunteer-meta min-w-0">
+            <div class="volunteer-name"><%= session.name %></div>
+            <div class="volunteer-subtext session-history-meta">
+              <span><%= session.location %></span>
+              <span>
+                <time datetime="<%= tz.iso8601 %>">
+                  <%= date_part %> <%= time_part %>
+                </time>
+              </span>
+            </div>
+            <p class="session-history-created-by"><%= information_session_creator_line(session) %></p>
+          </div>
+          <div class="volunteer-actions sessions-session-actions">
+            <%= link_to "Sign in", sign_in_information_session_path(session, filter_opts), class: "button-link" %>
+            <%= link_to "Edit", edit_information_session_path(session, filter_opts), class: "button-link" %>
+            <%= button_to "Delete",
+                information_session_path(session, filter_opts),
+                method: :delete,
+                class: "btn-delete",
+                form: {
+                  class: "inline m-0",
+                  data: { turbo_confirm: "Delete \"#{session.name}\"? This cannot be undone." }
+                } %>
+          </div>
+        </article>
+      <% end %>
+    </section>
 
-      <div class="filterField">
-        <%= f.label :upcoming_past, "Upcoming/Past" %>
-        <%= f.select :upcoming_past, 
-            options_for_select([['Upcoming', 'Upcoming'], ['Past', 'Past']], selected: params[:upcoming_past] || 'Upcoming'),
-            {} %>
-      </div>
-
-      <div class="filterField">
-        <%= f.submit "Filter" %>
-      </div>
-    </div>
+    <% if @sessions_total_pages.to_i > 1 %>
+      <nav class="sessions-pagination card" aria-label="Pagination">
+        <% if @sessions_page > 1 %>
+          <%= link_to "Previous",
+              information_sessions_path_with_filters(page: @sessions_page - 1),
+              class: "button-link sessions-pagination__control" %>
+        <% end %>
+        <ol class="sessions-pagination__pages">
+          <% (1..@sessions_total_pages).each do |n| %>
+            <li>
+              <% if n == @sessions_page %>
+                <span class="sessions-pagination__current" aria-current="page"><%= n %></span>
+              <% else %>
+                <%= link_to n, information_sessions_path_with_filters(page: n), class: "button-link sessions-pagination__link" %>
+              <% end %>
+            </li>
+          <% end %>
+        </ol>
+        <% if @sessions_page < @sessions_total_pages %>
+          <%= link_to "Next",
+              information_sessions_path_with_filters(page: @sessions_page + 1),
+              class: "button-link sessions-pagination__control" %>
+        <% end %>
+      </nav>
+    <% end %>
   <% end %>
-</div>
-<div class="dataList">
-    <table>
-        <thead>
-            <tr>
-            <th>Name</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Location</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% (@information_sessions || []).each do |session| %>
-            <tr>
-                <td><%= session.name %></td>
-                <td><%= session.scheduled_at.in_time_zone.strftime("%b %d, %Y") %></td>
-                <td><%= session.scheduled_at.in_time_zone.strftime("%I:%M %p") %></td>
-                <td><%= session.location %></td>
-                <td>
-                  <%= link_to "Edit", edit_information_session_path(session), class: "btn btn-sm btn-primary" %>
-                  <%= button_to "Delete", information_session_path(session),
-                                method: :delete,
-                                data: { turbo_confirm: "Are you sure you want to delete this session?" },
-                                onclick: "return confirm('Are you sure you want to remove #{session.name}?')" %>
-                </td>
-            </tr>
-            <% end %>
-        </tbody>
-    </table>
-</div>
-<%= link_to "Create New", new_information_session_path %>
+</main>

@@ -11,7 +11,7 @@ class VolunteersController < ApplicationController
   def show
     filter = params[:filter].to_s
     @timeline_filter = filter.presence || "all"
-    @timeline_entries = timeline_entries(@volunteer, filter: @timeline_filter)
+    @timeline_entries = VolunteerTimeline.entries_for(@volunteer, filter: @timeline_filter)
   end
 
   def sms
@@ -19,27 +19,32 @@ class VolunteersController < ApplicationController
   end
 
   def send_sms
-    message = params[:message].to_s
-
-    @volunteer.communications.create!(
-      communication_type: :sms,
-      body: message,
-      sent_at: Time.current,
+    Sms::MailchimpOutbound.deliver!(
+      volunteer: @volunteer,
+      body: params[:message],
       sent_by_user: current_user
     )
-
     redirect_to volunteer_path(@volunteer), notice: "SMS sent"
+  rescue Sms::MailchimpOutbound::BlankMessageError,
+         Sms::MailchimpOutbound::MissingPhoneError,
+         Sms::MailchimpOutbound::MessageTooLongError => e
+    redirect_to sms_volunteer_path(@volunteer), alert: e.message
+  rescue Sms::MailchimpOutbound::Error => e
+    redirect_to volunteer_path(@volunteer), alert: e.message
   end
 
   def add_note
     volunteer = Volunteer.find(params[:id])
-    volunteer.notes.create!(
+    note = volunteer.add_staff_note(
       content: params[:note].to_s,
       user: current_user,
       note_type: :general
     )
-
-    redirect_to volunteer_path(volunteer), notice: "Note saved"
+    if note.persisted?
+      redirect_to volunteer_path(volunteer), notice: "Note saved"
+    else
+      redirect_to volunteer_path(volunteer), alert: note.errors.full_messages.to_sentence
+    end
   end
 
   def bulk_add_note
@@ -47,8 +52,18 @@ class VolunteersController < ApplicationController
     note_content = params[:note].to_s
     volunteers = Volunteer.where(id: ids)
 
+    if note_content.blank?
+      redirect_to volunteers_path, alert: "Content can't be blank"
+      return
+    end
+
+    if note_content.length > Note::MAX_CONTENT_LENGTH
+      redirect_to volunteers_path, alert: "Content is too long (maximum is #{Note::MAX_CONTENT_LENGTH} characters)"
+      return
+    end
+
     volunteers.each do |volunteer|
-      volunteer.notes.create!(content: note_content, user: current_user, note_type: :general)
+      volunteer.add_staff_note(content: note_content, user: current_user, note_type: :general)
     end
 
     redirect_to volunteers_path, notice: "Note added to #{volunteers.count} volunteers"
@@ -76,50 +91,6 @@ class VolunteersController < ApplicationController
 
   def set_volunteer
     @volunteer = Volunteer.find(params[:id])
-  end
-
-  def timeline_entries(volunteer, filter:)
-    entries = []
-    notes = volunteer.notes.includes(:user)
-    communications = volunteer.communications
-
-    notes.each do |note|
-      entries << {
-        kind: :note,
-        time: note.created_at,
-        text: note.content,
-        byline: note.user&.full_name.to_s,
-        note: note
-      }
-    end
-
-    communications.each do |comm|
-      entries << {
-        kind: comm.communication_type.to_sym,
-        time: comm.sent_at || comm.created_at,
-        text: comm.body.to_s,
-        status: comm.status
-      }
-    end
-
-    volunteer.session_registrations.includes(:information_session).each do |registration|
-      next unless registration.information_session
-
-      entries << {
-        kind: :info_session,
-        time: registration.created_at,
-        text: "Info session: #{registration.information_session.name}"
-      }
-    end
-
-    filtered = case filter
-    when "notes"
-      entries.select { |entry| entry[:kind] == :note }
-    else
-      entries
-    end
-
-    filtered.sort_by { |entry| entry[:time] || Time.at(0) }.reverse
   end
 
   def ensure_list_volunteer(full_name)

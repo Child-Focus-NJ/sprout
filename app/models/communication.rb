@@ -9,21 +9,26 @@ class Communication < ApplicationRecord
   scope :recent, -> { order(created_at: :desc) }
   scope :by_status, ->(status) { where(status: status) }
 
-  after_create :mark_sms_delivered_if_seeded
-  after_create :create_automatic_note_for_sent_reminder
+  after_save :promote_pending_sms_to_delivered
+  after_save :log_staff_note_for_outbound_send
 
   private
 
-  def mark_sms_delivered_if_seeded
-    return unless sms? && sent_at.present? && pending?
+  # When an SMS is recorded as sent locally (sent_at set, still pending), mark delivered for UI/history.
+  def promote_pending_sms_to_delivered
+    return unless sms?
+    return unless sent_at.present? && pending?
 
-    update!(status: :delivered)
+    update_column(:status, Communication.statuses[:delivered])
   end
 
-  def create_automatic_note_for_sent_reminder
+  def log_staff_note_for_outbound_send
     return unless sent_by_user.present? && sent_at.present?
+    return unless saved_change_to_sent_at?
+    prev, curr = saved_change_to_sent_at
+    return if prev.present? || curr.blank?
 
-    volunteer.notes.create!(
+    volunteer.add_staff_note!(
       user: sent_by_user,
       note_type: :communication,
       content: "Reminder #{communication_type} sent at #{sent_at.strftime('%m/%d/%Y %H:%M')}"

@@ -7,9 +7,4 @@ class SessionRegistration < ApplicationRecord
   validates :volunteer_id, uniqueness: { scope: :information_session_id, message: "already registered for this session" }
 
   scope :active, -> { where(status: [ :registered, :attended ]) }
-
-  # User Story 9 step defs expect `registration.attended` (not `attended?`).
-  def attended
-    attended?
-  end
 end

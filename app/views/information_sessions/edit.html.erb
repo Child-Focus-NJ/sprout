@@ -1,55 +1,67 @@
-<%= link_to "Back", information_sessions_path, class: "button" %>
-<h1>Edit Information Session</h1>
+<main class="volunteer-page">
+  <nav class="page-nav page-nav--back" aria-label="Back">
+    <%= back_nav_link information_sessions_path(@list_filter_params.compact_blank), "Back to information sessions" %>
+  </nav>
 
-<%= form_with model: @information_session, local: true do |f| %>
-  <div>
-    <%= f.label :name %><br>
-    <%= f.text_field :name %>
-  </div>
+  <h1 class="page-title">Edit Information Session</h1>
 
-  <div>
-    <%= f.label :scheduled_at, "Date & Time" %><br>
-    <%= f.datetime_local_field :scheduled_at, value: @information_session.scheduled_at.strftime("%Y-%m-%dT%H:%M") %>
-  </div>
+  <section class="card status-panel">
+    <% if @information_session.errors.any? %>
+      <div class="errors" role="alert">
+        <% @information_session.errors.full_messages.each do |msg| %>
+          <p><%= msg %></p>
+        <% end %>
+      </div>
+    <% end %>
 
-  <div>
-    <%= f.label :location %><br>
-    <%= f.text_field :location %>
-  </div>
-
-  <div>
-    <%= f.label :capacity %><br>
-    <%= f.number_field :capacity %>
-  </div>
-
-  <div>
-    <%= f.submit "Save Changes" %>
-  </div>
-<% end %>
-
-<div>
-  <h3>Participants</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @information_session.volunteers.each do |volunteer| %>
-        <tr id="attendee-<%= volunteer.id %>">
-          <td><%= volunteer.full_name %></td>
-          <td><%= volunteer.email %></td>
-        <td>
-          <%= button_to "Remove",
-              remove_attendee_information_session_path(@information_session, volunteer_id: volunteer.id),
-              method: :delete,
-              onclick: "return confirm('Are you sure you want to remove #{volunteer.full_name}?')" %>
-        </td>
-        </tr>
+    <%= form_with model: @information_session, local: true, html: { class: "status-update-form information-session-form" } do |f| %>
+      <% (@list_filter_params || {}).each do |key, val| %>
+        <% next if val.blank? %>
+        <%= hidden_field_tag key, val %>
       <% end %>
-    </tbody>
-  </table>
-</div>
+      <%= render partial: "session_fields", locals: { f: f } %>
+
+      <div class="form-row">
+        <%= f.submit "Save Changes", class: "button-primary sessions-toolbar-btn" %>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="card status-panel">
+    <h2 class="section-heading">Participants</h2>
+    <div class="sessions-table-wrap sessions-participants-wrap">
+      <table class="sessions-table sessions-participants-table">
+        <colgroup>
+          <col class="sessions-participants-col-name">
+          <col class="sessions-participants-col-email">
+          <col class="sessions-participants-col-actions">
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col" class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @information_session.volunteers.each do |volunteer| %>
+            <tr id="attendee-<%= volunteer.id %>">
+              <td class="sessions-participants-name"><%= volunteer.full_name %></td>
+              <td class="sessions-participants-email"><%= volunteer.email %></td>
+              <td class="sessions-actions sessions-participants-actions">
+                <%= button_to "Remove",
+                    remove_attendee_information_session_path(
+                      @information_session,
+                      { volunteer_id: volunteer.id }.merge(@list_filter_params.compact_blank)
+                    ),
+                    method: :delete,
+                    class: "btn-delete sessions-toolbar-btn",
+                    form: { data: { turbo_confirm: "Are you sure you want to remove #{volunteer.full_name}?" } } %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
