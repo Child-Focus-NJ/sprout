@@ -48,8 +48,7 @@ Feature: Notes and Communication Tracking
   Scenario: Add note to multiple volunteers from list view
     Given I am on the volunteers list page
     When I select the volunteers "William P" and "Harry Johnson"
-    And I click "Add Note to Selected"
     And I enter "Send 4 week follow-up email"
-    And I press "Apply"
+    And I press "Add Note to Selected"
     Then the note should be added to both volunteers
     And I should see a confirmation message

@@ -1,0 +1,32 @@
+<header class="app-navbar" role="banner">
+  <div class="app-navbar__inner">
+    <nav class="app-navbar__links" aria-label="Main navigation">
+      <%= link_to "Home", root_path, class: app_nav_link_class(root_path) %>
+      <%= link_to "Volunteers", volunteers_path, class: app_nav_link_class(volunteers_path) %>
+      <%= link_to "Sessions", information_sessions_path, class: app_nav_link_class(information_sessions_path) %>
+      <%= link_to "Inquiry", new_inquiry_form_path, class: app_nav_link_class(new_inquiry_form_path) %>
+      <% if current_user.admin? %>
+        <%= link_to "Dashboard", application_dashboard_path, class: app_nav_link_class(application_dashboard_path) %>
+        <%= link_to "Admin", admin_settings_path, class: app_nav_link_class(admin_settings_path) %>
+      <% end %>
+    </nav>
+
+    <div class="app-navbar__profile">
+      <% if current_user.avatar_url.present? %>
+        <%= image_tag current_user.avatar_url,
+            alt: "",
+            class: "app-navbar__avatar",
+            width: 36,
+            height: 36,
+            referrerpolicy: "no-referrer",
+            loading: "lazy",
+            allow_other_host: true %>
+      <% end %>
+      <div class="app-navbar__profile-text">
+        <span class="app-navbar__name" title="<%= current_user.display_name %>"><%= current_user.display_name %></span>
+        <span class="app-navbar__sep" aria-hidden="true">·</span>
+        <span class="app-navbar__email" title="<%= current_user.email %>"><%= current_user.email %></span>
+      </div>
+    </div>
+  </div>
+</header>

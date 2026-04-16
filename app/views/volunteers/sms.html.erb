@@ -1,9 +1,9 @@
 <main class="volunteer-page">
-<nav class="page-nav card">
-  <%= link_to "← Back to Profile", volunteer_path(@volunteer), class: "button-link" %>
+<nav class="page-nav page-nav--back" aria-label="Back">
+  <%= back_nav_link volunteer_path(@volunteer), "Back to profile" %>
 </nav>
 
-<h1>Send SMS</h1>
+<h1 class="page-title">Send SMS</h1>
 
 <section id="sms-recipient" class="card">
   <h2>Sending to <%= @volunteer.full_name %></h2>
@@ -26,16 +26,25 @@
   <% end %>
 </section>
 
-<%= form_with url: send_sms_volunteer_path(@volunteer), method: :post do %>
-  <label for="message">Message</label>
-  <textarea id="message" name="message" rows="5"><%= @message %></textarea>
+<section id="sms-compose" class="card sms-compose-form" aria-labelledby="sms-compose-heading">
+  <h2 id="sms-compose-heading" class="subsection-heading">Your message</h2>
 
-  <div id="sms-character-count">
-    Character count: <span id="sms-char-count-value"><%= @message.to_s.length %></span>
-  </div>
+  <%= form_with url: send_sms_volunteer_path(@volunteer), method: :post, html: { class: "grid gap-3 m-0" } do %>
+    <div class="grid gap-1.5">
+      <label for="message">Message</label>
+      <textarea id="message" name="message" rows="6" maxlength="320"><%= @message %></textarea>
+    </div>
 
-  <button type="submit">Send</button>
-<% end %>
+    <div id="sms-character-count">
+      Character count: <span id="sms-char-count-value"><%= @message.to_s.length %></span> / 320
+    </div>
+    <p class="subtle">Maximum 320 characters.</p>
+
+    <div>
+      <button type="submit">Send</button>
+    </div>
+  <% end %>
+</section>
 
 <script>
   (function () {

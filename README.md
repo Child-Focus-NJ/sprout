@@ -27,10 +27,10 @@ Working under **Dr. Peter DePasquale**
 ## 🛠️ Tech Stack
 
 - **Language:** Ruby (3.4.5)
-- **Framework:** Ruby on Rails 8.1.x
+- **Framework:** Ruby on Rails 8.1.2
 - **Database:** PostgreSQL
-- **Cloud Services:** TBD
-- **App Deployment:** TBD
+- **Cloud Services:** AWS
+- **App Deployment:** Heroku
 - **Styling:** Tailwind CSS via `tailwindcss-rails`
 
 Architecture, gem choices, and integration decisions are detailed in `docs/architecture-and-tech-stack.md` and `docs/feature-specifications.md`.
@@ -82,6 +82,6 @@ bin/dev-docker --reset
    bin/rails server
    ```
 
-Note: AWS integrations (Zoom, Mailchimp, Optima) won't work without LocalStack or real AWS credentials.
+Note: AWS integrations (Zoom, Mailchimp, VMS) won't work without LocalStack or real AWS credentials.
 
-For more implementation details, see `docs/docker-setup.md`, `docs/mvp-plan.md`, and `docs/implementation-roadmap.md`.
+For more implementation details, see [docs/](https://github.com/Child-Focus-NJ/sprout/tree/main/docs).

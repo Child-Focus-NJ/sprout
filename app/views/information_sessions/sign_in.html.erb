@@ -1,26 +1,44 @@
-<h1>Sign-In: <%= @session.name %></h1>
+<main class="volunteer-page">
+  <nav class="page-nav page-nav--back" aria-label="Back">
+    <%= back_nav_link information_sessions_path(@list_filter_params.compact_blank), "Back to information sessions" %>
+  </nav>
 
-<section id="walkin-sign-in" class="walkin-sign-in">
-  <h2>Walk-in sign in</h2>
-  <%= form_with url: check_in_information_session_path(@session), method: :post do %>
-    <div>
-      <label for="email">Email</label>
-      <input type="email" id="email" name="email" />
-    </div>
-    <button type="submit">Check in walk-in</button>
-  <% end %>
-</section>
+  <h1 class="page-title">Sign-In: <%= @session.name %></h1>
 
-<% @session.session_registrations.includes(:volunteer).each do |registration| %>
-  <div class="volunteer-registration">
-    <span><%= registration.volunteer.full_name %></span>
-    <span><%= registration.volunteer.current_funnel_stage.humanize %></span>
-
-    <% unless registration.attended? %>
-      <%= form_with url: check_in_information_session_path(@session), method: :post do %>
-        <input type="hidden" name="volunteer_id" value="<%= registration.volunteer.id %>">
-        <button type="submit">Check in <%= registration.volunteer.full_name %></button>
-      <% end %>
+  <section id="walkin-sign-in" class="card walkin-sign-in">
+    <h2 class="section-heading">Walk-in sign in</h2>
+    <%= form_with url: check_in_information_session_path(@session), method: :post, html: { class: "status-update-form" } do %>
+      <div class="form-row">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" class="input-large" autocomplete="email" />
+      </div>
+      <div class="form-row">
+        <button type="submit" class="button-primary">Check in walk-in</button>
+      </div>
     <% end %>
-  </div>
-<% end %>
+  </section>
+
+  <section class="card status-panel" aria-label="Registered attendees">
+    <h2 class="section-heading">Registered volunteers</h2>
+    <% @session.session_registrations.includes(:volunteer).each do |registration| %>
+      <div class="volunteer-row volunteer-registration">
+        <div class="volunteer-meta">
+          <span class="volunteer-name"><%= registration.volunteer.full_name %></span>
+          <div class="volunteer-subtext">
+            <span>Contact: <%= registration.volunteer.phone.presence || registration.volunteer.email %></span>
+            <span>Status: <%= registration.volunteer.current_funnel_stage.humanize %></span>
+          </div>
+        </div>
+        <div class="volunteer-actions">
+          <%= link_to "View profile", volunteer_path(registration.volunteer), class: "button-link profile-link" %>
+          <% unless registration.attended? %>
+            <%= form_with url: check_in_information_session_path(@session), method: :post, html: { class: "inline-action-form" } do %>
+              <input type="hidden" name="volunteer_id" value="<%= registration.volunteer.id %>">
+              <button type="submit" class="sessions-toolbar-btn">Check in <%= registration.volunteer.full_name %></button>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </section>
+</main>

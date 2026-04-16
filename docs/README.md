@@ -7,5 +7,6 @@ Let's place design docs and files here in their own dirs.
 - **[Architecture & Tech Stack](architecture-and-tech-stack.md)** — Technical decisions, gem choices, service providers, architecture layers, and cost estimates
 - **[Implementation Roadmap](implementation-roadmap.md)** — 9-phase build plan with dependencies, ordered by priority
 - **[Feature Specifications](feature-specifications.md)** — Detailed implementation specs for each feature (routes, controllers, data flows, UI details)
+- **[VMS API](vms-integration.md)** — API reference for the VMS integration (inquiries, volunteers, lookups, session management)
 - **[Docker Setup](docker-setup.md)** — Development environment setup guide
 - **[Low-fidelity Diagrams](Sprout-Lofi-Diagrams.pdf)** — Low-fidelity diagrams presented to client to plan software frontend layout and organization

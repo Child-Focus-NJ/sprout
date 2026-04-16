@@ -21,8 +21,11 @@ class Volunteer < ApplicationRecord
 
   scope :active, -> { where.not(current_funnel_stage: :inactive) }
   scope :inactive_volunteers, -> { where(current_funnel_stage: :inactive) }
-  scope :application_eligible, -> { where(current_funnel_stage: :application_eligible) }
+  # `application_eligible` scope is already provided by enum `current_funnel_stage`
   scope :never_attended, -> { where(first_session_attended_at: nil) }
+  scope :awaiting_application_submission, lambda {
+    where(current_funnel_stage: :application_sent).order(application_sent_at: :asc)
+  }
 
   after_save :cancel_pending_reminders_if_applied
 
@@ -30,13 +33,10 @@ class Volunteer < ApplicationRecord
     first_session_attended_at.present?
   end
 
-  # User Story 9 expects a `status` method that reflects attendance.
-  # We keep funnel stage tracking in `current_funnel_stage`, but expose an
-  # attendance-focused status for the sign-in flow.
   def status
     return :attended_session if attended_session?
 
-    current_funnel_stage
+    current_funnel_stage.to_sym
   end
 
   def can_reactivate?
@@ -45,6 +45,26 @@ class Volunteer < ApplicationRecord
 
   def full_name
     "#{first_name} #{last_name}"
+  end
+
+  # Staff-authored or system-captured notes (profile form, bulk list, communication callbacks).
+  def add_staff_note(content:, user:, note_type: :general)
+    notes.create(content: content.to_s, user: user, note_type: note_type)
+  end
+
+  def add_staff_note!(content:, user:, note_type: :general)
+    notes.create!(content: content.to_s, user: user, note_type: note_type)
+  end
+
+  # Single label for the profile "Current status" block (matches user-facing copy elsewhere).
+  def profile_status_label
+    if applied?
+      "Application submitted"
+    elsif application_sent?
+      "Application sent"
+    else
+      current_funnel_stage.to_s.humanize
+    end
   end
 
   def change_status!(new_stage, user: nil, trigger: :manual)
@@ -61,7 +81,6 @@ class Volunteer < ApplicationRecord
     )
   end
 
-  # Info session check-in: mark registration attended, set first-session time, advance funnel, send application email.
   def finalize_check_in_for_session!(information_session, user:)
     registration = SessionRegistration.find_or_initialize_by(
       volunteer: self,
@@ -72,8 +91,25 @@ class Volunteer < ApplicationRecord
     registration.save!
 
     update!(first_session_attended_at: Time.current) unless first_session_attended_at.present?
-    change_status!(:application_sent, user: user, trigger: :event)
-    update!(application_sent_at: Time.current) unless application_sent_at.present?
+    change_status!(:application_eligible, user: user, trigger: :event)
+  end
+
+  # Staff action or automation: move to application_sent and record send time (idempotent on duplicate send).
+  def record_application_sent!(user:)
+    return false if application_sent_at.present?
+
+    ActiveRecord::Base.transaction do
+      change_status!(:application_sent, user: user)
+      update!(application_sent_at: Time.current)
+    end
+    true
+  end
+
+  def mark_application_submitted!(user:)
+    ActiveRecord::Base.transaction do
+      update!(application_submitted_at: Time.current)
+      change_status!(:applied, user: user)
+    end
   end
 
   private

@@ -47,7 +47,7 @@ Then("I should see volunteers with {string} status") do |status|
 end
 
 Then("I should see volunteers with application_sent status") do
-  expect(page).to have_content("application_sent")
+  expect(page).to have_content("Application sent")
 end
 
 Then("the list should be sorted by days waiting") do
@@ -60,7 +60,6 @@ end
 
 When("I view application reminder settings") do
   visit "/admin/settings"
-  click_on "Application reminders"
 end
 
 Then("I should see the reminder interval setting") do
@@ -68,7 +67,10 @@ Then("I should see the reminder interval setting") do
 end
 
 Then("I should be able to change the reminder frequency") do
-  expect(page).to have_css("select", text: "frequency")
+  expect(page).to have_select(
+    "application_reminder_interval_weeks",
+    with_options: [ "Every week", "Every 2 weeks", "Every 4 weeks", "Every 8 weeks", "Every 12 weeks" ]
+  )
 end
 
 Given("the volunteer {string} has status {string}") do |name, status|
