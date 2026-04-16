@@ -11,10 +11,17 @@ Given('the volunteer is registered for the session {string}') do |session_name|
   SessionRegistration.find_or_create_by!(volunteer: volunteer, information_session: session)
 end
 
-When('I go to the sign-in page for session {string}') do |session_name|
-  session = InformationSession.find_by!(name: session_name)
+Given('I am on the sign-in page for session {string}') do |session_name|
+  @session = InformationSession.find_or_initialize_by(name: session_name)
+  @session.scheduled_at ||= 1.day.from_now
+  @session.location ||= "415 Hamburg Turnpike"
+  @session.save!
+  visit "/information_sessions/#{@session.id}/sign_in"
+end
 
-  visit "/information_sessions/#{session.id}/sign_in"
+When('I go to the sign-in page for session {string}') do |session_name|
+  @session = InformationSession.find_by!(name: session_name)
+  visit "/information_sessions/#{@session.id}/sign_in"
 end
 
 When('I check in the volunteer {string}') do |identifier|

@@ -1,0 +1,2 @@
+class VolunteerTag < ApplicationRecord
+end

@@ -20,12 +20,11 @@
       {},
       {
         class: "input-large",
-        id: "information_session_location",
-        onchange: "document.getElementById('session-zoom-link-row').hidden = (this.value !== 'Zoom')"
+        id: "information_session_location"
       } %>
 </div>
 
-<div class="form-row" id="session-zoom-link-row" <%= "hidden" unless f.object.zoom_location? %>>
+<div class="form-row" id="session-zoom-link-row">
   <%= f.label :zoom_link, "Zoom link" %>
   <%= f.url_field :zoom_link, class: "input-large", placeholder: "https://..." %>
 </div>

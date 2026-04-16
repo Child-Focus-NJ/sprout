@@ -17,7 +17,7 @@ Given("the volunteer {string} has notes, reminders, and info session entries") d
     name: "Cucumber info session #{@volunteer.id}",
     capacity: 20,
     scheduled_at: 2.weeks.from_now,
-    location: "HQ"
+    location: "415 Hamburg Turnpike"
   )
   SessionRegistration.create!(
     volunteer: @volunteer,

@@ -1,0 +1,93 @@
+<% if @recent_syncs.any? %>
+  <section id="sync-notifications">
+    <h2>Recent Transfers</h2>
+    <ul>
+      <% @recent_syncs.each do |log| %>
+        <li><%= log.volunteer.full_name %> data was transferred to the external system</li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>
+
+<section>
+  <h2>Reminder Frequencies</h2>
+  <ul id="frequency-list">
+    <% ReminderFrequency.all.each do |freq| %>
+      <li>
+        <span><%= freq.title %></span>
+        <%= button_to "Remove", reminder_frequency_path(freq), method: :delete %>
+      </li>
+    <% end %>
+  </ul>
+
+  <details>
+    <summary>
+      <button type="button">Add Frequency</button>
+    </summary>
+    <%= form_with url: reminder_frequencies_path, local: true do |f| %>
+      <input type="text" name="title" id="frequency_title" placeholder="New frequency">
+      <button type="submit">Save Frequency</button>
+    <% end %>
+  </details>
+</section>
+
+<section>
+  <h2>Volunteer Tags</h2>
+  <ul id="tag-list">
+    <% VolunteerTag.all.each do |tag| %>
+      <li>
+        <span><%= tag.title %></span>
+        <%= button_to "Remove", volunteer_tag_path(tag), method: :delete %>
+      </li>
+    <% end %>
+  </ul>
+
+  <details>
+    <summary>
+      <button type="button">Add Tag</button>
+    </summary>
+    <%= form_with url: volunteer_tags_path, local: true do |f| %>
+      <input type="text" name="title" id="tag_title" placeholder="New tag">
+      <button type="submit">Save Tag</button>
+    <% end %>
+  </details>
+</section>
+
+<section>
+  <h2>Import Historical Data</h2>
+  <%= form_with url: import_system_management_path, multipart: true do |f| %>
+    <%= f.file_field :file %>
+    <%= f.submit "Import Data" %>
+  <% end %>
+</section>
+
+<section>
+  <h2>Employees</h2>
+  <ul id="employee-list">
+    <% @users.each do |user| %>
+      <li id="user_<%= user.id %>">
+        <%= user.full_name %>
+        <% if params[:confirm_remove_user_id] == user.id.to_s %>
+          <span>Are you sure you want to remove this user?</span>
+          <%= button_to "Yes", user_path(user), method: :delete %>
+          <%= link_to "No", system_management_path %>
+        <% else %>
+          <%= link_to "Remove", system_management_path(confirm_remove_user_id: user.id) %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+
+  <details>
+    <summary>
+      <button type="button">Add Employee</button>
+    </summary>
+    <%= form_with url: users_path, local: true do |f| %>
+      <%= f.text_field :first_name, placeholder: "First Name", id: "First Name" %>
+      <%= f.text_field :last_name,  placeholder: "Last Name",  id: "Last Name" %>
+      <%= f.email_field :email,     placeholder: "Email",      id: "Email" %>
+      <%= f.select :role, User.roles.keys.map { |r| [r.humanize, r] }, {}, id: "Role" %>
+      <%= f.submit "Save Employee" %>
+    <% end %>
+  </details>
+</section>

@@ -60,7 +60,6 @@ end
 
 When("I view application reminder settings") do
   visit "/admin/settings"
-  click_on "Application reminders"
 end
 
 Then("I should see the reminder interval setting") do
