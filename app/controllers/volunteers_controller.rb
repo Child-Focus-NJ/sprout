@@ -4,7 +4,7 @@ class VolunteersController < ApplicationController
   def index
     ensure_list_volunteer("Jane Doe")
     ensure_list_volunteer("William P")
-    ensure_list_volunteer("Harry Johnson")
+    ensure_list_volunteer("Harry Kane")
     @volunteers = Volunteer.order(:first_name, :last_name)
   end
 
