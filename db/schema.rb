@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_12_144323) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_09_144051) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -80,13 +80,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_12_144323) do
   end
 
   create_table "inquiry_form_submissions", force: :cascade do |t|
+    t.string "county"
     t.datetime "created_at", null: false
+    t.string "email"
+    t.string "first_name"
+    t.string "how_did_you_hear"
+    t.string "last_name"
+    t.string "other_info"
+    t.string "phone"
+    t.bigint "preferred_session_id"
     t.boolean "processed", default: false, null: false
     t.datetime "processed_at"
     t.jsonb "raw_data"
     t.string "source"
     t.datetime "updated_at", null: false
     t.bigint "volunteer_id"
+    t.index ["preferred_session_id"], name: "index_inquiry_form_submissions_on_preferred_session_id"
     t.index ["processed"], name: "index_inquiry_form_submissions_on_processed"
     t.index ["source"], name: "index_inquiry_form_submissions_on_source"
     t.index ["volunteer_id"], name: "index_inquiry_form_submissions_on_volunteer_id"
@@ -109,6 +118,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_12_144323) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_referral_sources_on_name", unique: true
+  end
+
+  create_table "reminder_frequencies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
   end
 
   create_table "scheduled_reminders", force: :cascade do |t|
@@ -178,6 +193,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_12_144323) do
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["google_uid"], name: "index_users_on_google_uid"
+  end
+
+  create_table "volunteer_tags", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
   end
 
   create_table "volunteers", force: :cascade do |t|

@@ -273,6 +273,7 @@ GEM
       net-protocol
     net-ssh (7.3.0)
     nio4r (2.7.5)
+    nkf (0.2.0)
     nokogiri (1.19.2-aarch64-linux-gnu)
       racc (~> 1.4)
     nokogiri (1.19.2-aarch64-linux-musl)
@@ -387,6 +388,12 @@ GEM
     reline (0.6.3)
       io-console (~> 0.5)
     rexml (3.4.4)
+    roo (3.0.0)
+      base64 (~> 0.2)
+      csv (~> 3)
+      logger (~> 1)
+      nokogiri (~> 1)
+      rubyzip (>= 3.0.0, < 4.0.0)
     rspec-expectations (3.13.5)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
@@ -493,6 +500,9 @@ GEM
       base64
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
+    write_xlsx (1.15.0)
+      nkf
+      rubyzip (>= 2.4.0, < 4.0)
     xpath (3.2.0)
       nokogiri (~> 1.8)
     zeitwerk (2.7.5)
@@ -532,6 +542,7 @@ DEPENDENCIES
   propshaft
   puma (>= 5.0)
   rails (~> 8.1.2, >= 8.1.2.1)
+  roo
   rspec-expectations (~> 3.13)
   rubocop-rails-omakase
   selenium-webdriver
@@ -544,6 +555,7 @@ DEPENDENCIES
   tzinfo-data
   warden
   web-console
+  write_xlsx
 
 CHECKSUMS
   action_text-trix (2.1.18) sha256=3fdb83f8bff4145d098be283cdd47ac41caf5110bfa6df4695ed7127d7fb3642
@@ -647,6 +659,7 @@ CHECKSUMS
   net-smtp (0.5.1) sha256=ed96a0af63c524fceb4b29b0d352195c30d82dd916a42f03c62a3a70e5b70736
   net-ssh (7.3.0) sha256=172076c4b30ce56fb25a03961b0c4da14e1246426401b0f89cba1a3b54bf3ef0
   nio4r (2.7.5) sha256=6c90168e48fb5f8e768419c93abb94ba2b892a1d0602cb06eef16d8b7df1dca1
+  nkf (0.2.0) sha256=fbc151bda025451f627fafdfcb3f4f13d0b22ae11f58c6d3a2939c76c5f5f126
   nokogiri (1.19.2-aarch64-linux-gnu) sha256=c34d5c8208025587554608e98fd88ab125b29c80f9352b821964e9a5d5cfbd19
   nokogiri (1.19.2-aarch64-linux-musl) sha256=7f6b4b0202d507326841a4f790294bf75098aef50c7173443812e3ac5cb06515
   nokogiri (1.19.2-arm-linux-gnu) sha256=b7fa1139016f3dc850bda1260988f0d749934a939d04ef2da13bec060d7d5081
@@ -691,6 +704,7 @@ CHECKSUMS
   regexp_parser (2.11.3) sha256=ca13f381a173b7a93450e53459075c9b76a10433caadcb2f1180f2c741fc55a4
   reline (0.6.3) sha256=1198b04973565b36ec0f11542ab3f5cfeeec34823f4e54cebde90968092b1835
   rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
+  roo (3.0.0) sha256=6fdd7a9158d657c69768b4168754ff2110cc21fdc01a1bec1010820cb05c91b1
   rspec-expectations (3.13.5) sha256=33a4d3a1d95060aea4c94e9f237030a8f9eae5615e9bd85718fe3a09e4b58836
   rspec-support (3.13.7) sha256=0640e5570872aafefd79867901deeeeb40b0c9875a36b983d85f54fb7381c47c
   rubocop (1.82.1) sha256=09f1a6a654a960eda767aebea33e47603080f8e9c9a3f019bf9b94c9cab5e273
@@ -730,6 +744,7 @@ CHECKSUMS
   websocket (1.2.11) sha256=b7e7a74e2410b5e85c25858b26b3322f29161e300935f70a0e0d3c35e0462737
   websocket-driver (0.8.0) sha256=ed0dba4b943c22f17f9a734817e808bc84cdce6a7e22045f5315aa57676d4962
   websocket-extensions (0.1.5) sha256=1c6ba63092cda343eb53fc657110c71c754c56484aad42578495227d717a8241
+  write_xlsx (1.15.0) sha256=67cfc1cc7361802e6088cdef5cec02addc8c788a4eb79914545f7032373b439a
   xpath (3.2.0) sha256=6dfda79d91bb3b949b947ecc5919f042ef2f399b904013eb3ef6d20dd3a4082e
   zeitwerk (2.7.5) sha256=d8da92128c09ea6ec62c949011b00ed4a20242b255293dd66bf41545398f73dd
 

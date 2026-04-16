@@ -67,6 +67,12 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 
   gem "factory_bot_rails"
+
+  # reads excel files
+  gem "roo"
+
+  # writes excel filese
+  gem "write_xlsx"
 end
 
 group :development do

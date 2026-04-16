@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "system_management/index"
   get "welcome/index"
   get "application_dashboard", to: "application_dashboard#index"
   get "admin/settings", to: "admin/settings#index"
@@ -25,7 +26,15 @@ Rails.application.routes.draw do
   end
   resources :inquiry_form
   resources :reporting_exporting
-  resources :system_management
+
+  resource :system_management, only: [ :show ], controller: "system_management" do
+    collection do
+      post :import
+    end
+  end
+  resources :reminder_frequencies, only: [ :create, :destroy ]
+  resources :volunteer_tags, only: [ :create, :destroy ]
+  resources :users, only: [ :create, :destroy ]
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
@@ -38,6 +47,7 @@ Rails.application.routes.draw do
   get "/auth/:provider/callback", to: "sessions#create"
   get "/auth/failure", to: "sessions#failure"
   get "/login", to: "sessions#new", as: :login
+
 
   # Defines the root path route ("/")
   root "welcome#index"
