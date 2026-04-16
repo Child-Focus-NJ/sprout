@@ -65,7 +65,7 @@ jobs:
       - name: Lint code for consistent style
         run: bin/rubocop -f github
 
-  test:
+  rspec:
     runs-on: ubuntu-latest
 
     services:
@@ -91,13 +91,20 @@ jobs:
       - name: Build Tailwind CSS
         run: bin/rails tailwindcss:build
 
-      - name: Run tests
+      - name: Prepare database
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/sprout_test
-        run: bin/rails db:test:prepare test
+        run: bin/rails db:test:prepare
 
-  system-test:
+      - name: Run RSpec
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/sprout_test
+          SIMPLECOV: "true"
+        run: bundle exec rspec
+
+  cucumber:
     runs-on: ubuntu-latest
 
     services:
@@ -123,16 +130,14 @@ jobs:
       - name: Build Tailwind CSS
         run: bin/rails tailwindcss:build
 
-      - name: Run System Tests
+      - name: Prepare database
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/sprout_test
-        run: bin/rails db:test:prepare test:system
+        run: bin/rails db:test:prepare
 
-      - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: screenshots
-          path: ${{ github.workspace }}/tmp/screenshots
-          if-no-files-found: ignore
+      - name: Run Cucumber
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/sprout_test
+        run: bundle exec cucumber
