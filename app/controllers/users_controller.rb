@@ -3,9 +3,9 @@ class UsersController < ApplicationController
     @user = User.new(
       first_name: params[:first_name],
       last_name:  params[:last_name],
-      email:      params[:email],
-      role:       params[:role]
+      email:      params[:email]
     )
+    @user.role = params[:role] if User.roles.key?(params[:role])
     if @user.save
       redirect_to system_management_path
     else
@@ -22,6 +22,9 @@ class UsersController < ApplicationController
   private
 
   def user_params
-    params.require(:user).permit(:first_name, :last_name, :email, :role)
+    params.require(:user).permit(:first_name, :last_name, :email)
   end
 end
+
+
+
