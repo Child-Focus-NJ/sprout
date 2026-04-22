@@ -1,4 +1,47 @@
-<h1><%= @template.name %></h1>
-<p><%= @template.subject %></p>
-<p><%= @template.body %></p>
-<%= link_to "Preview", preview_admin_communication_template_path(@template) %>
+<!-- app/views/admin/communication_templates/show.html.erb -->
+<div class="volunteer-page">
+  <div class="page-nav page-nav--back">
+    <%= link_to admin_communication_templates_path, class: "nav-back" do %>
+      <span class="nav-back__chevron" aria-hidden="true">‹</span>
+      <span>Back to Email Templates</span>
+    <% end %>
+  </div>
+
+  <h1 class="page-title"><%= @template.name %></h1>
+
+  <section class="card">
+    <h2 class="section-heading">Template details</h2>
+
+    <div class="grid gap-3 md:grid-cols-3 text-sm text-gray-800">
+      <div>
+        <p class="font-semibold">Funnel stage</p>
+        <p><%= @template.funnel_stage.humanize %></p>
+      </div>
+
+      <div>
+        <p class="font-semibold">Template type</p>
+        <p><%= @template.template_type.upcase %></p>
+      </div>
+
+      <div>
+        <p class="font-semibold">Trigger type</p>
+        <p><%= @template.trigger_type.humanize %></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="section-heading">Subject</h2>
+    <p class="text-base text-gray-900"><%= @template.subject.presence || "No subject" %></p>
+  </section>
+
+  <section class="card">
+    <h2 class="section-heading">Body</h2>
+    <div class="whitespace-pre-wrap text-base text-gray-900"><%= @template.body %></div>
+  </section>
+
+  <div class="action-toolbar">
+    <%= link_to "Preview Template", preview_admin_communication_template_path(@template), class: "button-primary" %>
+    <%= link_to "Back to Templates", admin_communication_templates_path, class: "button-link" %>
+  </div>
+</div>

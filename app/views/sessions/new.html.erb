@@ -1,4 +1,12 @@
-<h1>Login</h1>
+<!-- app/views/sessions/new.html.erb -->
+<div class="volunteer-page">
+  <section class="card max-w-xl mx-auto">
+    <h1 class="page-title">Login</h1>
+    <p class="help-text">Sign in with your Google account to access Sprout.</p>
 
-<%= button_to "Sign in with Google", "/auth/google_oauth2", method: :post %>
-
+    <%= button_to "Sign in with Google",
+                  "/auth/google_oauth2",
+                  method: :post,
+                  class: "button-primary w-full sm:w-auto" %>
+  </section>
+</div>

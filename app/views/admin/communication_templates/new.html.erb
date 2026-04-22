@@ -1,10 +1,16 @@
-<h1>New Email Template</h1>
-<%= form_with model: [:admin, @template] do |f| %>
-  <div><%= f.label :name %><%= f.text_field :name %></div>
-  <div><%= f.label :subject %><%= f.text_field :subject %></div>
-  <div><%= f.label :body %><%= f.text_area :body %></div>
-  <div><%= f.label :funnel_stage %><%= f.select :funnel_stage, CommunicationTemplate.funnel_stages.keys %></div>
-  <div><%= f.label :template_type %><%= f.select :template_type, CommunicationTemplate.template_types.keys %></div>
-  <div><%= f.label :trigger_type %><%= f.select :trigger_type, CommunicationTemplate.trigger_types.keys %></div>
-  <%= f.submit "Create" %>
-<% end %>
+<!-- app/views/admin/communication_templates/new.html.erb -->
+<div class="volunteer-page">
+  <div class="page-nav page-nav--back">
+    <%= link_to admin_communication_templates_path, class: "nav-back" do %>
+      <span class="nav-back__chevron" aria-hidden="true">‹</span>
+      <span>Back to Email Templates</span>
+    <% end %>
+  </div>
+
+  <h1 class="page-title">New Email Template</h1>
+  <p class="help-text">
+    Create a reusable message for volunteers at a specific stage of the funnel.
+  </p>
+
+  <%= render "form", template: @template %>
+</div>
