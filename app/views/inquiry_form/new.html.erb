@@ -2,50 +2,54 @@
 <div class="volunteer-page">
   <h1 class="page-title">Inquiry</h1>
 
-  <% if @information_session_id.present? %>
-    <section class="card">
+  <section class="card">
+    <% if @information_session_id.present? %>
       <h2 class="section-heading">Walk-in: add to the system and record attendance</h2>
       <p class="help-text">
         Per session check-in: collect inquiry details. If this email already exists,
         we use the existing volunteer record and avoid duplicates.
       </p>
-
-      <%= form_with url: inquiry_form_path, method: :post, html: { class: "inquiry-form" } do %>
-        <%= hidden_field_tag :information_session_id, @information_session_id %>
-
-        <div class="inquiry-form__inline">
-          <div class="inquiry-form__row">
-            <%= label_tag :first_name, "First name" %>
-            <%= text_field_tag :first_name, params[:first_name], class: "input-large" %>
-          </div>
-
-          <div class="inquiry-form__row">
-            <%= label_tag :last_name, "Last name" %>
-            <%= text_field_tag :last_name, params[:last_name], class: "input-large" %>
-          </div>
-        </div>
-
-        <div class="inquiry-form__row">
-          <%= label_tag :email, "Email" %>
-          <%= email_field_tag :email, params[:email], class: "input-large" %>
-        </div>
-
-        <%= submit_tag "Submit and record attendance", class: "button-primary" %>
-      <% end %>
-    </section>
-  <% else %>
-    <section class="card">
+    <% else %>
       <h2 class="section-heading">Please add them to the system</h2>
-      <p class="help-text">Enter the volunteer email to continue the inquiry process.</p>
+      <p class="help-text">
+        Enter the volunteer’s information to continue the inquiry process.
+      </p>
+    <% end %>
+    <% if @form_errors.present? && @form_errors.any? %>
+      <div class="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-red-800">
+        <% @form_errors.each_value do |message| %>
+          <p><%= message %></p>
+        <% end %>
+      </div>
+    <% end %>
+    <%= form_with url: inquiry_form_path, method: :post, html: { class: "inquiry-form" } do %>
+      <% if @information_session_id.present? %>
+        <%= hidden_field_tag :information_session_id, @information_session_id %>
+      <% end %>
 
-      <%= form_with url: inquiry_form_path, method: :post, html: { class: "inquiry-form" } do %>
+      <div class="inquiry-form__inline">
         <div class="inquiry-form__row">
-          <%= label_tag :email, "Email" %>
-          <%= email_field_tag :email, nil, class: "input-large" %>
+          <%= label_tag :first_name, "First name" %>
+          <%= text_field_tag :first_name, params[:first_name], class: "input-large" %>
         </div>
 
-        <%= submit_tag "Submit", class: "button-primary" %>
-      <% end %>
-    </section>
-  <% end %>
+        <div class="inquiry-form__row">
+          <%= label_tag :last_name, "Last name" %>
+          <%= text_field_tag :last_name, params[:last_name], class: "input-large" %>
+        </div>
+      </div>
+
+      <div class="inquiry-form__row">
+        <%= label_tag :email, "Email" %>
+        <%= email_field_tag :email, params[:email], class: "input-large" %>
+      </div>
+
+      <div class="inquiry-form__row">
+        <%= label_tag :phone, "Phone" %>
+        <%= text_field_tag :phone, params[:phone], class: "input-large" %>
+      </div>
+
+      <%= submit_tag "Submit", class: "button-primary" %>
+    <% end %>
+  </section>
 </div>

@@ -17,7 +17,7 @@
 
     <%= form_with url: preview_admin_communication_template_path(@template), method: :post, class: "space-y-4" do %>
       <div class="space-y-1 max-w-md">
-        <%= label_tag :first_name, "Volunteer first name", class: "font-semibold text-gray-800" %>
+        <%= label_tag :first_name, "First name", class: "font-semibold text-gray-800" %>
         <%= text_field_tag :first_name, params[:first_name], class: "input-large w-full max-w-none" %>
       </div>
 
