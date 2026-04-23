@@ -81,6 +81,7 @@ group :test do
   gem "selenium-webdriver"
   gem "cucumber"
   gem "warden"
+  gem "webmock"
 end
 
 gem "rspec-expectations", "~> 3.13"
