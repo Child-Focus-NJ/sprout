@@ -53,7 +53,7 @@ gem "httparty"
 
 # AWS SDK (SQS for async Lambda triggers, S3 for report storage)
 gem "aws-sdk-sqs", "~> 1.0"
-gem "aws-sdk-s3", "~> 1.0"
+gem "aws-sdk-s3", "~> 1.220"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
