@@ -155,6 +155,69 @@ class LambdaStack(Stack):
             targets=[targets.LambdaFunction(self.mailchimp_batch_fn)],
         )
 
+        # --- VMS Lambda functions ---
+
+        vms_session_secret_arn = f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:sprout/vms-session*"
+
+        self.vms_fn = _lambda.Function(
+            self,
+            "VmsFn",
+            function_name="sprout-vms",
+            runtime=_lambda.Runtime.RUBY_3_3,
+            handler="handler.handler",
+            code=_lambda.Code.from_asset(os.path.join(lambdas_dir, "vms")),
+            layers=[shared_layer],
+            timeout=Duration.seconds(60),
+            memory_size=256,
+            environment=common_env,
+            vpc=self._vpc,
+            vpc_subnets=self._vpc_subnets,
+            security_groups=[self._lambda_sg],
+        )
+
+        self.vms_session_refresh_fn = _lambda.Function(
+            self,
+            "VmsSessionRefreshFn",
+            function_name="sprout-vms-session-refresh",
+            runtime=_lambda.Runtime.RUBY_3_3,
+            handler="handler.handler",
+            code=_lambda.Code.from_asset(
+                os.path.join(lambdas_dir, "vms_session_refresh")
+            ),
+            layers=[shared_layer],
+            timeout=Duration.seconds(30),
+            memory_size=256,
+            environment=common_env,
+            vpc=self._vpc,
+            vpc_subnets=self._vpc_subnets,
+            security_groups=[self._lambda_sg],
+        )
+
+        # VMS Lambda can read session secret and invoke the refresh Lambda
+        self.vms_fn.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["secretsmanager:GetSecretValue"],
+                resources=[vms_session_secret_arn],
+            )
+        )
+        self.vms_fn.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["lambda:InvokeFunction"],
+                resources=[self.vms_session_refresh_fn.function_arn],
+            )
+        )
+
+        # Session refresh Lambda can read + write session secret
+        self.vms_session_refresh_fn.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "secretsmanager:GetSecretValue",
+                    "secretsmanager:PutSecretValue",
+                ],
+                resources=[vms_session_secret_arn],
+            )
+        )
+
         # IAM permissions - all functions can read database secret
         for fn in [
             self.zoom_meeting_fn,
@@ -162,6 +225,8 @@ class LambdaStack(Stack):
             self.volunteer_management_system_sync_fn,
             self.mailchimp_realtime_fn,
             self.mailchimp_batch_fn,
+            self.vms_fn,
+            self.vms_session_refresh_fn,
         ]:
             fn.add_to_role_policy(
                 iam.PolicyStatement(
