@@ -1,0 +1,66 @@
+<!-- app/views/admin/communication_templates/_form.html.erb -->
+<%= form_with model: [:admin, template], class: "space-y-4" do |f| %>
+  <% if template.errors.any? %>
+    <section class="card border-red-300 bg-red-50">
+      <h2 class="section-heading">Please fix the following</h2>
+      <ul class="list-disc pl-5 text-sm text-red-800">
+        <% template.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <section class="card">
+    <h2 class="section-heading">Template details</h2>
+    <p class="help-text">
+      Use <code>{{first_name}}</code> anywhere in the subject or body to personalize the message.
+    </p>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="space-y-1">
+        <%= f.label :name, class: "font-semibold text-gray-800" %>
+        <%= f.text_field :name, class: "input-large w-full max-w-none" %>
+      </div>
+
+      <div class="space-y-1">
+        <%= f.label :subject, class: "font-semibold text-gray-800" %>
+        <%= f.text_field :subject, class: "input-large w-full max-w-none" %>
+      </div>
+
+      <div class="space-y-1">
+        <%= f.label :funnel_stage, "Funnel stage", class: "font-semibold text-gray-800" %>
+        <%= f.select :funnel_stage,
+                     CommunicationTemplate.funnel_stages.keys.map { |stage| [stage.humanize, stage] },
+                     {},
+                     class: "input-large w-full max-w-none" %>
+      </div>
+
+      <div class="space-y-1">
+        <%= f.label :template_type, "Template type", class: "font-semibold text-gray-800" %>
+        <%= f.select :template_type,
+                     CommunicationTemplate.template_types.keys.map { |type| [type.upcase, type] },
+                     {},
+                     class: "input-large w-full max-w-none" %>
+      </div>
+
+      <div class="space-y-1 md:col-span-2">
+        <%= f.label :trigger_type, "Trigger type", class: "font-semibold text-gray-800" %>
+        <%= f.select :trigger_type,
+                     CommunicationTemplate.trigger_types.keys.map { |trigger| [trigger.humanize, trigger] },
+                     {},
+                     class: "input-large w-full max-w-none md:max-w-md" %>
+      </div>
+
+      <div class="space-y-1 md:col-span-2">
+        <%= f.label :body, class: "font-semibold text-gray-800" %>
+        <%= f.text_area :body, rows: 10, class: "w-full max-w-none border border-gray-400 rounded-md p-3 text-base" %>
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-2">
+      <%= f.submit "Create", class: "button-primary" %>
+      <%= link_to "Back to Templates", admin_communication_templates_path, class: "button-link" %>
+    </div>
+  </section>
+<% end %>

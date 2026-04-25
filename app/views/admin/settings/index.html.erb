@@ -1,31 +1,30 @@
-<main class="volunteer-page max-w-3xl">
+<!-- app/views/admin/settings/index.html.erb -->
+<div class="volunteer-page">
   <h1 class="page-title">Admin settings</h1>
 
-  <section id="application-reminders" class="card status-panel">
+  <section id="application-reminders" class="card">
     <h2 class="section-heading">Application reminders</h2>
-    <p class="help-text">Automated nudges for volunteers who received application materials but have not submitted yet. Reminder frequency is configurable (meeting notes).</p>
+    <p class="help-text">
+      Automated nudges for volunteers who received application materials but have not
+      submitted yet. Reminder frequency is configurable.
+    </p>
 
-    <%= form_with url: admin_settings_path, method: :patch, local: true, html: { class: "admin-settings-form", id: "application-reminders-form" } do %>
+    <%= form_with url: admin_settings_path, method: :patch, local: true,
+                  html: { class: "admin-settings-form" } do %>
       <div class="form-row">
         <%= label_tag :application_reminder_interval_weeks, "Reminder interval" %>
-        <p class="subtle mb-2">How often to send reminder emails (frequency).</p>
         <%= select_tag :application_reminder_interval_weeks,
-            options_for_select(
-              [
-                [ "Every week", 1 ],
-                [ "Every 2 weeks", 2 ],
-                [ "Every 4 weeks", 4 ],
-                [ "Every 8 weeks", 8 ],
-                [ "Every 12 weeks", 12 ]
-              ],
-              @reminder_interval_weeks
-            ),
-            id: "reminder-interval",
-            class: "input-large" %>
+                       options_for_select(
+                         [["Every week", 1], ["Every 2 weeks", 2], ["Every 4 weeks", 4], ["Every 8 weeks", 8], ["Every 12 weeks", 12]],
+                         @reminder_interval_weeks
+                       ),
+                       id: "reminder-interval",
+                       class: "input-large" %>
       </div>
+
       <div class="form-actions">
         <%= submit_tag "Save reminder settings", class: "button-primary" %>
       </div>
     <% end %>
   </section>
-</main>
+</div>

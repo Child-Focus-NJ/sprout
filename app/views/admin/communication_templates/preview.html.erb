@@ -1,9 +1,46 @@
-<h1>Preview: <%= @template.name %></h1>
-<%= form_with url: preview_admin_communication_template_path(@template), method: :post do |f| %>
-  <div><%= f.label :first_name, "First name" %><%= f.text_field :first_name %></div>
-  <%= f.submit "Preview" %>
-<% end %>
-<% if @preview_subject %>
-  <div><%= @preview_subject %></div>
-  <div><%= @preview_body %></div>
-<% end %>
+<!-- app/views/admin/communication_templates/preview.html.erb -->
+<div class="volunteer-page">
+  <div class="page-nav page-nav--back">
+    <%= link_to admin_communication_templates_path, class: "nav-back" do %>
+      <span class="nav-back__chevron" aria-hidden="true">‹</span>
+      <span>Back to Email Templates</span>
+    <% end %>
+  </div>
+
+  <h1 class="page-title">Preview: <%= @template.name %></h1>
+  <p class="help-text">
+    Enter a first name to preview how personalization appears in the subject and body.
+  </p>
+
+  <section class="card">
+    <h2 class="section-heading">Preview settings</h2>
+
+    <%= form_with url: preview_admin_communication_template_path(@template), method: :post, class: "space-y-4" do %>
+      <div class="space-y-1 max-w-md">
+        <%= label_tag :first_name, "First name", class: "font-semibold text-gray-800" %>
+        <%= text_field_tag :first_name, params[:first_name], class: "input-large w-full max-w-none" %>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <%= submit_tag "Generate Preview", class: "button-primary" %>
+        <%= link_to "View Template", admin_communication_template_path(@template), class: "button-link" %>
+      </div>
+    <% end %>
+  </section>
+
+  <% if @preview_subject.present? || @preview_body.present? %>
+    <section class="card">
+      <h2 class="section-heading">Preview output</h2>
+
+      <div class="mb-4">
+        <p class="font-semibold text-gray-800">Subject</p>
+        <p class="text-base text-gray-900"><%= @preview_subject %></p>
+      </div>
+
+      <div>
+        <p class="font-semibold text-gray-800">Body</p>
+        <div class="whitespace-pre-wrap text-base text-gray-900"><%= @preview_body %></div>
+      </div>
+    </section>
+  <% end %>
+</div>
