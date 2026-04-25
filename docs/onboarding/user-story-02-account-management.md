@@ -62,3 +62,19 @@ Prevents duplicate volunteer accounts and ensures inquiry submissions are matche
 
 ```bash
 docker compose up --build -d
+```
+
+[//]: # (### RSpec)
+
+[//]: # ()
+[//]: # (```bash)
+
+[//]: # (docker compose exec -e RAILS_ENV=test -e DATABASE_URL=postgres://sprout:sprout@db:5432/sprout_test -e SIMPLECOV=true web bash -lc "bin/rails db:test:prepare && bin/rspec-account-management")
+
+[//]: # (```)
+
+### Cucumber
+
+```bash
+docker compose exec -e RAILS_ENV=test -e DATABASE_URL=postgres://sprout:sprout@db:5432/sprout_test web bash -lc "bin/rails db:test:prepare && bundle exec cucumber features/02_account_management.feature"
+```

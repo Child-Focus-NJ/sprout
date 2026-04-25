@@ -68,5 +68,21 @@ Allows a potential volunteer to submit an inquiry form so staff can capture thei
 
 ```bash
 docker compose up --build -d
+```
+
+[//]: # (### RSpec)
+
+[//]: # ()
+[//]: # (```bash)
+
+[//]: # (docker compose exec -e RAILS_ENV=test -e DATABASE_URL=postgres://sprout:sprout@db:5432/sprout_test -e SIMPLECOV=true web bash -lc "bin/rails db:test:prepare && bin/rspec-inquiry-form")
+
+[//]: # (```)
+
+### Cucumber
+
+```bash
+docker compose exec -e RAILS_ENV=test -e DATABASE_URL=postgres://sprout:sprout@db:5432/sprout_test web bash -lc "bin/rails db:test:prepare && bundle exec cucumber features/01_form_submission.feature"
+```
 
 
