@@ -10,7 +10,6 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-
 ActiveRecord::Schema[8.1].define(version: 2026_04_12_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
@@ -242,7 +241,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_130000) do
   add_foreign_key "communications", "volunteers"
   add_foreign_key "external_sync_logs", "volunteers"
   add_foreign_key "information_sessions", "users", column: "created_by_user_id"
-  add_foreign_key "inquiry_form_submissions", "information_sessions", column: "preferred_session_id"
   add_foreign_key "inquiry_form_submissions", "volunteers"
   add_foreign_key "notes", "users"
   add_foreign_key "notes", "volunteers"

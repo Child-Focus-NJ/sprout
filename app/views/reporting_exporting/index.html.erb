@@ -1,0 +1,76 @@
+<h1>Reporting & Exporting</h1>
+
+<section id="create-report-section">
+  <h2>Create a Report</h2>
+  <%= form_with url: export_report_reporting_exporting_index_path, method: :post, local: true, data: { turbo: false } do |f| %>
+    <div>
+      <%= label_tag "x-axis", "X-Axis" %>
+      <%= select_tag "x-axis", options_for_select(["years"]), include_blank: "Select..." %>
+    </div>
+
+    <div>
+      <%= label_tag "y-axis", "Y-Axis" %>
+      <%= select_tag "y-axis", options_for_select(["information session sign-ups", "applications"]), include_blank: "Select..." %>
+    </div>
+
+    <div>
+      <%= label_tag "Start Date" %>
+      <%= text_field_tag "Start Date", nil, placeholder: "MM/DD/YYYY" %>
+    </div>
+
+    <div>
+      <%= label_tag "End Date" %>
+      <%= text_field_tag "End Date", nil, placeholder: "MM/DD/YYYY" %>
+    </div>
+
+    <div>
+      <%= label_tag "Title" %>
+      <%= text_field_tag "Title", nil %>
+    </div>
+
+    <div>
+      <%= label_tag "report format", "Report Format" %>
+      <%= select_tag "report format", options_for_select(["PDF"]), include_blank: "Select..." %>
+    </div>
+
+    <%= submit_tag "Export Report", name: "commit" %>
+    <%= submit_tag "Print", name: "commit" %>
+  <% end %>
+</section>
+
+<section id="export-data-section">
+  <h2>Export Data</h2>
+  <%= form_with url: export_data_reporting_exporting_index_path, method: :post, local: true, data: { turbo: false } do |f| %>
+    <div>
+      <%= label_tag "Title" %>
+      <%= text_field_tag "Title", nil %>
+    </div>
+    <div>
+      <%= label_tag "export format", "Export Format" %>
+      <%= select_tag "export format", options_for_select(["Excel", "CSV", "JSON"]), include_blank: "Select..." %>
+    </div>
+
+    <div>
+      <%= label_tag "Status" %>
+      <%= select_tag "Status", options_for_select([
+        "Attended an Information Session",
+        "Inquiry",
+        "Application Sent",
+        "Applied",
+        "Inactive"
+      ]), include_blank: "All Statuses" %>
+    </div>
+
+    <div>
+      <%= label_tag "Start Date" %>
+      <%= text_field_tag "Start Date", nil, placeholder: "MM/DD/YYYY" %>
+    </div>
+
+    <div>
+      <%= label_tag "End Date" %>
+      <%= text_field_tag "End Date", nil, placeholder: "MM/DD/YYYY" %>
+    </div>
+
+    <%= submit_tag "Export Data", name: "commit" %>
+  <% end %>
+</section>

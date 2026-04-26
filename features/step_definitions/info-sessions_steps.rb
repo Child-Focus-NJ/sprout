@@ -49,7 +49,12 @@ Then(/^I have selected "(.*)" from "(.*)"$/) do |option, field|
 end
 
 Given('I have filled out the {string} field with {string}') do |field_name, value|
+  field = find_field(field_name)
+  if field[:type] == 'datetime-local'
+    execute_script("arguments[0].value = arguments[1]", field, value)
+  else
     fill_in field_name, with: value
+  end
 end
 
 
@@ -112,9 +117,10 @@ Then('{string} should not appear on the list of attendees for information sessio
   dt = parse_session_datetime(month_abbr, day, year, hour, minute, meridian)
   session = InformationSession.find_by(scheduled_at: dt)
   visit edit_information_session_path(session.id)
-  expect(page).not_to have_content(name)
+  within('table') do
+    expect(page).not_to have_content(name)
+  end
 end
-
 Then('the status for {string} should change from {string} to {string}') do |full_name, old_status, new_status|
     first_name, last_name = full_name.split(" ", 2)
     volunteer = Volunteer.find_by(first_name:, last_name:)

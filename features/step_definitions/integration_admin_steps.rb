@@ -69,6 +69,7 @@ Then('the profile for {string} should include a note that says {string} with the
 end
 
 Given('I click {string} for {string}') do |button, row|
+  visit current_path
   within(:xpath, "//li[.//span[contains(text(), '#{row}')]]") do
     click_on button
   end
@@ -85,16 +86,17 @@ end
 Given('I upload an Excel sheet containing {string}') do |name|
   first_name, last_name = name.split(' ')
   filepath = Rails.root.join('tmp', "import_#{first_name}_#{last_name}.xlsx")
-  require 'write_xlsx'
-  workbook  = WriteXLSX.new(filepath)
-  worksheet = workbook.add_worksheet
-  worksheet.write(0, 0, 'first_name')
-  worksheet.write(0, 1, 'last_name')
-  worksheet.write(0, 2, 'email')
-  worksheet.write(1, 0, first_name)
-  worksheet.write(1, 1, last_name)
-  worksheet.write(1, 2, "#{first_name.downcase}.#{last_name.downcase}@import.test")
-  workbook.close
+  
+  workbook = RubyXL::Workbook.new
+  worksheet = workbook[0]
+  worksheet.add_cell(0, 0, 'first_name')
+  worksheet.add_cell(0, 1, 'last_name')
+  worksheet.add_cell(0, 2, 'email')
+  worksheet.add_cell(1, 0, first_name)
+  worksheet.add_cell(1, 1, last_name)
+  worksheet.add_cell(1, 2, "#{first_name.downcase}.#{last_name.downcase}@import.test")
+  workbook.write(filepath)
+  
   attach_file('file', filepath)
   click_button 'Import Data'
 end
@@ -105,6 +107,7 @@ Then('{string} should appear on the volunteers page') do |name|
 end
 
 Given('I have clicked the {string} button for {string}') do |button, full_name|
+  visit current_path
   first_name, last_name = full_name.split(' ')
   employee = User.find_by(first_name: first_name, last_name: last_name)
   within("#user_#{employee.id}") do
