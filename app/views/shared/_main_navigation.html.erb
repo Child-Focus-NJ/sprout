@@ -7,6 +7,7 @@
       <%= link_to "Inquiry", new_inquiry_form_path, class: app_nav_link_class(new_inquiry_form_path) %>
       <% if current_user.admin? %>
         <%= link_to "Dashboard", application_dashboard_path, class: app_nav_link_class(application_dashboard_path) %>
+        <%= link_to "Email Templates", admin_communication_templates_path, class: app_nav_link_class(admin_communication_templates_path) %>
         <%= link_to "Admin", admin_settings_path, class: app_nav_link_class(admin_settings_path) %>
       <% end %>
     </nav>
