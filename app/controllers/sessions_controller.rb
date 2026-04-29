@@ -12,7 +12,7 @@ class SessionsController < ApplicationController
 
     email = auth.info.email
 
-    if email && (email.end_with?("@childfocusnj.org") || email.end_with?("@nyu.edu")) # added nyu for testing
+    if email && (email.end_with?("@passaiccountycasa.org") || email.end_with?("@nyu.edu")) # added nyu for testing
       name_parts = auth.info.name.to_s.split
       first_from_name = name_parts.first
       last_from_name = name_parts.length > 1 ? name_parts[1..].join(" ") : nil
