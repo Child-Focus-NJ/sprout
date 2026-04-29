@@ -4,8 +4,8 @@ end
 
 Then("an email should be sent to {string}") do |to_email|
   Timeout.timeout(5) do
-    sleep 0.1 until ActionMailer::Base.deliveries.any? { |m| 
-      Array(m.to).map(&:downcase).include?(to_email.downcase) 
+    sleep 0.1 until ActionMailer::Base.deliveries.any? { |m|
+      Array(m.to).map(&:downcase).include?(to_email.downcase)
     }
   end
   recipients = ActionMailer::Base.deliveries.map(&:to).flatten.compact.map(&:downcase)

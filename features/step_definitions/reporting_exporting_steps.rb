@@ -8,7 +8,7 @@ Given('{int} volunteers signed up for information sessions in {int}') do |count,
     s = InformationSession.new(
       name: "Test Session #{year}",
       scheduled_at: Time.zone.parse("#{year}-06-15 10:00:00"),
-      capacity: [count, 10].max + 10,
+      capacity: [ count, 10 ].max + 10,
       location: "415 Hamburg Turnpike"
     )
     s.save!(validate: false)
@@ -131,7 +131,7 @@ Then('the PDF should contain a bar chart with the years {int}, {int}, and {int} 
   reader = PDF::Reader.new(pdf_files.last)
   full_text = reader.pages.map(&:text).join(' ')
 
-  [y1, y2, y3].each do |year|
+  [ y1, y2, y3 ].each do |year|
     expect(full_text).to include(year.to_s),
       "Expected PDF to mention year #{year} but it didn't. PDF text: #{full_text.truncate(500)}"
   end

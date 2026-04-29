@@ -76,14 +76,14 @@ group :development, :test do
   # writes excel filese
   gem "write_xlsx"
 
-  #reads pdf
-  gem 'pdf-reader'
+  # reads pdf
+  gem "pdf-reader"
 
-  #pdf generator
-  gem 'prawn'
+  # pdf generator
+  gem "prawn"
 
-  #excel file generator
-  gem 'caxlsx'
+  # excel file generator
+  gem "caxlsx"
 end
 
 group :development do
@@ -101,8 +101,8 @@ group :test do
   gem "warden"
   gem "rspec-rails", "~> 8.0"
   gem "simplecov", require: false
-  gem 'database_cleaner-active_record'
-  gem 'rubyXL'
+  gem "database_cleaner-active_record"
+  gem "rubyXL"
 end
 
 gem "rspec-expectations", "~> 3.13"

@@ -37,11 +37,11 @@ class ReportingExportingController < ApplicationController
         y = base_y + bar_height
 
         pdf.fill_color "4A90D9"
-        pdf.fill_rectangle [x, y], bar_width, bar_height
+        pdf.fill_rectangle [ x, y ], bar_width, bar_height
 
         pdf.fill_color "000000"
-        pdf.draw_text year.to_s, at: [x, base_y - 15], size: 10
-        pdf.draw_text counts[i].to_s, at: [x, y + 2], size: 8
+        pdf.draw_text year.to_s, at: [ x, base_y - 15 ], size: 10
+        pdf.draw_text counts[i].to_s, at: [ x, y + 2 ], size: 8
       end
 
       pdf.move_cursor_to base_y - 30
@@ -51,7 +51,7 @@ class ReportingExportingController < ApplicationController
         render js: "window.__printCalled = false; var blob = new Blob([#{pdf_data.bytes.inspect}], {type:'application/pdf'}); var url = URL.createObjectURL(blob); var w = window.open(url); w.onload = function(){ w.print(); window.__printCalled = true; };"
       else
         if Rails.env.test?
-          File.binwrite(Rails.root.join('tmp', 'test_downloads', "#{title}.pdf"), pdf.render)
+          File.binwrite(Rails.root.join("tmp", "test_downloads", "#{title}.pdf"), pdf.render)
           head :ok
         else
           send_data pdf.render, filename: "#{title}.pdf", type: "application/pdf", disposition: "attachment"
@@ -87,17 +87,17 @@ class ReportingExportingController < ApplicationController
     if export_format == "Excel"
       package = Axlsx::Package.new
       package.workbook.add_worksheet(name: "Data") do |sheet|
-        sheet.add_row ["Name", "Email", "Status"]
+        sheet.add_row [ "Name", "Email", "Status" ]
         volunteers.each do |v|
           status_label = v.first_session_attended_at.present? ? "Attended an Information Session" : v.current_funnel_stage.humanize
-          sheet.add_row [v.full_name, v.email, status_label]
+          sheet.add_row [ v.full_name, v.email, status_label ]
         end
       end
 
       if Rails.env.test?
-        File.binwrite(Rails.root.join('tmp', 'test_downloads', "#{title}.xlsx"), package.to_stream.read)
+        File.binwrite(Rails.root.join("tmp", "test_downloads", "#{title}.xlsx"), package.to_stream.read)
         head :ok
-      
+
 
       else
         send_data package.to_stream.read,

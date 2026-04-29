@@ -86,7 +86,7 @@ end
 Given('I upload an Excel sheet containing {string}') do |name|
   first_name, last_name = name.split(' ')
   filepath = Rails.root.join('tmp', "import_#{first_name}_#{last_name}.xlsx")
-  
+
   workbook = RubyXL::Workbook.new
   worksheet = workbook[0]
   worksheet.add_cell(0, 0, 'first_name')
@@ -96,7 +96,7 @@ Given('I upload an Excel sheet containing {string}') do |name|
   worksheet.add_cell(1, 1, last_name)
   worksheet.add_cell(1, 2, "#{first_name.downcase}.#{last_name.downcase}@import.test")
   workbook.write(filepath)
-  
+
   attach_file('file', filepath)
   click_button 'Import Data'
 end

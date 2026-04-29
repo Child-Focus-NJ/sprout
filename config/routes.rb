@@ -66,7 +66,7 @@ Rails.application.routes.draw do
   get "/auth/failure", to: "sessions#failure"
   get "/login", to: "sessions#new", as: :login
 
-  get '/favicon.ico', to: proc { [204, {}, []] }
+  get "/favicon.ico", to: proc { [ 204, {}, [] ] }
 
 
   # Defines the root path route ("/")

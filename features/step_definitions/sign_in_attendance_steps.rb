@@ -86,7 +86,7 @@ end
 
 When('I complete the walk-in inquiry for {string} with first name {string} and last name {string}') do |email, first_name, last_name|
   @walk_in_email = email
-  expect(page).to have_css('form.inquiry-form') 
+  expect(page).to have_css('form.inquiry-form')
   fill_in "First name", with: first_name
   fill_in "Last name", with: last_name
   fill_in "Email", with: email

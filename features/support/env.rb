@@ -77,7 +77,7 @@ Before('@javascript') do
 end
 
 Capybara.default_driver = :chrome_headless
-Capybara.javascript_driver = :chrome_headless  
+Capybara.javascript_driver = :chrome_headless
 Capybara.server = :puma, { Silent: true }
 
 
