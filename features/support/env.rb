@@ -31,6 +31,7 @@ OmniAuth.config.test_mode = true
 Before do
   Warden.test_mode!
   ActionMailer::Base.deliveries.clear
+  DatabaseCleaner.start
 end
 
 Before("@sign_in_attendance") do
@@ -38,15 +39,6 @@ Before("@sign_in_attendance") do
   InquiryFormSubmission.delete_all
   InformationSession.delete_all
   Volunteer.destroy_all
-end
-
-After do
-  ActionMailer::Base.deliveries.clear
-end
-
-After do
-  Warden.test_reset!
-  OmniAuth.config.mock_auth[:google_oauth2] = nil
 end
 
 module DownloadHelpers
@@ -91,8 +83,29 @@ Capybara.server = :puma, { Silent: true }
 
 ActionMailer::Base.deliveries = []
 
-After do
+module ClickWithWait
+  def click_on(*)
+    super
+    sleep 0.3
+  end
+
+  def click_button(*)
+    super
+    sleep 0.3
+  end
+
+  def click_link(*)
+    super
+    sleep 0.3
+  end
+end
+
+World(ClickWithWait)
+
+After do |scenario|
   Capybara.reset_sessions!
   Warden.test_reset!
   OmniAuth.config.mock_auth[:google_oauth2] = nil
+  ActionMailer::Base.deliveries.clear
+  DatabaseCleaner.clean
 end

@@ -4,14 +4,15 @@ end
 
 
 Given('{int} volunteers signed up for information sessions in {int}') do |count, year|
-  session_in_year = InformationSession.find_or_initialize_by(name: "Test Session #{year}")
-  unless session_in_year.persisted?
-    session_in_year.assign_attributes(
+  session_in_year = InformationSession.find_by(name: "Test Session #{year}") || begin
+    s = InformationSession.new(
+      name: "Test Session #{year}",
       scheduled_at: Time.zone.parse("#{year}-06-15 10:00:00"),
       capacity: [count, 10].max + 10,
       location: "415 Hamburg Turnpike"
     )
-    session_in_year.save(validate: false)
+    s.save!(validate: false)
+    s
   end
 
   existing_count = session_in_year.session_registrations.count
@@ -34,14 +35,15 @@ end
 Given('Samantha Ray attended an information session in {int}') do |year|
   volunteer = Volunteer.find_by!(first_name: 'Samantha', last_name: 'Ray')
 
-  session_in_year = InformationSession.find_or_initialize_by(name: "Test Session #{year}")
-  unless session_in_year.persisted?
-    session_in_year.assign_attributes(
+  session_in_year = InformationSession.find_by(name: "Test Session #{year}") || begin
+    s = InformationSession.new(
+      name: "Test Session #{year}",
       scheduled_at: Time.zone.parse("#{year}-06-15 10:00:00"),
       capacity: 20,
       location: "415 Hamburg Turnpike"
     )
-    session_in_year.save(validate: false)
+    s.save!(validate: false)
+    s
   end
 
   registration = SessionRegistration.find_or_initialize_by(
@@ -141,8 +143,10 @@ end
 
 Then('an excel file named {string} should be in my downloads folder') do |filename|
   download_path = DownloadHelpers.downloaded_file_path("#{filename}.xlsx")
-  expect(File).to exist(download_path),
-    "Expected #{filename}.xlsx to exist in downloads but it was not found"
+  Timeout.timeout(10) do
+    sleep 0.5 until File.exist?(download_path)
+  end
+  expect(File).to exist(download_path)
 end
 
 Then('the excel sheet should contain {string}') do |expected_value|

@@ -4,7 +4,7 @@ end
 
 Given('the following users exist:') do |table|
   table.hashes.each do |row|
-    User.find_or_create_by!(email: row['email']) do |user|
+    User.create!(email: row['email']) do |user|
       user.first_name = row['first_name']
       user.last_name  = row['last_name']
       user.password   = 'password123' if user.respond_to?(:password)
@@ -15,13 +15,13 @@ end
 
 Given('the following reminder frequencies exist:') do |table|
   table.hashes.each do |row|
-    ReminderFrequency.find_or_create_by!(title: row['title'])
+    ReminderFrequency.create!(title: row['title'])
   end
 end
 
 Given('the following volunteer tags exist:') do |table|
   table.hashes.each do |row|
-    VolunteerTag.find_or_create_by!(title: row['title'])
+    VolunteerTag.create!(title: row['title'])
   end
 end
 
@@ -102,6 +102,7 @@ Given('I upload an Excel sheet containing {string}') do |name|
 end
 
 Then('{string} should appear on the volunteers page') do |name|
+  expect(page).to have_content('Import complete')
   visit volunteers_path
   expect(page).to have_content(name)
 end
@@ -116,7 +117,7 @@ Given('I have clicked the {string} button for {string}') do |button, full_name|
 end
 
 Then('I should get a confirmation box that says {string}') do |message|
-  expect(page).to have_content(message)
+  expect(page).to have_content(message, wait: 5)
 end
 
 Given('I have clicked {string}') do |button|
@@ -142,5 +143,5 @@ Then('{string} should appear on the page') do |name|
 end
 
 Then('I should not see {string} on the page') do |name|
-  expect(page).not_to have_content(name)
+  expect(page).to have_no_content(name, wait: 5)
 end

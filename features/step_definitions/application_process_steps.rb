@@ -28,7 +28,7 @@ Then("the volunteer should appear in the applied section") do
 end
 
 Given("there are volunteers with status {string}") do |status|
-  Volunteer.find_or_create_by!(email: "vol1@childfocusnj.org") do |v|
+  Volunteer.create!(email: "vol1@childfocusnj.org") do |v|
     v.first_name = "Vol"
     v.last_name = "One"
   end.update!(current_funnel_stage: status.parameterize.underscore.to_sym)

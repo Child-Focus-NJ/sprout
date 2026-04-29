@@ -26,13 +26,13 @@ Given('the following information sessions exist:') do |table|
 end
 
 Given('the following volunteers exist:') do |table|
-    table.hashes.each do |row|
-        Volunteer.find_or_create_by!(email: row['email']) do |volunteer|
-        volunteer.first_name = row['first_name']
-        volunteer.last_name  = row['last_name']
-        volunteer.password = 'password123' if volunteer.respond_to?(:password)
-      end
-    end
+  table.hashes.each do |row|
+    Volunteer.create!(
+      email: row['email'],
+      first_name: row['first_name'],
+      last_name: row['last_name']
+    )
+  end
 end
 
 
@@ -141,8 +141,9 @@ end
 
 Given('I click the {string} button for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |button, month_abbr, day, year, hour, minute, meridian|
   date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
-  session_el = find("[data-session-list-item]", text: /#{Regexp.escape(date_str)}.*#{Regexp.escape(time_str)}/)
-  session_el.click_button(button)
+  within("[data-session-list-item]", text: /#{Regexp.escape(date_str)}.*#{Regexp.escape(time_str)}/) do
+    click_button(button)
+  end
 end
 
 Then('every attendees status should change from {string} to {string}') do |old_status, new_status|

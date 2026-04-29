@@ -17,7 +17,7 @@ class SessionsController < ApplicationController
       first_from_name = name_parts.first
       last_from_name = name_parts.length > 1 ? name_parts[1..].join(" ") : nil
 
-      user = User.find_or_create_by(google_uid: auth.uid) do |u|
+      user = User.create!(google_uid: auth.uid) do |u|
         u.email = email
         u.first_name = auth.info.first_name.presence || first_from_name
         u.last_name = auth.info.last_name.presence || last_from_name
