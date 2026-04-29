@@ -1,21 +1,25 @@
 Given('an information session exists named {string}') do |name|
-  @session = InformationSession.find_or_initialize_by(name: name)
-  @session.scheduled_at ||= 1.day.from_now
-  @session.location ||= "415 Hamburg Turnpike"
-  @session.save!
+  @session = InformationSession.create!(
+    name: name,
+    scheduled_at: 1.day.from_now,
+    location: "415 Hamburg Turnpike",
+    capacity: 10
+  )
 end
 
 Given('the volunteer is registered for the session {string}') do |session_name|
   session = InformationSession.find_by!(name: session_name)
-  volunteer = @volunteer || Volunteer.first
+  volunteer = @volunteer || Volunteer.find_by!(email: "jane@childfocusnj.org")
   SessionRegistration.find_or_create_by!(volunteer: volunteer, information_session: session)
 end
 
 Given('I am on the sign-in page for session {string}') do |session_name|
-  @session = InformationSession.find_or_initialize_by(name: session_name)
-  @session.scheduled_at ||= 1.day.from_now
-  @session.location ||= "415 Hamburg Turnpike"
-  @session.save!
+  @session = InformationSession.create!(
+    name: session_name,
+    scheduled_at: 1.day.from_now,
+    location: "415 Hamburg Turnpike",
+    capacity: 10
+  )
   visit "/information_sessions/#{@session.id}/sign_in"
 end
 
@@ -33,15 +37,15 @@ When('I check in the volunteer {string}') do |identifier|
   else
     @volunteer = find_or_create_volunteer_by_name(identifier)
     click_button "Check in #{@volunteer.full_name}"
+    expect(page).to have_content("Application queued for #{@volunteer.full_name}", wait: 5)
   end
 end
 
 Then('the volunteer should be marked as attended for {string}') do |session_name|
   session = InformationSession.find_by!(name: session_name)
   volunteer = Volunteer.find_by!(email: "jane@childfocusnj.org")
-
   registration = SessionRegistration.find_by!(volunteer: volunteer, information_session: session)
-
+  registration.reload
   assert registration.attended?
 end
 
@@ -69,6 +73,7 @@ When('I attempt to check in an unregistered volunteer {string}') do |email|
     fill_in "Email", with: email
     click_button "Check in walk-in"
   end
+  expect(page).to have_current_path(/inquiry_form/i, wait: 5)
 end
 
 Then('I should be redirected to the inquiry form') do
@@ -81,11 +86,13 @@ end
 
 When('I complete the walk-in inquiry for {string} with first name {string} and last name {string}') do |email, first_name, last_name|
   @walk_in_email = email
+  expect(page).to have_css('form.inquiry-form')
   fill_in "First name", with: first_name
   fill_in "Last name", with: last_name
   fill_in "Email", with: email
   fill_in "Phone", with: "5551234567"
-  click_button "Submit and record attendance"
+  click_button "Submit"
+  expect(page).to have_no_css('form.inquiry-form')
 end
 
 Then('a volunteer should exist for {string}') do |email|
@@ -95,9 +102,8 @@ end
 Then('they should be marked as attended for {string}') do |session_name|
   session = InformationSession.find_by!(name: session_name)
   volunteer = Volunteer.find_by!(email: @walk_in_email)
-
   registration = SessionRegistration.find_by!(volunteer: volunteer, information_session: session)
-
+  registration.reload
   assert registration.attended?
 end
 

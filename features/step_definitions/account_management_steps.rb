@@ -1,5 +1,5 @@
 Given("a volunteer exists with email {string}") do |email|
-  Volunteer.find_or_create_by!(email: email.strip.downcase) do |v|
+  Volunteer.create!(email: email.strip.downcase) do |v|
     v.first_name = "Existing"
     v.last_name  = "Volunteer"
   end

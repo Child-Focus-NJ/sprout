@@ -16,6 +16,7 @@ Feature: Reporting & Exporting
             | 10       | Zoom                 | Thursday Evening Info Session | 2025-04-16 18:00:00 |
             | 10       | 415 Hamburg Turnpike | Monday Morning Info Session   | 2024-12-08 10:00:00 |
 
+        @javascript
         Scenario: Exporting PDF report comparing sign-ups by year
             Given 200 volunteers signed up for information sessions in 2026
             And 189 volunteers signed up for information sessions in 2025
@@ -30,6 +31,7 @@ Feature: Reporting & Exporting
             Then a PDF named "sign-ups24-26" should be in my downloads folder
             And the PDF should contain a bar chart with the years 2024, 2025, and 2026 on the x-axis
 
+        @javascript
         Scenario: Printing PDF report comparing applications by year
             Given 33 volunteers signed up for information sessions in 2026
             And 20 volunteers signed up for information sessions in 2025
@@ -43,6 +45,7 @@ Feature: Reporting & Exporting
             And I have clicked the "Print" button
             Then a PDF report should be sent to the printer
 
+        @javascript
         Scenario: Exporting data to CSV, Excel, and JSON
             Given I select "Excel" in the "export format" dropdown in the export data section
             And Samantha Ray attended an information session in 2024

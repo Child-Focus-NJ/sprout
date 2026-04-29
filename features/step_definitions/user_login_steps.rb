@@ -18,12 +18,13 @@ end
 
 When('I complete the Google OAuth flow as a Child Focus user') do
   stub_google_oauth(email: "admin@childfocusnj.org")
-  user = User.find_or_create_by!(email: "admin@childfocusnj.org") do |u|
-    u.first_name = "Admin"
-    u.last_name = "User"
-    u.role = :admin
-    u.google_uid = "test-google-uid"
-  end
+  user = User.find_by(email: "admin@childfocusnj.org") || User.create!(
+    email: "admin@childfocusnj.org",
+    first_name: "Admin",
+    last_name: "User",
+    role: :admin,
+    google_uid: "test-google-uid"
+  )
   login_as(user, scope: :user)
   visit volunteers_path
 end
