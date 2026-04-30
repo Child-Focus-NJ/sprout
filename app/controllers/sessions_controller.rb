@@ -4,38 +4,19 @@ class SessionsController < ApplicationController
 
   def create
     auth = request.env["omniauth.auth"]
-
     unless auth
       flash[:alert] = "Authentication failed"
-      redirect_to login_path and return
+      return redirect_to login_path
     end
 
-    email = auth.info.email
-
-    if email && (email.end_with?("@passaiccountycasa.org") || email.end_with?("@nyu.edu")) # added nyu for testing
-      name_parts = auth.info.name.to_s.split
-      first_from_name = name_parts.first
-      last_from_name = name_parts.length > 1 ? name_parts[1..].join(" ") : nil
-
-      user = User.create!(google_uid: auth.uid) do |u|
-        u.email = email
-        u.first_name = auth.info.first_name.presence || first_from_name
-        u.last_name = auth.info.last_name.presence || last_from_name
-        u.avatar_url = auth.info.image.presence
-      end
-
-      user.update!(
-        first_name: auth.info.first_name.presence || first_from_name || user.first_name,
-        last_name: auth.info.last_name.presence || last_from_name || user.last_name,
-        avatar_url: auth.info.image.presence || user.avatar_url
-      )
-
-      session[:user_id] = user.id
-      redirect_to volunteers_path
-    else
+    unless User.allowed_email?(auth.info.email)
       flash[:alert] = "Must use a Child Focus NJ associated email"
-      redirect_to login_path
+      return redirect_to login_path
     end
+
+    user = User.from_omniauth(auth)
+    session[:user_id] = user.id
+    redirect_to volunteers_path
   end
 
   def failure
