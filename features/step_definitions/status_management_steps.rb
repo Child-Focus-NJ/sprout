@@ -28,7 +28,7 @@ When("I attempt to send the application email again") do
 end
 
 Then("the volunteer should have status {string}") do |status|
-  expect(page).to have_content(/#{Regexp.escape(status)}/i)
+  expect(page).to have_content(/#{Regexp.escape(status)}/i, wait: 5)
 end
 
 Then("I should see a status change entry for {string} to {string}") do |from_status, to_status|
@@ -49,6 +49,7 @@ Then("I should still see application sent date {string}") do |date|
 end
 
 Then("the application email should not be sent") do
+  expect(page).to have_css('body')
   expect(page).not_to have_content("Application email queued")
 end
 

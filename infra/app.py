@@ -8,6 +8,7 @@ from stacks.storage_stack import StorageStack
 from stacks.queue_stack import QueueStack
 from stacks.lambda_stack import LambdaStack
 from stacks.api_stack import ApiStack
+from stacks.iam_stack import IamStack
 
 app = cdk.App()
 
@@ -15,6 +16,8 @@ env = cdk.Environment(
     account=os.environ.get("CDK_DEFAULT_ACCOUNT", "000000000000"),
     region=os.environ.get("CDK_DEFAULT_REGION", "us-east-1"),
 )
+
+IamStack(app, "SproutIam", env=env)
 
 network = NetworkStack(app, "SproutNetwork", env=env)
 

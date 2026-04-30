@@ -70,6 +70,7 @@ When("a reminder email or SMS is sent to the volunteer") do
     sent_at: Time.current,
     sent_by_user_id: @user.id
   )
+  visit volunteer_path(@volunteer)
 end
 
 Then("a note should be automatically created") do

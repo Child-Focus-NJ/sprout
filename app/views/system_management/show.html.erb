@@ -4,7 +4,7 @@
     <ul>
       <% @recent_syncs.each do |log| %>
         <li><%= log.volunteer.full_name %> data was transferred to the external system</li>
-      <% end %>
+      <% end %>s
     </ul>
   </section>
 <% end %>
@@ -20,15 +20,12 @@
     <% end %>
   </ul>
 
-  <details>
-    <summary>
+  
       <button type="button">Add Frequency</button>
-    </summary>
     <%= form_with url: reminder_frequencies_path, local: true do |f| %>
       <input type="text" name="title" id="frequency_title" placeholder="New frequency">
       <button type="submit">Save Frequency</button>
     <% end %>
-  </details>
 </section>
 
 <section>
@@ -42,15 +39,13 @@
     <% end %>
   </ul>
 
-  <details>
-    <summary>
+
       <button type="button">Add Tag</button>
-    </summary>
+
     <%= form_with url: volunteer_tags_path, local: true do |f| %>
       <input type="text" name="title" id="tag_title" placeholder="New tag">
       <button type="submit">Save Tag</button>
     <% end %>
-  </details>
 </section>
 
 <section>
@@ -78,10 +73,8 @@
     <% end %>
   </ul>
 
-  <details>
-    <summary>
+
       <button type="button">Add Employee</button>
-    </summary>
     <%= form_with url: users_path, local: true do |f| %>
       <%= f.text_field :first_name, placeholder: "First Name", id: "First Name" %>
       <%= f.text_field :last_name,  placeholder: "Last Name",  id: "Last Name" %>
@@ -89,5 +82,4 @@
       <%= f.select :role, User.roles.keys.map { |r| [r.humanize, r] }, {}, id: "Role" %>
       <%= f.submit "Save Employee" %>
     <% end %>
-  </details>
 </section>

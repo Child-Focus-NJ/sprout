@@ -38,7 +38,12 @@ Rails.application.routes.draw do
     end
   end
   resource :inquiry_form, controller: "inquiry_form"
-  resources :reporting_exporting
+  resources :reporting_exporting do
+    collection do
+      post :export_report
+      post :export_data
+    end
+  end
 
   resource :system_management, only: [ :show ], controller: "system_management" do
     collection do
@@ -60,6 +65,8 @@ Rails.application.routes.draw do
   get "/auth/:provider/callback", to: "sessions#create"
   get "/auth/failure", to: "sessions#failure"
   get "/login", to: "sessions#new", as: :login
+
+  get "/favicon.ico", to: proc { [ 204, {}, [] ] }
 
 
   # Defines the root path route ("/")

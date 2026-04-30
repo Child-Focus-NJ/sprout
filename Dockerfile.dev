@@ -17,8 +17,15 @@ RUN apt-get update -qq && \
     libyaml-dev \
     libvips \
     pkg-config \
+    wget \
+    gnupg \
     postgresql-client \
     && rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Install Chromium and ChromeDriver
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y chromium chromium-driver && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Install bundler
 RUN gem install bundler

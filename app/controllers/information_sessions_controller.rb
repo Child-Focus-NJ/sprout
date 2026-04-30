@@ -50,7 +50,6 @@ class InformationSessionsController < ApplicationController
   def create
     @information_session = InformationSession.new(information_session_params)
     @information_session.created_by_user = current_user
-
     if @information_session.save
       redirect_to information_sessions_path(**list_filter_params_compact.except(:page)),
         notice: "Information session was successfully created."
