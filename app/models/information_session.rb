@@ -1,7 +1,7 @@
 class InformationSession < ApplicationRecord
   enum :session_type, { in_person: 0, virtual: 1 }
 
-  LOCATION_CHOICES = ["415 Hamburg Turnpike", "Zoom"].freeze
+  LOCATION_CHOICES = [ "415 Hamburg Turnpike", "Zoom" ].freeze
   VALID_URL_REGEX = /\Ahttps?:\/\/.+\z/i
 
   attribute :capacity, :integer, default: 10
@@ -26,7 +26,7 @@ class InformationSession < ApplicationRecord
   scope :past,      -> { where("scheduled_at <= ?", Time.current).order(scheduled_at: :desc) }
 
   def spots_remaining
-    capacity && capacity - session_registrations.where(status: [:registered, :attended]).count
+    capacity && capacity - session_registrations.where(status: [ :registered, :attended ]).count
   end
 
   def label
