@@ -29,3 +29,10 @@ RSpec.configure do |config|
   config.before(:suite) { Warden.test_mode! }
   config.after(:each, type: :request) { Warden.test_reset! }
 end
+
+Shoulda::Matchers.configure do |config|
+  config.integrate do |with|
+    with.test_framework :rspec
+    with.library :rails
+  end
+end

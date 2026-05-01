@@ -103,6 +103,8 @@ group :test do
   gem "simplecov", require: false
   gem "database_cleaner-active_record"
   gem "rubyXL"
+  gem "shoulda-matchers", "~> 6.0", group: :test
 end
+
 
 gem "rspec-expectations", "~> 3.13"
