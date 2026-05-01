@@ -55,7 +55,7 @@ class InformationSessionsController < ApplicationController
         notice: "Information session was successfully created."
     else
       flash.now[:alert] = "Please fix the errors below."
-      render :new
+      render :new, status: :unprocessable_entity
     end
   end
 
@@ -70,7 +70,7 @@ class InformationSessionsController < ApplicationController
       redirect_to edit_information_session_path(@information_session, **list_filter_params_compact)
     else
       flash.now[:alert] = "Please fix the errors below."
-      render :edit
+      render :edit, status: :unprocessable_entity
     end
   end
 
