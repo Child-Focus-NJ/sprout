@@ -97,7 +97,7 @@ Given('I upload an Excel sheet containing {string}') do |name|
   worksheet.add_cell(1, 2, "#{first_name.downcase}.#{last_name.downcase}@import.test")
   workbook.write(filepath)
 
-  attach_file('file', filepath)
+  attach_file('import_file', filepath, make_visible: true)
   click_button 'Import Data'
 end
 

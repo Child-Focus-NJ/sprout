@@ -1,85 +1,153 @@
-<% if @recent_syncs.any? %>
-  <section id="sync-notifications">
-    <h2>Recent Transfers</h2>
-    <ul>
-      <% @recent_syncs.each do |log| %>
-        <li><%= log.volunteer.full_name %> data was transferred to the external system</li>
-      <% end %>s
-    </ul>
-  </section>
-<% end %>
+<div class="volunteer-page">
 
-<section>
-  <h2>Reminder Frequencies</h2>
-  <ul id="frequency-list">
-    <% ReminderFrequency.all.each do |freq| %>
-      <li>
-        <span><%= freq.title %></span>
-        <%= button_to "Remove", reminder_frequency_path(freq), method: :delete %>
-      </li>
-    <% end %>
-  </ul>
-
-  
-      <button type="button">Add Frequency</button>
-    <%= form_with url: reminder_frequencies_path, local: true do |f| %>
-      <input type="text" name="title" id="frequency_title" placeholder="New frequency">
-      <button type="submit">Save Frequency</button>
-    <% end %>
-</section>
-
-<section>
-  <h2>Volunteer Tags</h2>
-  <ul id="tag-list">
-    <% VolunteerTag.all.each do |tag| %>
-      <li>
-        <span><%= tag.title %></span>
-        <%= button_to "Remove", volunteer_tag_path(tag), method: :delete %>
-      </li>
-    <% end %>
-  </ul>
-
-
-      <button type="button">Add Tag</button>
-
-    <%= form_with url: volunteer_tags_path, local: true do |f| %>
-      <input type="text" name="title" id="tag_title" placeholder="New tag">
-      <button type="submit">Save Tag</button>
-    <% end %>
-</section>
-
-<section>
-  <h2>Import Historical Data</h2>
-  <%= form_with url: import_system_management_path, multipart: true do |f| %>
-    <%= f.file_field :file %>
-    <%= f.submit "Import Data" %>
-  <% end %>
-</section>
-
-<section>
-  <h2>Employees</h2>
-  <ul id="employee-list">
-    <% @users.each do |user| %>
-      <li id="user_<%= user.id %>">
-        <%= user.full_name %>
-        <% if params[:confirm_remove_user_id] == user.id.to_s %>
-          <span>Are you sure you want to remove this user?</span>
-          <%= button_to "Yes", user_path(user), method: :delete %>
-          <%= link_to "No", system_management_path %>
-        <% else %>
-          <%= link_to "Remove", system_management_path(confirm_remove_user_id: user.id) %>
+  <% if @recent_syncs.any? %>
+    <div class="alert-success" id="sync-notifications">
+      <p class="font-semibold mb-1">Recent Transfers</p>
+      <ul class="list-disc list-inside text-sm">
+        <% @recent_syncs.each do |log| %>
+          <li><%= log.volunteer.full_name %> data was transferred to the external system</li>
         <% end %>
-      </li>
-    <% end %>
-  </ul>
+      </ul>
+    </div>
+  <% end %>
+
+  <h1 class="page-title">System Management</h1>
+
+  <div class="card">
+    <h2 class="section-heading">Reminder Frequencies</h2>
+
+    <ul id="frequency-list" class="volunteer-list mb-3">
+      <% ReminderFrequency.all.each do |freq| %>
+        <li class="volunteer-row">
+          <div class="volunteer-meta">
+            <span class="volunteer-name"><%= freq.title %></span>
+          </div>
+          <div class="volunteer-actions">
+            <%= button_to "Remove", reminder_frequency_path(freq), method: :delete,
+                  class: "btn-delete" %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+
+    <details class="mt-2">
+      <summary class="button-link cursor-pointer select-none">Add Frequency</summary>
+      <div class="mt-3">
+        <%= form_with url: reminder_frequencies_path, local: true, class: "inline-form" do |f| %>
+          <input type="text" name="title" id="frequency_title"
+                 placeholder="New frequency"
+                 class="input-large max-w-xs">
+          <button type="submit" class="button-primary">Save Frequency</button>
+        <% end %>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2 class="section-heading">Volunteer Tags</h2>
+
+    <ul id="tag-list" class="volunteer-list mb-3">
+      <% VolunteerTag.all.each do |tag| %>
+        <li class="volunteer-row">
+          <div class="volunteer-meta">
+            <span class="volunteer-name"><%= tag.title %></span>
+          </div>
+          <div class="volunteer-actions">
+            <%= button_to "Remove", volunteer_tag_path(tag), method: :delete,
+                  class: "btn-delete" %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+
+    <details class="mt-2">
+      <summary class="button-link cursor-pointer select-none">Add Tag</summary>
+      <div class="mt-3">
+        <%= form_with url: volunteer_tags_path, local: true, class: "inline-form" do |f| %>
+          <input type="text" name="title" id="tag_title"
+                 placeholder="New tag"
+                 class="input-large max-w-xs">
+          <button type="submit" class="button-primary">Save Tag</button>
+        <% end %>
+      </div>
+    </details>
+  </div>
 
 
-      <button type="button">Add Employee</button>
-    <%= form_with url: users_path, local: true do |f| %>
-      <%= f.text_field :first_name, placeholder: "First Name", id: "First Name" %>
-      <%= f.text_field :last_name,  placeholder: "Last Name",  id: "Last Name" %>
-      <%= f.email_field :email,     placeholder: "Email",      id: "Email" %>
-      <%= f.select :role, User.roles.keys.map { |r| [r.humanize, r] }, {}, id: "Role" %>
-      <%= f.submit "Save Employee" %>
-    <% end %>
-</section>
+<div class="card">
+  <h2 class="section-heading">Import Historical Data</h2>
+  <p class="help-text">Upload a CSV or spreadsheet to import historical volunteer records.</p>
+
+  <%= form_with url: import_system_management_path, multipart: true do |f| %>
+    <div class="inline-form items-center">
+      <%= f.file_field :file, id: "import_file",
+            class: "sr-only",
+            accept: ".csv,.xlsx,.xls",
+            onchange: "
+              document.getElementById('import-filename').textContent = this.files[0]?.name ?? '';
+              document.getElementById('import-submit').classList.toggle('hidden', !this.files.length);
+            " %>
+      <label for="import_file" class="button-link cursor-pointer">
+        Choose File
+      </label>
+      <span id="import-filename" class="text-sm text-gray-600 truncate max-w-xs"></span>
+      <%= f.submit "Import Data", id: "import-submit",
+            class: "button-primary hidden" %>
+    </div>
+  <% end %>
+</div>
+
+  <div class="card">
+    <h2 class="section-heading">Employees</h2>
+
+    <ul id="employee-list" class="volunteer-list mb-3">
+      <% @users.each do |user| %>
+        <li id="user_<%= user.id %>" class="volunteer-row">
+          <div class="volunteer-meta">
+            <span class="volunteer-name"><%= user.full_name %></span>
+          </div>
+          <div class="volunteer-actions">
+            <% if params[:confirm_remove_user_id] == user.id.to_s %>
+              <span>Are you sure you want to remove this user?</span>  <%# was "Remove this user?" %>
+              <%= button_to "Yes", user_path(user), method: :delete, class: "btn-delete" %>
+              <%= link_to "Cancel", system_management_path, class: "button-link" %>
+           
+            <% else %>
+              <%= link_to "Remove", system_management_path(confirm_remove_user_id: user.id),
+                    class: "btn-delete" %>
+            <% end %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+
+    <details class="mt-2">
+      <summary class="button-link cursor-pointer select-none">Add Employee</summary>
+      <div class="mt-3">
+        <%= form_with url: users_path, local: true do |f| %>
+          <div class="grid gap-3 max-w-md">
+            <div class="form-row">
+              <%= f.label :first_name, "First Name", class: "font-semibold text-gray-800" %>
+              <%= f.text_field :first_name, placeholder: "First Name", class: "input-large" %>
+            </div>
+            <div class="form-row">
+              <%= f.label :last_name, "Last Name", class: "font-semibold text-gray-800" %>
+              <%= f.text_field :last_name, placeholder: "Last Name", class: "input-large" %>
+            </div>
+            <div class="form-row">
+              <%= f.label :email, "Email", class: "font-semibold text-gray-800" %>
+              <%= f.email_field :email, placeholder: "Email", class: "input-large" %>
+            </div>
+            <div class="form-row">
+              <%= f.label :role, "Role", class: "font-semibold text-gray-800" %>
+              <%= f.select :role, User.roles.keys.map { |r| [r.humanize, r] }, {},
+                    class: "input-large" %>
+            </div>
+            <%= f.submit "Save Employee", class: "button-primary mt-1" %>
+          </div>
+        <% end %>
+      </div>
+    </details>
+  </div>
+
+</div>

@@ -48,7 +48,6 @@ Feature: Integration & Administration
             And I should not see "VIP" on the frequency list
 
         Scenario: Importing historical data
-            Given I have clicked the "Import Data" button
             And I upload an Excel sheet containing "Colin Smith"
             Then "Colin Smith" should appear on the volunteers page
 
