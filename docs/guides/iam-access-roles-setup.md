@@ -89,7 +89,7 @@ steps:
       aws-region: us-east-1
 ```
 
-No access keys. Credentials are short-lived (15 min) and scoped to your repo.
+No long-lived access keys. Credentials are temporary session credentials and scoped to your repo.
 
 ---
 
