@@ -58,8 +58,13 @@ Given('I have filled out the {string} field with {string}') do |field_name, valu
 end
 
 
+
 Given('I have clicked the {string} button') do |button|
-  click_on button
+  begin
+    click_on button
+  rescue Capybara::ElementNotFound
+    find('summary', text: button).click
+  end
 end
 
 Given('I click the {string} navigation button') do |button| # use for navigation links
