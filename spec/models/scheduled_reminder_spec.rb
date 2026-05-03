@@ -88,7 +88,7 @@ RSpec.describe ScheduledReminder, type: :model do
       sooner = ScheduledReminder.create!(volunteer: volunteer, communication_template: template, scheduled_for: 1.week.from_now, status: :pending)
       later = ScheduledReminder.create!(volunteer: volunteer, communication_template: template, scheduled_for: 4.weeks.from_now, status: :pending)
 
-      expect(ScheduledReminder.upcoming.to_a).to eq([sooner, later])
+      expect(ScheduledReminder.upcoming.to_a).to eq([ sooner, later ])
     end
   end
 
