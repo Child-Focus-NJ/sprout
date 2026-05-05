@@ -1,3 +1,4 @@
+import aws_cdk
 from aws_cdk import Stack, CfnOutput
 import aws_cdk.aws_iam as iam
 from constructs import Construct
@@ -20,16 +21,14 @@ class IamStack(Stack):
             "RequireMFA",
             managed_policy_name="SproutRequireMFA",
             statements=[
-                # Let users manage their own MFA and password
+                # Let users manage their own MFA, password, and access keys
                 iam.PolicyStatement(
-                    sid="AllowSelfServiceMFA",
+                    sid="AllowSelfServiceUserActions",
                     effect=iam.Effect.ALLOW,
                     actions=[
                         "iam:GetAccountPasswordPolicy",
-                        "iam:ListVirtualMFADevices",
                         "iam:ChangePassword",
                         "iam:GetUser",
-                        "iam:CreateVirtualMFADevice",
                         "iam:DeleteVirtualMFADevice",
                         "iam:ListMFADevices",
                         "iam:EnableMFADevice",
@@ -43,6 +42,16 @@ class IamStack(Stack):
                         f"arn:aws:iam::{self.account}:user/${{aws:username}}",
                         f"arn:aws:iam::{self.account}:mfa/${{aws:username}}",
                     ],
+                ),
+                # These actions don't support per-user ARNs
+                iam.PolicyStatement(
+                    sid="AllowMFADeviceManagement",
+                    effect=iam.Effect.ALLOW,
+                    actions=[
+                        "iam:CreateVirtualMFADevice",
+                        "iam:ListVirtualMFADevices",
+                    ],
+                    resources=["*"],
                 ),
                 # Block everything if MFA is not active
                 iam.PolicyStatement(
@@ -107,6 +116,7 @@ class IamStack(Stack):
             self,
             "GitHubActionsRole",
             role_name="SproutGitHubActionsRole",
+            max_session_duration=aws_cdk.Duration.minutes(15),
             assumed_by=iam.WebIdentityPrincipal(
                 github_oidc_provider.open_id_connect_provider_arn,
                 conditions={
