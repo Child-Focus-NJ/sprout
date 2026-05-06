@@ -84,12 +84,24 @@ class InquiryFormController < ApplicationController
       return
     end
 
-    if Volunteer.exists?(email: email)
+
+    volunteer = Volunteer.find_by(email: email)
+
+    if volunteer
       redirect_to new_inquiry_form_path, alert: "You've already signed up."
       return
     end
 
+    volunteer = Volunteer.create!(
+      first_name: first_name,
+      last_name: last_name,
+      email: email,
+      phone: phone,
+      current_funnel_stage: :inquiry
+    )
+
     InquiryFormSubmission.create!(
+      volunteer: volunteer,
       source: "public_inquiry_form",
       raw_data: {
         first_name: first_name,
@@ -97,7 +109,8 @@ class InquiryFormController < ApplicationController
         email: email,
         phone: phone
       },
-      processed: false
+      processed: true,
+      processed_at: Time.current
     )
     InquiryMailer.confirmation(email).deliver_now
 
