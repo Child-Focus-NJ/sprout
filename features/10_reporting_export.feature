@@ -32,20 +32,6 @@ Feature: Reporting & Exporting
             And the PDF should contain a bar chart with the years 2024, 2025, and 2026 on the x-axis
 
         @javascript
-        Scenario: Printing PDF report comparing applications by year
-            Given 33 volunteers signed up for information sessions in 2026
-            And 20 volunteers signed up for information sessions in 2025
-            And 15 volunteers signed up for information sessions in 2024
-            And I select "years" in the "x-axis" dropdown in the create a report section
-            And I select "applications" in the "y-axis" dropdown in the create a report section
-            And I have filled out the "Start Date" field with "01/01/2024" in the create a report section
-            And I have filled out the "End Date" field with "12/31/2026" in the create a report section
-            And I select "PDF" in the "report format" dropdown in the create a report section
-            And I enter "applications24-26" as the title in the create a report section
-            And I have clicked the "Print" button
-            Then a PDF report should be sent to the printer
-
-        @javascript
         Scenario: Exporting data to CSV, Excel, and JSON
             Given I select "Excel" in the "export format" dropdown in the export data section
             And Samantha Ray attended an information session in 2024

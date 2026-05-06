@@ -16,8 +16,11 @@ class ReportingExportingController < ApplicationController
       counts = years.map do |year|
         year_start = Date.new(year, 1, 1)
         year_end = Date.new(year, 12, 31)
-        sessions = InformationSession.where(scheduled_at: year_start..year_end)
-        SessionRegistration.where(information_session: sessions).count
+        if y_axis == "applications"
+          Volunteer.where(application_submitted_at: year_start..year_end).count
+        else
+          Volunteer.where(inquiry_date: year_start..year_end).count
+        end
       end
 
       pdf = Prawn::Document.new
@@ -46,17 +49,14 @@ class ReportingExportingController < ApplicationController
 
       pdf.move_cursor_to base_y - 30
 
-      if action == "Print"
-        pdf_data = pdf.render
-        render js: "window.__printCalled = false; var blob = new Blob([#{pdf_data.bytes.inspect}], {type:'application/pdf'}); var url = URL.createObjectURL(blob); var w = window.open(url); w.onload = function(){ w.print(); window.__printCalled = true; };"
-      else
-        if Rails.env.test?
-          File.binwrite(Rails.root.join("tmp", "test_downloads", "#{title}.pdf"), pdf.render)
-          head :ok
-        else
-          send_data pdf.render, filename: "#{title}.pdf", type: "application/pdf", disposition: "attachment"
-        end
-      end
+
+    if Rails.env.test?
+      File.binwrite(Rails.root.join("tmp", "test_downloads", "#{title}.pdf"), pdf.render)
+      head :ok
+    else
+      send_data pdf.render, filename: "#{title}.pdf", type: "application/pdf", disposition: "attachment"
+    end
+
     else
       redirect_to reporting_exporting_index_path, alert: "Invalid parameters"
     end
@@ -78,11 +78,19 @@ class ReportingExportingController < ApplicationController
       volunteers = volunteers.where(current_funnel_stage: stage) if stage
     end
 
-    if start_date && end_date
-      attended_session_ids = InformationSession.where(scheduled_at: start_date..end_date).pluck(:id)
-      volunteers = volunteers.joins(:session_registrations)
-                             .where(session_registrations: { information_session_id: attended_session_ids })
+  if start_date && end_date
+    if status_filter == "Attended an Information Session"
+      volunteers = volunteers.where(first_session_attended_at: start_date..end_date)
+    elsif status_filter == "Applied"
+      volunteers = volunteers.where(application_submitted_at: start_date..end_date)
+    elsif status_filter == "Application Sent"
+      volunteers = volunteers.where(application_sent_at: start_date..end_date)
+    elsif status_filter == "Inactive"
+      volunteers = volunteers.where(became_inactive_at: start_date..end_date)
+    else
+      volunteers = volunteers.where(inquiry_date: start_date..end_date)
     end
+  end
 
     if export_format == "Excel"
       package = Axlsx::Package.new
