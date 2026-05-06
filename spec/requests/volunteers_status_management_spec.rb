@@ -22,6 +22,38 @@ RSpec.describe "Volunteer status management", type: :request do
     end
   end
 
+  describe "PATCH /volunteers/:id" do
+    it "updates editable volunteer profile fields" do
+      patch volunteer_path(volunteer), params: {
+        volunteer: {
+          first_name: "Jamie",
+          last_name: "Stone",
+          email: "jamie.stone@childfocusnj.org",
+          phone: "973-555-0123"
+        }
+      }
+
+      expect(response).to redirect_to(volunteer_path(volunteer))
+      volunteer.reload
+      expect(volunteer.first_name).to eq("Jamie")
+      expect(volunteer.last_name).to eq("Stone")
+      expect(volunteer.email).to eq("jamie.stone@childfocusnj.org")
+      expect(volunteer.phone).to eq("973-555-0123")
+    end
+
+    it "shows validation errors when profile fields are invalid" do
+      patch volunteer_path(volunteer), params: {
+        volunteer: {
+          first_name: "",
+          email: ""
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("can't be blank")
+    end
+  end
+
   describe "POST /volunteers/:id/send_application" do
     it "blocks duplicate sends when an application was already sent" do
       volunteer.update!(current_funnel_stage: :application_sent, application_sent_at: 1.day.ago)

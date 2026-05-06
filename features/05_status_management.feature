@@ -40,6 +40,18 @@ Feature: Status Management
     And I should see status option "Applied"
     And I should see status option "Inactive"
 
+  Scenario: Volunteer profile fields are editable
+    Given I am on the volunteer "Jane Doe" profile page
+    When I update first name to "Janet"
+    And I update last name to "Smith"
+    And I update email to "janet.smith@childfocusnj.org"
+    And I update phone number to "973-555-0147"
+    And I press "Save contact details"
+    Then I should see volunteer first name "Janet"
+    And I should see volunteer last name "Smith"
+    And I should see volunteer email "janet.smith@childfocusnj.org"
+    And I should see volunteer phone number "973-555-0147"
+
   Scenario: Inactive volunteer retains application sent date
     Given I am on the volunteer "Jane Doe" profile page
     And the volunteer has status "Application sent"
