@@ -9,7 +9,7 @@
     class="flash-banner <%= is_alert ? "flash-banner--alert" : "flash-banner--notice" %>"
     role="<%= is_alert ? "alert" : "status" %>"
   >
-    <span class="flash-banner__text"><%= message %></span>
+    <span class="flash-banner__text"><%= sanitize(message.to_s, tags: [], attributes: []) %></span>
     <button
       type="button"
       class="flash-banner__dismiss"
