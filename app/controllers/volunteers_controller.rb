@@ -1,5 +1,5 @@
 class VolunteersController < ApplicationController
-  before_action :set_volunteer, only: [ :show, :update_status, :send_application, :mark_submitted, :sms, :send_sms ]
+  before_action :set_volunteer, only: [ :show, :update, :update_status, :send_application, :mark_submitted, :sms, :send_sms ]
 
   def index
     ensure_list_volunteer("Jane Doe")
@@ -12,6 +12,18 @@ class VolunteersController < ApplicationController
     filter = params[:filter].to_s
     @timeline_filter = filter.presence || "all"
     @timeline_entries = VolunteerTimeline.entries_for(@volunteer, filter: @timeline_filter)
+  end
+
+  def update
+    if @volunteer.update(volunteer_params)
+      redirect_to volunteer_path(@volunteer), notice: "Volunteer profile updated"
+    else
+      filter = params[:filter].to_s
+      @timeline_filter = filter.presence || "all"
+      @timeline_entries = VolunteerTimeline.entries_for(@volunteer, filter: @timeline_filter)
+      flash.now[:alert] = @volunteer.errors.full_messages.to_sentence
+      render :show, status: :unprocessable_entity
+    end
   end
 
   def sms
@@ -102,5 +114,9 @@ class VolunteersController < ApplicationController
       volunteer.first_name = first_name
       volunteer.last_name = last_name
     end
+  end
+
+  def volunteer_params
+    params.require(:volunteer).permit(:first_name, :last_name, :email, :phone)
   end
 end
