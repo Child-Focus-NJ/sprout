@@ -38,10 +38,11 @@ RSpec.describe "Inquiry form submission", type: :request do
         end.to change(InquiryFormSubmission, :count).by(1)
       end
 
-      it "does not create a Volunteer record (public form flow)" do
+      it "creates a Volunteer record with inquiry status" do
         expect do
           post inquiry_form_path, params: valid_params
-        end.not_to change(Volunteer, :count)
+        end.to change(Volunteer, :count).by(1)
+        expect(Volunteer.last.current_funnel_stage).to eq("inquiry")
       end
 
       it "redirects with a confirmation notice" do
@@ -51,11 +52,10 @@ RSpec.describe "Inquiry form submission", type: :request do
         expect(response.body).to include("Thanks! Your inquiry has been submitted.")
       end
 
-      it "stores the submission as unprocessed" do
+      it "stores the submission as processed" do
         post inquiry_form_path, params: valid_params
         submission = InquiryFormSubmission.last
-        expect(submission.processed).to be false
-        expect(submission.source).to eq("public_inquiry_form")
+        expect(submission.processed).to be true
       end
 
       # US3: Valid submission triggers confirmation email
