@@ -9,7 +9,9 @@
     class="flash-banner <%= is_alert ? "flash-banner--alert" : "flash-banner--notice" %>"
     role="<%= is_alert ? "alert" : "status" %>"
   >
-    <span class="flash-banner__text"><%= sanitize(message.to_s, tags: [], attributes: []) %></span>
+    <% plain_message = sanitize(message.to_s, tags: [], attributes: []) %>
+    <span class="flash-banner__text" data-plain-message="<%= plain_message %>"><%= h(plain_message) %></span>
+    <span class="sr-only" data-escaped-message><%= raw(plain_message.gsub("'", "&#39;")) %></span>
     <button
       type="button"
       class="flash-banner__dismiss"
