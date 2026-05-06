@@ -52,6 +52,14 @@
                      class: "input-large w-full max-w-none md:max-w-md" %>
       </div>
 
+      <div class="space-y-1 md:col-span-2" id="interval-weeks-field">
+        <%= f.label :interval_weeks, "Interval (weeks)", class: "font-semibold text-gray-800" %>
+        <%= f.select :interval_weeks,
+                     [[" — ", nil], ["1 week", 1], ["2 weeks", 2], ["4 weeks", 4], ["8 weeks", 8], ["12 weeks", 12]],
+                     {},
+                     class: "input-large w-full max-w-none md:max-w-md" %>
+      </div>
+
       <div class="space-y-1 md:col-span-2">
         <%= f.label :body, class: "font-semibold text-gray-800" %>
         <%= f.text_area :body, rows: 10, class: "w-full max-w-none border border-gray-400 rounded-md p-3 text-base" %>

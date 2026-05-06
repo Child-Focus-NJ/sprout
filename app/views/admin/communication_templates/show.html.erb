@@ -14,9 +14,15 @@
 
     <div class="grid gap-3 md:grid-cols-3 text-sm text-gray-800">
       <div>
-        <p class="font-semibold">Funnel stage</p>
-        <p><%= @template.funnel_stage.humanize %></p>
+        <p class="font-semibold">Trigger type</p>
+        <p><%= @template.trigger_type.humanize %></p>
       </div>
+      <% if @template.interval_weeks.present? %>
+        <div>
+          <p class="font-semibold">Interval</p>
+          <p><%= @template.interval_weeks %> weeks</p>
+        </div>
+      <% end %>
 
       <div>
         <p class="font-semibold">Template type</p>

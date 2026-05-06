@@ -33,6 +33,6 @@ class Admin::CommunicationTemplatesController < ApplicationController
   private
 
   def template_params
-    params.require(:communication_template).permit(:name, :subject, :body, :funnel_stage, :template_type, :trigger_type)
+    params.require(:communication_template).permit(:name, :subject, :body, :funnel_stage, :template_type, :trigger_type, :interval_weeks)
   end
 end
