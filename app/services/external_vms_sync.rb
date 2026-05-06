@@ -3,14 +3,12 @@
 require "date"
 require "json"
 require "net/http"
-require "openssl"
 require "uri"
 
 class ExternalVmsSync
   BASE_URL_ENV_KEY = "EXTERNAL_VMS_URL"
   USERNAME_ENV_KEY = "EXTERNAL_VMS_USERNAME"
   PASSWORD_ENV_KEY = "EXTERNAL_VMS_PASSWORD"
-  SSL_VERIFY_ENV_KEY = "EXTERNAL_VMS_SSL_VERIFY"
   DEFAULT_BASE_URL = "https://nj-passaic.evintotraining.com"
   DEFAULT_PAGE_SIZE = 50
   DEFAULT_ORDER_BY = "Inquired-desc"
@@ -223,7 +221,6 @@ class ExternalVmsSync
   def http_for(uri)
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = uri.scheme == "https"
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless ssl_verify?
     http.open_timeout = 15
     http.read_timeout = 30
     http
@@ -254,9 +251,5 @@ class ExternalVmsSync
 
   def password
     ENV.fetch(PASSWORD_ENV_KEY)
-  end
-
-  def ssl_verify?
-    ENV.fetch(SSL_VERIFY_ENV_KEY, "false") == "true"
   end
 end
