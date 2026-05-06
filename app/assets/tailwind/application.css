@@ -55,6 +55,31 @@
     @apply w-full max-w-full min-h-[5.5rem] border border-gray-400 rounded-md p-2 text-base;
   }
 
+  .note-form label {
+    @apply font-semibold text-gray-800;
+  }
+
+  #contact-info .note-form > div {
+    @apply grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2;
+  }
+
+  #contact-info .note-form > div.mt-2 {
+    @apply block;
+  }
+
+  .note-form input[type="text"],
+  .note-form input[type="email"],
+  .note-form input[type="tel"] {
+    @apply min-h-[44px] w-full max-w-none px-3 py-2 text-base leading-6 text-gray-900 border border-gray-400 rounded-md bg-white;
+  }
+
+  .note-form input[type="text"]:focus,
+  .note-form input[type="email"]:focus,
+  .note-form input[type="tel"]:focus,
+  .note-form textarea:focus {
+    @apply outline-none ring-2 ring-sky-200 border-sky-500;
+  }
+
   .note-form .button-primary {
     @apply mt-3;
   }
