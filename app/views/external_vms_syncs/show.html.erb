@@ -1,0 +1,51 @@
+<main class="volunteer-page">
+  <h1 class="page-title">External VMS Sync</h1>
+
+  <section class="card status-panel">
+    <h2 class="section-heading">Sync data</h2>
+    <p class="help-text">Pull active inquiries from the external VMS into the local Rails database.</p>
+    <%= button_to "Sync data", external_vms_sync_path, method: :post, class: "button-primary" %>
+    <% if @last_sync.present? %>
+      <p class="subtle">Last sync: <%= l(@last_sync.created_at, format: :short) %></p>
+    <% end %>
+  </section>
+
+  <section class="card status-panel">
+    <h2 class="section-heading">Synced records</h2>
+    <% if @synced_submissions.any? %>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse text-left text-sm">
+          <thead>
+            <tr>
+              <th class="border-b border-gray-300 px-2 py-2">Name</th>
+              <th class="border-b border-gray-300 px-2 py-2">Email</th>
+              <th class="border-b border-gray-300 px-2 py-2">Phone</th>
+              <th class="border-b border-gray-300 px-2 py-2">External ID</th>
+              <th class="border-b border-gray-300 px-2 py-2">Synced</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @synced_submissions.each do |submission| %>
+              <% volunteer = submission.volunteer %>
+              <tr>
+                <td class="border-b border-gray-200 px-2 py-2">
+                  <% if volunteer.present? %>
+                    <%= link_to volunteer.full_name, volunteer_path(volunteer), class: "button-link profile-link" %>
+                  <% else %>
+                    <%= [ submission.first_name, submission.last_name ].compact.join(" ") %>
+                  <% end %>
+                </td>
+                <td class="border-b border-gray-200 px-2 py-2"><%= submission.email %></td>
+                <td class="border-b border-gray-200 px-2 py-2"><%= submission.phone %></td>
+                <td class="border-b border-gray-200 px-2 py-2"><%= submission.raw_data&.fetch("encrypted_id", nil) || volunteer&.external_id %></td>
+                <td class="border-b border-gray-200 px-2 py-2"><%= l(submission.updated_at, format: :short) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="help-text">No external VMS records have been synced yet.</p>
+    <% end %>
+  </section>
+</main>
