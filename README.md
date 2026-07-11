@@ -10,7 +10,7 @@ Sprout supports the journey from initial inquiry through information session att
 
 Working under **Dr. Peter DePasquale**
 
-- **Developers:** Isabelle Adams, Isabelle Larson, Wes Simpson, & Sufyan Waryah
+- **Spring 2026 Developers:** Isabelle Adams, Isabelle Larson, Wes Simpson, & Sufyan Waryah
 
 ---
 
