@@ -27,6 +27,14 @@ end
   VolunteerTag.find_or_create_by!(title: title)
 end
 
+# ── NJ Counties ─────────────────────────────────────────────────────────────
+[
+  'Atlantic', 'Bergen', 'Burlington', 'Camden', 'Cape May', 'Cumberland', 'Essex', 'Gloucester', 'Hudson', 'Hunterdon',
+  'Mercer', 'Middlesex', 'Monmouth', 'Morris', 'Ocean', 'Passaic', 'Salem', 'Somerset', 'Sussex', 'Union', 'Warren'
+].each do |countyname|
+  NjCounty.find_or_create_by!(name: countyname)
+end
+
 # ── Reminder Frequencies ───────────────────────────────────────────────────────
 [ "Weekly", "Bi-weekly", "Monthly" ].each do |title|
   ReminderFrequency.find_or_create_by!(title: title)
@@ -110,6 +118,7 @@ volunteers = volunteer_data.map do |attrs|
   v.became_inactive_at        = attrs[:became_inactive_at]
   v.inactive_reason           = attrs[:inactive_reason]
   v.referral_source           = sources.sample
+  v.nj_county                 = counties.sample
   v.preferred_contact_method  = [ :email, :sms, :both ].sample
 
   v.save!

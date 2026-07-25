@@ -89,7 +89,7 @@ RSpec.describe Volunteer, type: :model do
       newer = create(:volunteer, current_funnel_stage: :application_sent, application_sent_at: 1.day.ago)
       create(:volunteer, current_funnel_stage: :inquiry)
 
-      expect(described_class.awaiting_application_submission.pluck(:id)).to eq([ older.id, newer.id ])
+      expect(described_class.awaiting_application_submission.pluck(:id)).to eq([older.id, newer.id])
     end
   end
 
@@ -169,6 +169,39 @@ RSpec.describe Volunteer, type: :model do
       expect(volunteer.application_sent_at).to be_nil
       expect(volunteer.first_session_attended_at).to be_present
       expect(volunteer.status_changes.last.event?).to be true
+    end
+  end
+
+  describe "associations" do
+    it "can be created without a county or referral source" do
+      volunteer = build(:volunteer, nj_county: nil, referral_source: nil)
+      expect(volunteer).to be_valid
+    end
+
+    it "belongs to an nj_county" do
+      county = create(:nj_county)
+      volunteer = create(:volunteer, nj_county: county)
+      expect(volunteer.nj_county).to eq(county)
+    end
+  end
+
+  describe "#nj_county_name" do
+    it "returns the associated county's name" do
+      county = create(:nj_county, name: "Essex")
+      volunteer = build(:volunteer, nj_county: county)
+      expect(volunteer.nj_county_name).to eq("Essex")
+    end
+
+    it "returns nil when no county is set" do
+      volunteer = build(:volunteer, nj_county: nil)
+      expect(volunteer.nj_county_name).to be_nil
+    end
+  end
+
+  describe "#referral_source_name" do
+    it "returns nil when no referral source is set" do
+      volunteer = build(:volunteer, referral_source: nil)
+      expect(volunteer.referral_source_name).to be_nil
     end
   end
 end

@@ -18,13 +18,25 @@
     </div>
     <br>
     <div>
-      <%= form.label :email, "Email  " %>
+      <%= form.label :email, "Email" %>
       <%= form.email_field :email, required: true %>
     </div>
     <br>
     <div>
-      <%= form.label :phone, "Phone  " %>
+      <%= form.label :phone, "Phone" %>
       <%= form.telephone_field :phone, required: true %>
+    </div>
+    <br>
+    <div>
+      <%= form.label :nj_county_id, "County" %>
+      <%= form.collection_select :nj_county_id, NjCounty.alphabetical, :id, :name,
+                                 { include_blank: "Select..." }, { class: "input-large" } %>
+    </div>
+    <br>
+    <div>
+      <%= form.label :referral_source_id, "How did you hear?" %>
+      <%= form.collection_select :referral_source_id, ReferralSource.active.alphabetical, :id, :name,
+                                 { include_blank: "Select..." }, { class: "input-large" } %>
     </div>
     <br>
     <% normalized_phone = @volunteer.phone.to_s.gsub(/\D/, "") %>

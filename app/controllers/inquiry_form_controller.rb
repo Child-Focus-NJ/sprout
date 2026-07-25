@@ -7,6 +7,7 @@ class InquiryFormController < ApplicationController
     @information_session_id = params[:information_session_id]
     @form_values = form_values_from_params
     @form_errors = {}
+    load_select_options
   end
 
   def create
@@ -15,6 +16,7 @@ class InquiryFormController < ApplicationController
     @form_errors = validate_form(@form_values)
 
     if @form_errors.any?
+      load_select_options
       render :new, status: :unprocessable_entity
       return
     end
@@ -24,11 +26,14 @@ class InquiryFormController < ApplicationController
     first_name = @form_values[:first_name]
     last_name = @form_values[:last_name]
     phone = @form_values[:phone]
+    nj_county_id = @form_values[:nj_county_id]
+    referral_source_id = @form_values[:referral_source_id]
 
     if session_id.present?
       info_session = InformationSession.find_by(id: session_id)
       unless info_session
         @form_errors[:base] = "Invalid session."
+        load_select_options
         render :new, status: :unprocessable_entity
         return
       end
@@ -54,6 +59,8 @@ class InquiryFormController < ApplicationController
         last_name: last_name,
         email: email,
         phone: phone,
+        nj_county_id: nj_county_id,
+        referral_source_id: referral_source_id,
         current_funnel_stage: :inquiry
       )
 
@@ -64,12 +71,16 @@ class InquiryFormController < ApplicationController
         last_name: last_name,
         email: email,
         source: "walk_in_check_in",
+        nj_county_id: nj_county_id,
+        referral_source_id: referral_source_id,
         raw_data: {
           information_session_id: info_session.id,
           first_name: first_name,
           last_name: last_name,
           email: email,
-          phone: phone
+          phone: phone,
+          nj_county_id: nj_county_id,
+          referral_source_id: referral_source_id
         },
         processed: true,
         processed_at: Time.current
@@ -97,17 +108,23 @@ class InquiryFormController < ApplicationController
       last_name: last_name,
       email: email,
       phone: phone,
+      nj_county_id: nj_county_id,
+      referral_source_id: referral_source_id,
       current_funnel_stage: :inquiry
     )
 
     InquiryFormSubmission.create!(
       volunteer: volunteer,
       source: "public_inquiry_form",
+      nj_county_id: nj_county_id,
+      referral_source_id: referral_source_id,
       raw_data: {
         first_name: first_name,
         last_name: last_name,
         email: email,
-        phone: phone
+        phone: phone,
+        nj_county_id: nj_county_id,
+        referral_source_id: referral_source_id
       },
       processed: true,
       processed_at: Time.current
@@ -124,7 +141,9 @@ class InquiryFormController < ApplicationController
       first_name: params[:first_name].to_s.strip,
       last_name: params[:last_name].to_s.strip,
       email: params[:email].to_s.strip.downcase,
-      phone: params[:phone].to_s.strip
+      phone: params[:phone].to_s.strip,
+      nj_county_id: params[:nj_county_id].presence,
+      referral_source_id: params[:referral_source_id].presence
     }
   end
 
@@ -145,5 +164,10 @@ class InquiryFormController < ApplicationController
     end
 
     errors
+  end
+
+  def load_select_options
+    @nj_counties = NjCounty.alphabetical
+    @referral_sources = ReferralSource.active.alphabetical
   end
 end

@@ -117,6 +117,6 @@ class VolunteersController < ApplicationController
   end
 
   def volunteer_params
-    params.require(:volunteer).permit(:first_name, :last_name, :email, :phone)
+    params.require(:volunteer).permit(:first_name, :last_name, :email, :phone, :nj_county_id, :referral_source_id)
   end
 end

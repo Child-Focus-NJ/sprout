@@ -5,6 +5,7 @@ class Volunteer < ApplicationRecord
 
   belongs_to :referral_source, optional: true
   belongs_to :referred_by_volunteer, class_name: "Volunteer", optional: true
+  belongs_to :nj_county, optional: true
 
   has_many :session_registrations, dependent: :destroy
   has_many :information_sessions, through: :session_registrations
@@ -18,6 +19,9 @@ class Volunteer < ApplicationRecord
   validates :first_name, presence: true
   validates :last_name, presence: true
   validates :email, presence: true, uniqueness: true
+
+  delegate :name, to: :nj_county, prefix: true, allow_nil: true
+  delegate :name, to: :referral_source, prefix: true, allow_nil: true
 
   scope :active, -> { where.not(current_funnel_stage: :inactive) }
   scope :inactive_volunteers, -> { where(current_funnel_stage: :inactive) }
