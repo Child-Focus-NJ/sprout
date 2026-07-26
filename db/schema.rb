@@ -73,6 +73,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_22_120000) do
     t.string "location"
     t.string "name"
     t.text "notes"
+    t.text "zoom_link"
     t.datetime "scheduled_at", null: false
     t.integer "session_type", default: 0, null: false
     t.datetime "updated_at", null: false
