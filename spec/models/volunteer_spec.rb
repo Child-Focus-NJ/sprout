@@ -89,7 +89,7 @@ RSpec.describe Volunteer, type: :model do
       newer = create(:volunteer, current_funnel_stage: :application_sent, application_sent_at: 1.day.ago)
       create(:volunteer, current_funnel_stage: :inquiry)
 
-      expect(described_class.awaiting_application_submission.pluck(:id)).to eq([older.id, newer.id])
+      expect(described_class.awaiting_application_submission.pluck(:id)).to eq([ older.id, newer.id ])
     end
   end
 

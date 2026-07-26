@@ -3,4 +3,3 @@ FactoryBot.define do
     sequence(:name) { |n| "County #{n}" }
   end
 end
-
