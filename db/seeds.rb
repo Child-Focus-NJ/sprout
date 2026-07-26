@@ -18,9 +18,11 @@ staff = User.find_or_create_by!(email: "staff@childfocusnj.org") do |u|
 end
 
 # ── Referral Sources ───────────────────────────────────────────────────────────
-sources = [ "Facebook", "Instagram", "Word of Mouth", "Website", "Flyer", "School", "Other" ].map do |name|
-  ReferralSource.find_or_create_by!(name: name)
-end
+# Reference data is seeded via db/migrate — see SeedNjCountiesAndReferralSources.
+# This runs in every environment via `db:migrate`, not just when someone
+# manually runs `db:seed`. We just look the records up here for sampling.
+sources = ReferralSource.all.to_a
+raise "No referral sources found — run `bin/rails db:migrate` first." if sources.empty?
 
 # ── Volunteer Tags ─────────────────────────────────────────────────────────────
 [ "Bilingual", "Available Weekends", "Has Prior Experience", "Flexible Schedule" ].each do |title|
@@ -28,12 +30,9 @@ end
 end
 
 # ── NJ Counties ─────────────────────────────────────────────────────────────
-[
-  'Atlantic', 'Bergen', 'Burlington', 'Camden', 'Cape May', 'Cumberland', 'Essex', 'Gloucester', 'Hudson', 'Hunterdon',
-  'Mercer', 'Middlesex', 'Monmouth', 'Morris', 'Ocean', 'Passaic', 'Salem', 'Somerset', 'Sussex', 'Union', 'Warren'
-].each do |countyname|
-  NjCounty.find_or_create_by!(name: countyname)
-end
+# Also seeded via db/migrate (see note above) rather than here.
+counties = NjCounty.all.to_a
+raise "No NJ counties found — run `bin/rails db:migrate` first." if counties.empty?
 
 # ── Reminder Frequencies ───────────────────────────────────────────────────────
 [ "Weekly", "Bi-weekly", "Monthly" ].each do |title|
@@ -145,4 +144,4 @@ end
 puts "  Created session registrations"
 
 puts "  Created #{volunteers.size} volunteers"
-puts "Done! Seeded volunteers, sessions, tags, frequencies, and referral sources."
+puts "Done! Seeded volunteers, sessions, tags, and frequencies."
