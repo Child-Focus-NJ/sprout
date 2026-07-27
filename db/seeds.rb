@@ -18,11 +18,16 @@ staff = User.find_or_create_by!(email: "staff@childfocusnj.org") do |u|
 end
 
 # ── Referral Sources ───────────────────────────────────────────────────────────
-# Reference data is seeded via db/migrate — see SeedNjCountiesAndReferralSources.
-# This runs in every environment via `db:migrate`, not just when someone
-# manually runs `db:seed`. We just look the records up here for sampling.
-sources = ReferralSource.all.to_a
-raise "No referral sources found — run `bin/rails db:migrate` first." if sources.empty?
+# Also created by db/migrate (SeedNjCountiesAndReferralSources) for
+# environments that replay real pending migrations. But as of Rails 8,
+# db:migrate against a *fresh/empty* database implicitly loads db/schema.rb
+# first and marks migrations at/below that version as applied WITHOUT running
+# their code (rails/rails#53899) — so that migration alone isn't reliable on
+# a brand-new database. find_or_create_by! here makes this self-healing
+# regardless of which path Rails takes.
+sources = [ "Facebook", "Instagram", "Word of Mouth", "Website", "Flyer", "School", "Other" ].map do |name|
+  ReferralSource.find_or_create_by!(name: name)
+end
 
 # ── Volunteer Tags ─────────────────────────────────────────────────────────────
 [ "Bilingual", "Available Weekends", "Has Prior Experience", "Flexible Schedule" ].each do |title|
@@ -30,9 +35,13 @@ raise "No referral sources found — run `bin/rails db:migrate` first." if sourc
 end
 
 # ── NJ Counties ─────────────────────────────────────────────────────────────
-# Also seeded via db/migrate (see note above) rather than here.
-counties = NjCounty.all.to_a
-raise "No NJ counties found — run `bin/rails db:migrate` first." if counties.empty?
+# Also created by db/migrate — see note above the referral sources block.
+counties = [
+  'Atlantic', 'Bergen', 'Burlington', 'Camden', 'Cape May', 'Cumberland', 'Essex', 'Gloucester', 'Hudson', 'Hunterdon',
+  'Mercer', 'Middlesex', 'Monmouth', 'Morris', 'Ocean', 'Passaic', 'Salem', 'Somerset', 'Sussex', 'Union', 'Warren'
+].map do |countyname|
+  NjCounty.find_or_create_by!(name: countyname)
+end
 
 # ── Reminder Frequencies ───────────────────────────────────────────────────────
 [ "Weekly", "Bi-weekly", "Monthly" ].each do |title|
