@@ -34,7 +34,7 @@ class ApplicationController < ActionController::Base
   end
 
   def allow_unauthenticated_access?
-    (controller_name == "sessions" && %w[new create failure].include?(action_name)) ||
+    (controller_name == "sessions" && %w[new create failure destroy].include?(action_name)) ||
       request.path == "/up"
   end
 
