@@ -1,0 +1,40 @@
+<h2 class="section-heading">Reminder Frequencies</h2>
+
+<ul id="frequency-list" class="volunteer-list mb-3">
+  <% @reminder_frequencies.each do |freq| %>
+    <li class="volunteer-row">
+      <% if params[:edit_frequency_id] == freq.id.to_s %>
+        <%= form_with url: reminder_frequency_path(freq), method: :patch, local: true, class: "inline-form" do %>
+          <input type="text" name="title" id="frequency_title" value="<%= freq.title %>"
+                 class="input-large max-w-xs">
+          <button type="submit" class="button-primary">Save Frequency</button>
+          <%= link_to "Cancel", system_management_path(tab: "frequencies"), class: "button-link" %>
+        <% end %>
+      <% else %>
+        <div class="volunteer-meta">
+          <span class="volunteer-name"><%= freq.title %></span>
+        </div>
+        <div class="volunteer-actions">
+          <%= link_to "Edit", system_management_path(tab: "frequencies", edit_frequency_id: freq.id),
+                class: "button-link" %>
+          <%= button_to "Remove", reminder_frequency_path(freq), method: :delete,
+                class: "btn-delete" %>
+        </div>
+      <% end %>
+    </li>
+  <% end %>
+</ul>
+
+<% unless params[:edit_frequency_id].present? %>
+  <details class="mt-2">
+    <summary class="button-link cursor-pointer select-none">Add Frequency</summary>
+    <div class="mt-3">
+      <%= form_with url: reminder_frequencies_path, local: true, class: "inline-form" do %>
+        <input type="text" name="title" id="frequency_title"
+               placeholder="New frequency"
+               class="input-large max-w-xs">
+        <button type="submit" class="button-primary">Save Frequency</button>
+      <% end %>
+    </div>
+  </details>
+<% end %>

@@ -1,0 +1,40 @@
+<h2 class="section-heading">Volunteer Tags</h2>
+
+<ul id="tag-list" class="volunteer-list mb-3">
+  <% @volunteer_tags.each do |tag| %>
+    <li class="volunteer-row">
+      <% if params[:edit_tag_id] == tag.id.to_s %>
+        <%= form_with url: volunteer_tag_path(tag), method: :patch, local: true, class: "inline-form" do %>
+          <input type="text" name="title" id="tag_title" value="<%= tag.title %>"
+                 class="input-large max-w-xs">
+          <button type="submit" class="button-primary">Save Tag</button>
+          <%= link_to "Cancel", system_management_path(tab: "tags"), class: "button-link" %>
+        <% end %>
+      <% else %>
+        <div class="volunteer-meta">
+          <span class="volunteer-name"><%= tag.title %></span>
+        </div>
+        <div class="volunteer-actions">
+          <%= link_to "Edit", system_management_path(tab: "tags", edit_tag_id: tag.id),
+                class: "button-link" %>
+          <%= button_to "Remove", volunteer_tag_path(tag), method: :delete,
+                class: "btn-delete" %>
+        </div>
+      <% end %>
+    </li>
+  <% end %>
+</ul>
+
+<% unless params[:edit_tag_id].present? %>
+  <details class="mt-2">
+    <summary class="button-link cursor-pointer select-none">Add Tag</summary>
+    <div class="mt-3">
+      <%= form_with url: volunteer_tags_path, local: true, class: "inline-form" do %>
+        <input type="text" name="title" id="tag_title"
+               placeholder="New tag"
+               class="input-large max-w-xs">
+        <button type="submit" class="button-primary">Save Tag</button>
+      <% end %>
+    </div>
+  </details>
+<% end %>

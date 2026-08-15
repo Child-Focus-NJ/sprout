@@ -2,6 +2,10 @@ Given('I am on the system management page') do
   visit system_management_path
 end
 
+Given('I click the {string} tab') do |tab|
+  click_link tab
+end
+
 Given('the following users exist:') do |table|
   table.hashes.each do |row|
     User.create!(email: row['email']) do |user|
