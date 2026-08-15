@@ -39,7 +39,15 @@ Feature: Integration & Administration
             Then I should see "Three Months" on the frequency list
             And I should not see "Six Months" on the frequency list
 
+        Scenario: Editing a reminder frequency
+            Given I click "Edit" for "Six Months"
+            And I enter "Nine Months" in the "frequency_title" field
+            And I have clicked the "Save Frequency" button
+            Then I should see "Nine Months" on the frequency list
+            And I should not see "Six Months" on the frequency list
+
         Scenario: Changing volunteer tags
+            Given I click the "Volunteer Tags" tab
             Given I click "Remove" for "VIP"
             And I have clicked the "Add Tag" button
             And I enter "Temporarily Inactive" in the "tag_title" field
@@ -52,12 +60,14 @@ Feature: Integration & Administration
             Then "Colin Smith" should appear on the volunteers page
 
         Scenario: Removing an Employee
+            Given I click the "Employees" tab
             Given I have clicked the "Remove" button for "Joel Savitz"
             Then I should get a confirmation box that says "Are you sure you want to remove this user?"
             And I click "Yes"
             Then I should not see "Joel Savitz" on the page
 
         Scenario: Adding an Employee
+            Given I click the "Employees" tab
             And I have clicked the "Add Employee" button
             And I enter "Kevra" in the "First Name" field
             And I enter "Scholl" in the "Last Name" field
@@ -65,3 +75,10 @@ Feature: Integration & Administration
             And I select "Staff" in the "Role" dropdown field
             And I have clicked the "Save Employee" button
             Then "Kevra Scholl" should appear on the page
+
+        Scenario: Adding a referral source
+            Given I click the "Referral Sources" tab
+            And I have clicked the "Add Referral Source" button
+            And I enter "Radio" in the "referral_source_name" field
+            And I have clicked the "Save Referral Source" button
+            Then I should see "Radio" on the frequency list

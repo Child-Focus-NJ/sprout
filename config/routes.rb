@@ -51,9 +51,10 @@ Rails.application.routes.draw do
     end
   end
   resource :external_vms_sync, only: [ :show, :create ], controller: "external_vms_syncs"
-  resources :reminder_frequencies, only: [ :create, :destroy ]
-  resources :volunteer_tags, only: [ :create, :destroy ]
-  resources :users, only: [ :create, :destroy ]
+  resources :reminder_frequencies, only: [ :create, :update, :destroy ]
+  resources :volunteer_tags, only: [ :create, :update, :destroy ]
+  resources :users, only: [ :create, :update, :destroy ]
+  resources :referral_sources, only: [ :create, :update, :destroy ]
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
