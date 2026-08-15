@@ -55,6 +55,28 @@ RSpec.describe User, type: :model do
         expect { User.from_omniauth(auth) }.not_to change(User, :count)
       end
 
+      it 'links Google to an existing staff record with the same email' do
+        existing = User.create!(
+          email: "izzy@nyu.edu",
+          first_name: "Staff",
+          last_name: "Member"
+        )
+        auth_for_existing = OmniAuth::AuthHash.new({
+          uid: "google-uid-existing",
+          info: {
+            email: "izzy@nyu.edu",
+            first_name: "Izzy",
+            last_name: "Member",
+            name: "Izzy Member",
+            image: nil
+          }
+        })
+
+        expect { User.from_omniauth(auth_for_existing) }.not_to change(User, :count)
+        expect(existing.reload.google_uid).to eq("google-uid-existing")
+        expect(existing.first_name).to eq("Izzy")
+      end
+
       it 'updates their info' do
         updated_auth = OmniAuth::AuthHash.new({
           uid: "google-uid-123",
