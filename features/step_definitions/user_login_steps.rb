@@ -9,7 +9,7 @@ Given('I have a Child Focus NJ email domain') do
 end
 
 Then('I am redirected to the volunteer home page') do
-  expect(page).to have_current_path(volunteers_path)
+  expect(page).to have_current_path(application_dashboard_path)
 end
 
 Given('I do not have a Child Focus NJ email domain') do
@@ -26,7 +26,7 @@ When('I complete the Google OAuth flow as a Child Focus user') do
     google_uid: "test-google-uid"
   )
   login_as(user, scope: :user)
-  visit volunteers_path
+  visit application_dashboard_path
 end
 
 When('I attempt Google OAuth with a non-allowed email') do
