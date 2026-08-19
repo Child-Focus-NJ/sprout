@@ -8,7 +8,7 @@ Given('I have a Child Focus NJ email domain') do
   stub_google_oauth(email: "admin@childfocusnj.org")
 end
 
-Then('I am redirected to the volunteer home page') do
+Then('I am redirected to the application dashboard') do
   expect(page).to have_current_path(application_dashboard_path)
 end
 
