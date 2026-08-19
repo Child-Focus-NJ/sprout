@@ -15,8 +15,9 @@ class SessionsController < ApplicationController
     end
 
     user = User.from_omniauth(auth)
+    reset_session
     session[:user_id] = user.id
-    redirect_to volunteers_path
+    redirect_to application_dashboard_path
   end
 
   def failure

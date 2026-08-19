@@ -23,22 +23,32 @@ class User < ApplicationRecord
   end
 
   def self.from_omniauth(auth)
-  name_parts = auth.info.name.to_s.split
-  user = find_or_create_by!(google_uid: auth.uid) do |u|
-    u.email = auth.info.email
-    u.first_name = auth.info.first_name.presence || name_parts.first
-    u.last_name = auth.info.last_name.presence || name_parts[1..].join(" ").presence
-    u.avatar_url = auth.info.image.presence
-  end
-  user.update!(
-    first_name: auth.info.first_name.presence || name_parts.first || user.first_name,
-    last_name: auth.info.last_name.presence || name_parts[1..].join(" ").presence || user.last_name,
-    avatar_url: auth.info.image.presence || user.avatar_url
-  )
-  user
-end
+    name_parts = auth.info.name.to_s.split
+    email = auth.info.email.to_s.strip.downcase
+    user = find_by(google_uid: auth.uid) || find_by(email: email)
 
-def self.allowed_email?(email)
-  email&.end_with?("@passaiccountycasa.org", "@nyu.edu") || false
-end
+    attrs = {
+      google_uid: auth.uid,
+      email: email,
+      first_name: auth.info.first_name.presence || name_parts.first,
+      last_name: auth.info.last_name.presence || name_parts[1..].join(" ").presence,
+      avatar_url: auth.info.image.presence
+    }
+
+    if user
+      user.update!(
+        google_uid: attrs[:google_uid],
+        first_name: attrs[:first_name] || user.first_name,
+        last_name: attrs[:last_name] || user.last_name,
+        avatar_url: attrs[:avatar_url] || user.avatar_url
+      )
+      user
+    else
+      create!(attrs)
+    end
+  end
+
+  def self.allowed_email?(email)
+    email&.end_with?("@passaiccountycasa.org", "@nyu.edu") || false
+  end
 end

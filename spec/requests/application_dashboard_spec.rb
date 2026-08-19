@@ -37,6 +37,17 @@ RSpec.describe "Application dashboard", type: :request do
         expect(body).to include("View profile")
         expect(body.index(older.full_name)).to be < body.index(newer.full_name)
       end
+
+      it "lists Dashboard before Volunteers in the main navigation" do
+        get volunteers_path
+
+        expect(response).to have_http_status(:ok)
+        dashboard_index = response.body.index(">Dashboard<")
+        volunteers_index = response.body.index(">Volunteers<")
+        expect(dashboard_index).to be_present
+        expect(volunteers_index).to be_present
+        expect(dashboard_index).to be < volunteers_index
+      end
     end
 
     context "when signed in as staff" do
