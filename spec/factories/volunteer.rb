@@ -4,5 +4,13 @@ FactoryBot.define do
     sequence(:email) { |n| "volunteer#{n}@childfocusnj.org" }
     first_name { "Test" }
     last_name { "Volunteer" }
+
+    trait :with_county do
+      association :nj_county
+    end
+
+    trait :with_referral_source do
+      association :referral_source
+    end
   end
 end
