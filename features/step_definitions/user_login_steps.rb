@@ -45,3 +45,7 @@ end
 Then('I will be on the login page') do
   expect(page).to have_current_path(login_path)
 end
+
+When('I log out') do
+  click_on "Log out"
+end

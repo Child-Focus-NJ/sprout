@@ -29,6 +29,9 @@
         <span class="app-navbar__sep" aria-hidden="true">·</span>
         <span class="app-navbar__email" title="<%= current_user.email %>"><%= current_user.email %></span>
       </div>
+      <%= button_to "Log out", logout_path, method: :delete,
+            form: { class: "app-navbar__logout-form" },
+            class: "app-navbar__logout" %>
     </div>
   </div>
 </header>
