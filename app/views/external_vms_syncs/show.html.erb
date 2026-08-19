@@ -3,7 +3,7 @@
 
   <section class="card status-panel">
     <h2 class="section-heading">Sync data</h2>
-    <p class="help-text">Pull active inquiries from the external VMS into the local Rails database.</p>
+    <p class="help-text">Pull active inquiries from the external VMS into Sprout.</p>
     <%= button_to "Sync data", external_vms_sync_path, method: :post, class: "button-primary" %>
     <% if @last_sync.present? %>
       <p class="subtle">Last sync: <%= l(@last_sync.created_at, format: :short) %></p>

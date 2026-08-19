@@ -1,0 +1,51 @@
+<h2 class="section-heading">Referral Sources</h2>
+
+<ul id="referral-source-list" class="volunteer-list mb-3">
+  <% @referral_sources.each do |source| %>
+    <li class="volunteer-row">
+      <% if params[:edit_referral_source_id] == source.id.to_s %>
+        <%= form_with url: referral_source_path(source), method: :patch, local: true, class: "grid gap-3 max-w-md" do %>
+          <input type="text" name="name" id="referral_source_name" value="<%= source.name %>"
+                 class="input-large">
+          <label class="inline-flex items-center gap-2">
+            <%= check_box_tag :active, "1", source.active? %>
+            Active
+          </label>
+          <div class="inline-form">
+            <button type="submit" class="button-primary">Save Referral Source</button>
+            <%= link_to "Cancel", system_management_path(tab: "referral_sources"), class: "button-link" %>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="volunteer-meta">
+          <span class="volunteer-name"><%= source.name %></span>
+          <span class="help-text"><%= source.active? ? "Active" : "Inactive" %></span>
+        </div>
+        <div class="volunteer-actions">
+          <%= link_to "Edit", system_management_path(tab: "referral_sources", edit_referral_source_id: source.id),
+                class: "button-link" %>
+          <%= button_to "Remove", referral_source_path(source), method: :delete,
+                class: "btn-delete" %>
+        </div>
+      <% end %>
+    </li>
+  <% end %>
+</ul>
+
+<% unless params[:edit_referral_source_id].present? %>
+  <details class="mt-2">
+    <summary class="button-link cursor-pointer select-none">Add Referral Source</summary>
+    <div class="mt-3">
+      <%= form_with url: referral_sources_path, local: true, class: "grid gap-3 max-w-md" do %>
+        <input type="text" name="name" id="referral_source_name"
+               placeholder="New referral source"
+               class="input-large">
+        <label class="inline-flex items-center gap-2">
+          <%= check_box_tag :active, "1", true %>
+          Active
+        </label>
+        <button type="submit" class="button-primary">Save Referral Source</button>
+      <% end %>
+    </div>
+  </details>
+<% end %>

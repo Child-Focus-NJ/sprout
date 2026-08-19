@@ -127,6 +127,7 @@ end
 When("I select the volunteers {string} and {string}") do |name1, name2|
   v1 = find_or_create_volunteer_by_name(name1)
   v2 = find_or_create_volunteer_by_name(name2)
+  visit volunteers_path
   check "volunteer_#{v1.id}"
   check "volunteer_#{v2.id}"
 end
