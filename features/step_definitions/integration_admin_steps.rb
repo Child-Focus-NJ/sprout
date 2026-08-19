@@ -2,6 +2,10 @@ Given('I am on the system management page') do
   visit system_management_path
 end
 
+Given('I click the {string} tab') do |tab|
+  within(".sys-tabs") { click_link tab }
+end
+
 Given('the following users exist:') do |table|
   table.hashes.each do |row|
     User.create!(email: row['email']) do |user|
@@ -69,7 +73,7 @@ Then('the profile for {string} should include a note that says {string} with the
 end
 
 Given('I click {string} for {string}') do |button, row|
-  visit current_path
+  visit current_url
   within(:xpath, "//li[.//span[contains(text(), '#{row}')]]") do
     click_on button
   end
@@ -108,7 +112,7 @@ Then('{string} should appear on the volunteers page') do |name|
 end
 
 Given('I have clicked the {string} button for {string}') do |button, full_name|
-  visit current_path
+  visit current_url
   first_name, last_name = full_name.split(' ')
   employee = User.find_by(first_name: first_name, last_name: last_name)
   within("#user_#{employee.id}") do

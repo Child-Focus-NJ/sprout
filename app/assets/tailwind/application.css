@@ -607,6 +607,18 @@
     @apply m-0 inline-flex h-auto shrink-0 cursor-pointer appearance-none items-center rounded-lg border-0 bg-transparent px-2.5 py-1.5 text-sm font-medium text-slate-600 shadow-none hover:bg-slate-100 hover:text-slate-900;
   }
 
+  .sys-tabs {
+    @apply mb-4 flex flex-wrap gap-1 border-b border-slate-200 pb-0;
+  }
+
+  .sys-tabs__link {
+    @apply -mb-px inline-flex items-center rounded-t-lg border border-transparent px-3 py-2 text-sm font-medium text-slate-600 no-underline hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  .sys-tabs__link--active {
+    @apply border-slate-200 border-b-white bg-white text-sky-950;
+  }
+
   .welcome-home {
     @apply mx-auto flex max-w-7xl flex-col items-center justify-center px-4 py-16 sm:min-h-[min(70vh,36rem)] sm:py-24;
   }

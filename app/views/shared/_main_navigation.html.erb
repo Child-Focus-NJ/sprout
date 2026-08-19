@@ -1,11 +1,13 @@
 <header class="app-navbar" role="banner">
   <div class="app-navbar__inner">
     <nav class="app-navbar__links" aria-label="Main navigation">
+      <% if current_user.admin? %>
+        <%= link_to "Dashboard", application_dashboard_path, class: app_nav_link_class(application_dashboard_path) %>
+      <% end %>
       <%= link_to "Volunteers", volunteers_path, class: app_nav_link_class(volunteers_path) %>
       <%= link_to "Sessions", information_sessions_path, class: app_nav_link_class(information_sessions_path) %>
       <%= link_to "Inquiry", new_inquiry_form_path, class: app_nav_link_class(new_inquiry_form_path) %>
       <% if current_user.admin? %>
-        <%= link_to "Dashboard", application_dashboard_path, class: app_nav_link_class(application_dashboard_path) %>
         <%= link_to "External Sync", external_vms_sync_path, class: app_nav_link_class(external_vms_sync_path) %>
         <%= link_to "Email Templates", admin_communication_templates_path, class: app_nav_link_class(admin_communication_templates_path) %>
         <%= link_to "Admin", system_management_path, class: app_nav_link_class(system_management_path) %>
