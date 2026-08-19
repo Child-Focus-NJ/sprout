@@ -19,4 +19,10 @@ module ApplicationHelper
     base = "app-navbar__link"
     current_page?(path) ? "#{base} app-navbar__link--active" : base
   end
+
+  def system_management_tab_link(label, tab, current_tab)
+    classes = "sys-tabs__link"
+    classes += " sys-tabs__link--active" if tab == current_tab
+    link_to label, system_management_path(tab: tab), class: classes
+  end
 end

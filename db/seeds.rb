@@ -70,10 +70,11 @@ info_sessions = sessions.map do |attrs|
 end
 
 # ── Volunteers ─────────────────────────────────────────────────────────────────
+# Keep the demo dataset tiny so local/dev lists stay easy to scan.
 volunteer_data = [
-  { first_name: "Harry",  last_name: "Kane",   email: "harry.kane@example.com",   inquiry_date: Date.new(2026, 2, 10), stage: :applied,          application_submitted_at: Date.new(2026, 3, 5) },
-  { first_name: "Marcus", last_name: "Webb",   email: "marcus.webb@example.com",  inquiry_date: Date.new(2026, 3, 18), stage: :application_sent, application_sent_at: Date.new(2026, 4, 1) },
-  { first_name: "Priya",  last_name: "Nair",   email: "priya.nair@example.com",   inquiry_date: Date.new(2026, 4, 3),  stage: :inquiry }
+  { first_name: "Harry", last_name: "Kane",   email: "harry-kane@childfocusnj.org", inquiry_date: Date.new(2026, 4, 1),  stage: :inquiry },
+  { first_name: "Sofia", last_name: "Reyes",  email: "sofia.reyes@example.com",     inquiry_date: Date.new(2024, 4, 14), stage: :application_sent,     application_sent_at: Date.new(2024, 5, 1) },
+  { first_name: "Hana",  last_name: "Kimura", email: "hana.kimura@example.com",     inquiry_date: Date.new(2026, 3, 22), stage: :application_eligible, first_session_attended_at: Date.new(2026, 4, 10) }
 ]
 
 volunteers = volunteer_data.map do |attrs|
@@ -100,7 +101,7 @@ end
 eligible_volunteers = volunteers.select { |v| v.application_eligible? || v.application_sent? || v.applied? }
 
 info_sessions.each do |session|
-  attendees = eligible_volunteers.sample(rand(3..8))
+  attendees = eligible_volunteers.sample([ eligible_volunteers.size, 2 ].min)
   attendees.each do |volunteer|
     next if SessionRegistration.exists?(volunteer: volunteer, information_session: session)
 

@@ -27,6 +27,12 @@ class ApplicationController < ActionController::Base
       return
     end
 
+    unless signed_in_via_google?
+      reset_session
+      redirect_to login_path, alert: "Please sign in to continue."
+      return
+    end
+
     return if current_user.active?
 
     reset_session
@@ -36,6 +42,15 @@ class ApplicationController < ActionController::Base
   def allow_unauthenticated_access?
     (controller_name == "sessions" && %w[new create failure destroy].include?(action_name)) ||
       request.path == "/up"
+  end
+
+  # Seeded employees have no Google uid. A leftover cookie can point at that
+  # record (often admin@childfocusnj.org) after a DB reset. Cucumber/Warden
+  # logins in test do not set google_uid, so skip this check there.
+  def signed_in_via_google?
+    return true if Rails.env.test?
+
+    current_user.google_uid.present?
   end
 
   def deliver_application_queued_email!(volunteer)
