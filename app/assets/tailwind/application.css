@@ -599,6 +599,14 @@
     @apply max-w-full truncate text-xs font-normal text-slate-500 sm:max-w-[18rem] sm:text-sm;
   }
 
+  .app-navbar__logout-form {
+    @apply m-0 ml-1 inline shrink-0;
+  }
+
+  .app-navbar__logout {
+    @apply m-0 inline-flex h-auto shrink-0 cursor-pointer appearance-none items-center rounded-lg border-0 bg-transparent px-2.5 py-1.5 text-sm font-medium text-slate-600 shadow-none hover:bg-slate-100 hover:text-slate-900;
+  }
+
   .welcome-home {
     @apply mx-auto flex max-w-7xl flex-col items-center justify-center px-4 py-16 sm:min-h-[min(70vh,36rem)] sm:py-24;
   }

@@ -23,4 +23,10 @@ class SessionsController < ApplicationController
     flash[:alert] = "Authentication failed"
     redirect_to login_path
   end
+
+  def destroy
+    request.env["warden"]&.logout
+    reset_session
+    redirect_to login_path, notice: "You have been logged out."
+  end
 end
