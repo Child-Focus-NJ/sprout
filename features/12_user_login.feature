@@ -8,7 +8,7 @@ Feature: User Login
 
     Scenario: Successful Login
         When I complete the Google OAuth flow as a Child Focus user
-        Then I am redirected to the volunteer home page
+        Then I am redirected to the application dashboard
 
     Scenario: Successful Logout
         When I complete the Google OAuth flow as a Child Focus user
