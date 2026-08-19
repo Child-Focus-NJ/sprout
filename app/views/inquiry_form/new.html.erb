@@ -10,9 +10,9 @@
         we use the existing volunteer record and avoid duplicates.
       </p>
     <% else %>
-      <h2 class="section-heading">Please add them to the system</h2>
+      <h2 class="section-heading">Please add new inquiries to the system</h2>
       <p class="help-text">
-        Enter the volunteer’s information to continue the inquiry process.
+        Enter the inquiry’s information to continue the inquiry process.
       </p>
     <% end %>
     <% if @form_errors.present? && @form_errors.any? %>
@@ -47,6 +47,20 @@
       <div class="inquiry-form__row">
         <%= label_tag :phone, "Phone" %>
         <%= text_field_tag :phone, params[:phone], class: "input-large" %>
+      </div>
+
+      <div class="inquiry-form__row">
+        <%= label_tag :nj_county_id, "County" %>
+        <%= select_tag :nj_county_id,
+                       options_from_collection_for_select(@nj_counties, :id, :name, params[:nj_county_id]),
+                       include_blank: "Select...", class: "input-large" %>
+      </div>
+
+      <div class="inquiry-form__row">
+        <%= label_tag :referral_source_id, "How did you learn of ChildFocus?" %>
+        <%= select_tag :referral_source_id,
+                       options_from_collection_for_select(@referral_sources, :id, :name, params[:referral_source_id]),
+                       include_blank: "Select...", class: "input-large" %>
       </div>
 
       <%= submit_tag "Submit", class: "button-primary" %>

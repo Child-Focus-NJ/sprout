@@ -18,6 +18,13 @@ staff = User.find_or_create_by!(email: "staff@childfocusnj.org") do |u|
 end
 
 # ── Referral Sources ───────────────────────────────────────────────────────────
+# Also created by db/migrate (SeedNjCountiesAndReferralSources) for
+# environments that replay real pending migrations. But as of Rails 8,
+# db:migrate against a *fresh/empty* database implicitly loads db/schema.rb
+# first and marks migrations at/below that version as applied WITHOUT running
+# their code (rails/rails#53899) — so that migration alone isn't reliable on
+# a brand-new database. find_or_create_by! here makes this self-healing
+# regardless of which path Rails takes.
 sources = [ "Facebook", "Instagram", "Word of Mouth", "Website", "Flyer", "School", "Other" ].map do |name|
   ReferralSource.find_or_create_by!(name: name)
 end
@@ -25,6 +32,15 @@ end
 # ── Volunteer Tags ─────────────────────────────────────────────────────────────
 [ "Bilingual", "Available Weekends", "Has Prior Experience", "Flexible Schedule" ].each do |title|
   VolunteerTag.find_or_create_by!(title: title)
+end
+
+# ── NJ Counties ─────────────────────────────────────────────────────────────
+# Also created by db/migrate — see note above the referral sources block.
+counties = [
+  'Atlantic', 'Bergen', 'Burlington', 'Camden', 'Cape May', 'Cumberland', 'Essex', 'Gloucester', 'Hudson', 'Hunterdon',
+  'Mercer', 'Middlesex', 'Monmouth', 'Morris', 'Ocean', 'Passaic', 'Salem', 'Somerset', 'Sussex', 'Union', 'Warren'
+].map do |countyname|
+  NjCounty.find_or_create_by!(name: countyname)
 end
 
 # ── Reminder Frequencies ───────────────────────────────────────────────────────
@@ -110,6 +126,7 @@ volunteers = volunteer_data.map do |attrs|
   v.became_inactive_at        = attrs[:became_inactive_at]
   v.inactive_reason           = attrs[:inactive_reason]
   v.referral_source           = sources.sample
+  v.nj_county                 = counties.sample
   v.preferred_contact_method  = [ :email, :sms, :both ].sample
 
   v.save!
@@ -136,4 +153,4 @@ end
 puts "  Created session registrations"
 
 puts "  Created #{volunteers.size} volunteers"
-puts "Done! Seeded volunteers, sessions, tags, frequencies, and referral sources."
+puts "Done! Seeded volunteers, sessions, tags, and frequencies."
