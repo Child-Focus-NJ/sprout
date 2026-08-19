@@ -2,9 +2,6 @@ class VolunteersController < ApplicationController
   before_action :set_volunteer, only: [ :show, :update, :update_status, :send_application, :mark_submitted, :sms, :send_sms ]
 
   def index
-    ensure_list_volunteer("Jane Doe")
-    ensure_list_volunteer("William P")
-    ensure_list_volunteer("Harry Kane")
     @volunteers = Volunteer.order(:first_name, :last_name)
   end
 
@@ -103,17 +100,6 @@ class VolunteersController < ApplicationController
 
   def set_volunteer
     @volunteer = Volunteer.find(params[:id])
-  end
-
-  def ensure_list_volunteer(full_name)
-    parts = full_name.split(" ", 2)
-    first_name = parts[0] || "Unknown"
-    last_name = parts[1] || ""
-
-    Volunteer.find_or_create_by!(email: "#{full_name.parameterize}@childfocusnj.org") do |volunteer|
-      volunteer.first_name = first_name
-      volunteer.last_name = last_name
-    end
   end
 
   def volunteer_params

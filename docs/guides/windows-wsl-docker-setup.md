@@ -1,10 +1,12 @@
 # Windows 11: WSL + Docker Desktop for Sprout
 
-This guide is for a **Windows 11 PC that does not have WSL**. It gets Ubuntu (WSL 2) installed, Docker Desktop talking to that distro, and Sprout serving at [http://localhost:3000](http://localhost:3000). 
+This guide is for a **Windows 11 PC that does not have WSL**. It gets Ubuntu (WSL 2) installed, Docker Desktop talking to the Ubuntu distro, then Sprout running on localhost. 
 
-[Install WSL](https://learn.microsoft.com/en-us/windows/wsl/install)  
-[Install Docker Desktop on Windows](https://docs.docker.com/desktop/setup/install/windows-install/)  
-[WSL 2 backend](https://docs.docker.com/desktop/features/wsl/)
+Prerequistes:
+- [Install WSL](https://learn.microsoft.com/en-us/windows/wsl/install)  
+- [Install Docker Desktop on Windows](https://docs.docker.com/desktop/setup/install/windows-install/)  
+- [WSL 2 backend](https://docs.docker.com/desktop/features/wsl/)
+- The OAuth secrets for [`sprout_startup.ps1`](./sprout_startup.ps1)
 
 ## 1. Confirm virtualization
 
@@ -44,6 +46,8 @@ You should see something like:
 
   docker-desktop    Running         2
 ```
+> [!NOTE]
+> If Ubuntu is not set as default, run  `wsl --set-default Ubuntu` on Powershell.
 
 `docker-desktop` appears **after** Docker Desktop is installed and running. Right after `wsl --install`, you should only see Ubuntu (or whichever distro you chose). New installs default to WSL 2. If a distro is version 1:
 
@@ -73,7 +77,7 @@ docker compose version
 
 ## 4. Use Docker from Ubuntu
 
-Open Ubuntu (Start menu) or `wsl` from PowerShell, then:
+First restart Docker Desktop, then open `wsl` from PowerShell. From there:
 
 ```bash
 docker --version
@@ -82,34 +86,16 @@ docker info
 
 ## 5. Boot Sprout on localhost
 
-First start by cloning and cding into the repo.
+From Powershell at the root level, run
 
-1. Start **Docker Desktop** and wait until it is running.
-2. In Ubuntu, run:
-
-```bash
-bin/dev-docker
+```
+powershell -ExecutionPolicy Bypass -File .\sprout_startup.ps1 -Reset
 ```
 
-`bin/dev-docker` checks that `docker` exists and that the daemon is up, then runs `docker compose up`. Compose starts three services from `docker-compose.yml`:
+> [!NOTE]
+> The -Reset flag tells the script to start Sprout with: `./bin/dev-docker --reset`, which recreates Docker volumes and gives you a clean local environment.
 
+> [!IMPORTANT]
+> You will need the OAuth secrets for `sprout_startup.ps1`. This file contains information. You can also run the script from any folder. Use the full path to `sprout_startup.ps1` if you’re not in the same directory as the script.
 
-| Service      | Role                                | Host URL / port                                |
-| ------------ | ----------------------------------- | ---------------------------------------------- |
-| `web`        | Rails (image from `Dockerfile.dev`) | [http://localhost:3000](http://localhost:3000) |
-| `db`         | PostgreSQL 16                       | `localhost:5432`                               |
-| `localstack` | AWS emulator                        | [http://localhost:4566](http://localhost:4566) |
-
-
-On first start, Docker builds the Rails image (Ruby 3.4.5, `bundle install`, etc). This can take several minutes.
-
-When the `web` container starts, `bin/docker-entrypoint-dev` (not `db:seed`) does:
-
-- `bundle check` / `bundle install` if gems are missing
-- `bin/rails db:create` if the database does not exist
-- `bin/rails db:migrate`
-- `bin/rails tailwindcss:build`
-- `bin/rails server -b 0.0.0.0`
-
-After a few minutes, [localhost](http://localhost) should be good to use, and you can navigate the app locally!
-
+After a few minutes, localhost should be good to use, and you can navigate the app locally!
