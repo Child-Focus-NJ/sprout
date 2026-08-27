@@ -18,7 +18,8 @@
           <%= link_to "Edit", system_management_path(tab: "frequencies", edit_frequency_id: freq.id),
                 class: "button-link" %>
           <%= button_to "Remove", reminder_frequency_path(freq), method: :delete,
-                class: "btn-delete" %>
+                class: "btn-delete",
+                form: { data: { turbo_confirm: "Remove \"#{freq.title}\"? This cannot be undone." } } %>
         </div>
       <% end %>
     </li>

@@ -18,7 +18,8 @@
           <%= link_to "Edit", system_management_path(tab: "tags", edit_tag_id: tag.id),
                 class: "button-link" %>
           <%= button_to "Remove", volunteer_tag_path(tag), method: :delete,
-                class: "btn-delete" %>
+                class: "btn-delete",
+                form: { data: { turbo_confirm: "Remove \"#{tag.title}\"? This cannot be undone." } } %>
         </div>
       <% end %>
     </li>

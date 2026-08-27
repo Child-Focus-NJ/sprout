@@ -25,7 +25,8 @@
           <%= link_to "Edit", system_management_path(tab: "referral_sources", edit_referral_source_id: source.id),
                 class: "button-link" %>
           <%= button_to "Remove", referral_source_path(source), method: :delete,
-                class: "btn-delete" %>
+                class: "btn-delete",
+                form: { data: { turbo_confirm: "Remove \"#{source.name}\"? This cannot be undone." } } %>
         </div>
       <% end %>
     </li>
