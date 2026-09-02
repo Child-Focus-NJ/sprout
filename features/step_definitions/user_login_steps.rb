@@ -46,6 +46,10 @@ Then('I will be on the login page') do
   expect(page).to have_current_path(login_path)
 end
 
+Then('I should see the Sprout logo') do
+  expect(page).to have_css('img[alt="Sprout logo"]')
+end
+
 When('I log out') do
   click_on "Log out"
 end
