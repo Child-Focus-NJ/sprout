@@ -112,16 +112,27 @@ Then("I should see an {string} button") do |button_name|
 end
 
 Then("I should see a {string} button for the volunteer") do |button_name|
-  expect(page).to have_button(button_name)
+  expect(page).to have_css(".btn-delete, button, a.button-link", text: button_name)
 end
 
 Then("the Note button should be visually distinct from the Delete button") do
   expect(page).to have_button("Add Note")
-  expect(page).to have_button("Delete")
+  expect(page).to have_css(".btn-delete", text: "Delete")
 end
 
 Then("the Delete button should require confirmation") do
-  expect(page).to have_css("[data-confirm], [data-method='delete']")
+  click_on "Delete"
+  expect(page).to have_content(/Delete .+\?/)
+  expect(page).to have_button("Yes, delete")
+  expect(page).to have_link("Cancel")
+end
+
+Then("every Delete button should require confirmation") do
+  delete_links = all("a.btn-delete", text: "Delete")
+  expect(delete_links).not_to be_empty
+  delete_links.each do |link|
+    expect(link[:href]).to include("confirm_delete_session_id=")
+  end
 end
 
 When("I select the volunteers {string} and {string}") do |name1, name2|

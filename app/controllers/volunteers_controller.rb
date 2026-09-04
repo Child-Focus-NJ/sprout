@@ -1,5 +1,5 @@
 class VolunteersController < ApplicationController
-  before_action :set_volunteer, only: [ :show, :update, :update_status, :send_application, :mark_submitted, :sms, :send_sms ]
+  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :send_sms ]
 
   def index
     @volunteers = Volunteer.order(:first_name, :last_name)
@@ -21,6 +21,12 @@ class VolunteersController < ApplicationController
       flash.now[:alert] = @volunteer.errors.full_messages.to_sentence
       render :show, status: :unprocessable_entity
     end
+  end
+
+  def destroy
+    name = @volunteer.full_name
+    @volunteer.destroy
+    redirect_to volunteers_path, notice: "#{name} was deleted."
   end
 
   def sms

@@ -65,7 +65,17 @@
       <% end %>
     <% end %>
     <div class="delete-action">
-      <%= button_to "Delete", volunteer_path(@volunteer), method: :delete, data: { confirm: "Are you sure?" }, class: "btn-delete" %>
+      <% if params[:confirm_delete].present? %>
+        <div class="delete-confirm-inline" role="group" aria-label="Confirm volunteer deletion">
+          <span class="delete-confirm-inline__message">
+            Delete <strong><%= @volunteer.full_name %></strong>?
+          </span>
+          <%= button_to "Yes, delete", volunteer_path(@volunteer), method: :delete, class: "btn-delete" %>
+          <%= link_to "Cancel", volunteer_path(@volunteer), class: "button-link" %>
+        </div>
+      <% else %>
+        <%= link_to "Delete", volunteer_path(@volunteer, confirm_delete: 1), class: "btn-delete" %>
+      <% end %>
     </div>
   </div>
 

@@ -187,11 +187,11 @@
   }
 
   .action-toolbar {
-    @apply flex gap-2 flex-wrap items-center;
+    @apply flex gap-2 flex-nowrap items-center;
   }
 
   .inline-action-form {
-    @apply m-0;
+    @apply m-0 inline;
   }
 
   .inline-action-form button {
@@ -199,11 +199,23 @@
   }
 
   .delete-action {
-    @apply ml-auto;
+    @apply ml-auto flex shrink-0 items-center;
   }
 
   .delete-action form {
-    @apply m-0;
+    @apply m-0 inline;
+  }
+
+  .delete-confirm-inline {
+    @apply flex flex-nowrap items-center justify-end gap-2;
+  }
+
+  .delete-confirm-inline__message {
+    @apply whitespace-nowrap text-sm text-gray-700;
+  }
+
+  .delete-confirm-inline form {
+    @apply m-0 inline;
   }
 
   .note-entry-panel h3 {

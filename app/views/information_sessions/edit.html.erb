@@ -49,14 +49,28 @@
               <td class="sessions-participants-name"><%= volunteer.full_name %></td>
               <td class="sessions-participants-email"><%= volunteer.email %></td>
               <td class="sessions-actions sessions-participants-actions">
-                <%= button_to "Remove",
-                    remove_attendee_information_session_path(
-                      @information_session,
-                      { volunteer_id: volunteer.id }.merge(@list_filter_params.compact_blank)
-                    ),
-                    method: :delete,
-                    class: "btn-delete sessions-toolbar-btn",
-                    form: { data: { turbo_confirm: "Are you sure you want to remove #{volunteer.full_name}?" } } %>
+                <% if params[:confirm_remove_volunteer_id] == volunteer.id.to_s %>
+                  <div class="delete-confirm-inline">
+                    <span class="delete-confirm-inline__message">Remove <%= volunteer.full_name %>?</span>
+                    <%= button_to "Yes, remove",
+                        remove_attendee_information_session_path(
+                          @information_session,
+                          { volunteer_id: volunteer.id }.merge(@list_filter_params.compact_blank)
+                        ),
+                        method: :delete,
+                        class: "btn-delete sessions-toolbar-btn" %>
+                    <%= link_to "Cancel",
+                        edit_information_session_path(@information_session, @list_filter_params.compact_blank),
+                        class: "button-link" %>
+                  </div>
+                <% else %>
+                  <%= link_to "Remove",
+                      edit_information_session_path(
+                        @information_session,
+                        @list_filter_params.compact_blank.merge(confirm_remove_volunteer_id: volunteer.id)
+                      ),
+                      class: "btn-delete sessions-toolbar-btn" %>
+                <% end %>
               </td>
             </tr>
           <% end %>

@@ -22,10 +22,18 @@
           <span class="help-text"><%= source.active? ? "Active" : "Inactive" %></span>
         </div>
         <div class="volunteer-actions">
-          <%= link_to "Edit", system_management_path(tab: "referral_sources", edit_referral_source_id: source.id),
-                class: "button-link" %>
-          <%= button_to "Remove", referral_source_path(source), method: :delete,
-                class: "btn-delete" %>
+          <% if params[:confirm_remove_referral_source_id] == source.id.to_s %>
+            <div class="delete-confirm-inline">
+              <span class="delete-confirm-inline__message">Are you sure you want to remove this referral source?</span>
+              <%= button_to "Yes, remove", referral_source_path(source), method: :delete, class: "btn-delete" %>
+              <%= link_to "Cancel", system_management_path(tab: "referral_sources"), class: "button-link" %>
+            </div>
+          <% else %>
+            <%= link_to "Edit", system_management_path(tab: "referral_sources", edit_referral_source_id: source.id),
+                  class: "button-link" %>
+            <%= link_to "Remove", system_management_path(tab: "referral_sources", confirm_remove_referral_source_id: source.id),
+                  class: "btn-delete" %>
+          <% end %>
         </div>
       <% end %>
     </li>

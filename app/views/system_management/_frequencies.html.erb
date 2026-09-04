@@ -15,10 +15,18 @@
           <span class="volunteer-name"><%= freq.title %></span>
         </div>
         <div class="volunteer-actions">
-          <%= link_to "Edit", system_management_path(tab: "frequencies", edit_frequency_id: freq.id),
-                class: "button-link" %>
-          <%= button_to "Remove", reminder_frequency_path(freq), method: :delete,
-                class: "btn-delete" %>
+          <% if params[:confirm_remove_frequency_id] == freq.id.to_s %>
+            <div class="delete-confirm-inline">
+              <span class="delete-confirm-inline__message">Are you sure you want to remove this frequency?</span>
+              <%= button_to "Yes, remove", reminder_frequency_path(freq), method: :delete, class: "btn-delete" %>
+              <%= link_to "Cancel", system_management_path(tab: "frequencies"), class: "button-link" %>
+            </div>
+          <% else %>
+            <%= link_to "Edit", system_management_path(tab: "frequencies", edit_frequency_id: freq.id),
+                  class: "button-link" %>
+            <%= link_to "Remove", system_management_path(tab: "frequencies", confirm_remove_frequency_id: freq.id),
+                  class: "btn-delete" %>
+          <% end %>
         </div>
       <% end %>
     </li>
