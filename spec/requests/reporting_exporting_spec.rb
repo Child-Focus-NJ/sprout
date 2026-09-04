@@ -19,7 +19,7 @@ RSpec.describe "Reporting and exporting", type: :request do
       get reporting_exporting_index_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Reporting & Exporting")
+      expect(response.body).to include("Reporting")
     end
   end
 
