@@ -43,6 +43,14 @@
     @apply text-2xl font-semibold mb-3 text-gray-900;
   }
 
+  .volunteer-profile-header {
+    @apply mb-3 flex flex-wrap items-center gap-3;
+  }
+
+  .volunteer-profile-header .page-title {
+    @apply m-0;
+  }
+
   .card {
     @apply border border-gray-300 rounded-lg p-3 mb-4 bg-white shadow-sm;
   }
@@ -244,6 +252,30 @@
 
   .status-current {
     @apply text-lg font-semibold mb-2 text-gray-900;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center rounded-md border px-2.5 py-0.5 text-sm font-semibold;
+  }
+
+  .status-badge--inquiry {
+    @apply border-slate-300 bg-slate-100 text-slate-800;
+  }
+
+  .status-badge--application-eligible {
+    @apply border-sky-300 bg-sky-100 text-sky-900;
+  }
+
+  .status-badge--application-sent {
+    @apply border-amber-300 bg-amber-100 text-amber-950;
+  }
+
+  .status-badge--applied {
+    @apply border-emerald-300 bg-emerald-100 text-emerald-900;
+  }
+
+  .status-badge--inactive {
+    @apply border-gray-300 bg-gray-100 text-gray-600;
   }
 
   .status-update-form {

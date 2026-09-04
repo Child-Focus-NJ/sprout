@@ -10,7 +10,7 @@
           <label for="volunteer_<%= volunteer.id %>" class="volunteer-name"><%= volunteer.full_name %></label>
           <div class="volunteer-subtext">
             <span>Contact: <%= volunteer.phone.presence || volunteer.email %></span>
-            <span>Status: <%= volunteer.current_funnel_stage.to_s.humanize %></span>
+            <%= volunteer_status_badge(volunteer) %>
           </div>
         </div>
         <div class="volunteer-actions">

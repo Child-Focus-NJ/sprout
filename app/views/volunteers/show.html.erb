@@ -2,7 +2,10 @@
 <nav class="page-nav page-nav--back" aria-label="Back">
   <%= back_nav_link volunteers_path, "Back to volunteers" %>
 </nav>
-<h1 class="page-title"><%= @volunteer.full_name %></h1>
+<div class="volunteer-profile-header">
+  <h1 class="page-title"><%= @volunteer.full_name %></h1>
+  <%= volunteer_status_badge(@volunteer) %>
+</div>
 
 <section id="contact-info" class="card status-panel">
   <h2 class="section-heading">Contact</h2>
