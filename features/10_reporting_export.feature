@@ -30,18 +30,3 @@ Feature: Reporting & Exporting
             And I have clicked the "Export Report" button
             Then a PDF named "sign-ups24-26" should be in my downloads folder
             And the PDF should contain a bar chart with the years 2024, 2025, and 2026 on the x-axis
-
-        @javascript
-        Scenario: Exporting data to CSV, Excel, and JSON
-            Given I select "Excel" in the "export format" dropdown in the export data section
-            And Samantha Ray attended an information session in 2024
-            And Samantha Ray has status "Attended an Information Session"
-            And I select "Attended an Information Session" in the "Status" dropdown in the export data section
-            And I have filled out the "Start Date" field with "01/01/2024" in the export data section
-            And I have filled out the "End Date" field with "12/31/2024" in the export data section
-            And I enter "Attendees2024" as the title in the create a report section
-            And I have clicked the "Export Data" button
-            Then an excel file named "Attendees2024" should be in my downloads folder
-            And the excel sheet should contain "Samantha Ray"
-            And the excel sheet should contain "Attended an Information Session"
-            And the excel sheet should contain "sammy123@childfocusnj.org"

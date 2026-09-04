@@ -41,13 +41,13 @@ Rails.application.routes.draw do
   resources :reporting_exporting do
     collection do
       post :export_report
-      post :export_data
     end
   end
 
   resource :system_management, only: [ :show ], controller: "system_management" do
     collection do
       post :import
+      post :export_data
     end
   end
   resource :external_vms_sync, only: [ :show, :create ], controller: "external_vms_syncs"
