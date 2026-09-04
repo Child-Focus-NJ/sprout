@@ -149,3 +149,22 @@ end
 Then('I should not see {string} on the page') do |name|
   expect(page).to have_no_content(name, wait: 5)
 end
+
+Given('a referral source named {string} exists') do |name|
+  ReferralSource.find_or_create_by!(name: name) { |source| source.active = true }
+end
+
+Then('the {string} button for {string} should require confirmation') do |button, row|
+  visit current_url
+  href = nil
+  within(:xpath, "//li[.//span[contains(@class,'volunteer-name') and contains(normalize-space(.), '#{row}')]]") do
+    link = find_link(button)
+    href = link[:href]
+    expect(href).to match(/confirm_remove_/)
+  end
+
+  visit href
+  expect(page).to have_css(".delete-confirm-inline", text: /Are you sure/i, wait: 5)
+  expect(page).to have_css(".delete-confirm-inline button.btn-delete", text: /Yes/)
+  expect(page).to have_link("Cancel")
+end

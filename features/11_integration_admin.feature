@@ -33,6 +33,7 @@ Feature: Integration & Administration
 
         Scenario: Changing reminder frequencies
             Given I click "Remove" for "Six Months"
+            And I click "Yes, remove"
             And I have clicked the "Add Frequency" button
             And I enter "Three Months" in the "frequency_title" field
             And I have clicked the "Save Frequency" button
@@ -49,11 +50,24 @@ Feature: Integration & Administration
         Scenario: Changing volunteer tags
             Given I click the "Volunteer Tags" tab
             Given I click "Remove" for "VIP"
+            And I click "Yes, remove"
             And I have clicked the "Add Tag" button
             And I enter "Temporarily Inactive" in the "tag_title" field
             And I have clicked the "Save Tag" button
             Then I should see "Temporarily Inactive" on the frequency list
             And I should not see "VIP" on the frequency list
+
+        Scenario: Removing a reminder frequency requires confirmation
+            Then the "Remove" button for "Six Months" should require confirmation
+
+        Scenario: Removing a volunteer tag requires confirmation
+            Given I click the "Volunteer Tags" tab
+            Then the "Remove" button for "VIP" should require confirmation
+
+        Scenario: Removing a referral source requires confirmation
+            Given a referral source named "Website" exists
+            And I click the "Referral Sources" tab
+            Then the "Remove" button for "Website" should require confirmation
 
         Scenario: Importing historical data
             And I upload an Excel sheet containing "Colin Smith"
@@ -63,7 +77,7 @@ Feature: Integration & Administration
             Given I click the "Employees" tab
             Given I have clicked the "Remove" button for "Joel Savitz"
             Then I should get a confirmation box that says "Are you sure you want to remove this user?"
-            And I click "Yes"
+            And I click "Yes, remove"
             Then I should not see "Joel Savitz" on the page
 
         Scenario: Adding an Employee

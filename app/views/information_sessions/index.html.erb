@@ -81,16 +81,23 @@
             <p class="session-history-created-by"><%= information_session_creator_line(session) %></p>
           </div>
           <div class="volunteer-actions sessions-session-actions">
-            <%= link_to "Sign in", sign_in_information_session_path(session, filter_opts), class: "button-link" %>
-            <%= link_to "Edit", edit_information_session_path(session, filter_opts), class: "button-link" %>
-            <%= button_to "Delete",
-                information_session_path(session, filter_opts),
-                method: :delete,
-                class: "btn-delete",
-                form: {
-                  class: "inline m-0",
-                  data: { turbo_confirm: "Delete \"#{session.name}\"? This cannot be undone." }
-                } %>
+            <% if params[:confirm_delete_session_id] == session.id.to_s %>
+              <div class="delete-confirm-inline">
+                <span class="delete-confirm-inline__message">Delete "<%= session.name %>"? This cannot be undone.</span>
+                <%= button_to "Yes, delete",
+                    information_session_path(session, filter_opts),
+                    method: :delete,
+                    class: "btn-delete",
+                    form: { class: "inline m-0" } %>
+                <%= link_to "Cancel", information_sessions_path(filter_opts), class: "button-link" %>
+              </div>
+            <% else %>
+              <%= link_to "Sign in", sign_in_information_session_path(session, filter_opts), class: "button-link" %>
+              <%= link_to "Edit", edit_information_session_path(session, filter_opts), class: "button-link" %>
+              <%= link_to "Delete",
+                  information_sessions_path(filter_opts.merge(confirm_delete_session_id: session.id)),
+                  class: "btn-delete" %>
+            <% end %>
           </div>
         </article>
       <% end %>

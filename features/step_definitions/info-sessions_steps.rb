@@ -113,9 +113,13 @@ Given('I click the {string} button') do |button|
 end
 
 Given('I click the {string} button for attendee with name {string}') do |button, name|
-  row = find('tr', text: name)
+  within("tr", text: name) { click_on(button) }
 
-  row.click_button(button)
+  if button == "Remove"
+    expect(page).to have_button("Yes, remove", wait: 5)
+    click_button("Yes, remove")
+    expect(page).to have_content(/removed/i, wait: 5)
+  end
 end
 
 Then('{string} should not appear on the list of attendees for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |name, month_abbr, day, year, hour, minute, meridian|
@@ -146,8 +150,15 @@ end
 
 Given('I click the {string} button for information session with date {word} {int}, {int} and time {int}:{int} {word}') do |button, month_abbr, day, year, hour, minute, meridian|
   date_str, time_str = format_session_datetime(month_abbr, day, year, hour, minute, meridian)
-  within("[data-session-list-item]", text: /#{Regexp.escape(date_str)}.*#{Regexp.escape(time_str)}/) do
-    click_button(button)
+  session_item = "[data-session-list-item]"
+  session_text = /#{Regexp.escape(date_str)}.*#{Regexp.escape(time_str)}/m
+
+  within(session_item, text: session_text) { click_on(button) }
+
+  if button == "Delete"
+    expect(page).to have_button("Yes, delete", wait: 5)
+    click_button("Yes, delete")
+    expect(page).to have_content(/successfully deleted/i, wait: 5)
   end
 end
 

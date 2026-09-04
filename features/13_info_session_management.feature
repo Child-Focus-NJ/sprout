@@ -89,6 +89,10 @@ Feature: Manage Information Sessions
             Then an information session with date Mar 06, 2027 and time 06:00 PM should not be on the list of information sessions
             And every attendees status should change from "Registered for information session" to "inquiry"
             And every attendee should receive an email notification that the event was cancelled and be prompted to sign up for a new information session
+
+        Scenario: Deleting an information session requires confirmation
+            Given I am on the information session management page
+            Then every Delete button should require confirmation
             
 
         Scenario: Viewing all upcoming information sessions 

@@ -15,10 +15,18 @@
           <span class="volunteer-name"><%= tag.title %></span>
         </div>
         <div class="volunteer-actions">
-          <%= link_to "Edit", system_management_path(tab: "tags", edit_tag_id: tag.id),
-                class: "button-link" %>
-          <%= button_to "Remove", volunteer_tag_path(tag), method: :delete,
-                class: "btn-delete" %>
+          <% if params[:confirm_remove_tag_id] == tag.id.to_s %>
+            <div class="delete-confirm-inline">
+              <span class="delete-confirm-inline__message">Are you sure you want to remove this tag?</span>
+              <%= button_to "Yes, remove", volunteer_tag_path(tag), method: :delete, class: "btn-delete" %>
+              <%= link_to "Cancel", system_management_path(tab: "tags"), class: "button-link" %>
+            </div>
+          <% else %>
+            <%= link_to "Edit", system_management_path(tab: "tags", edit_tag_id: tag.id),
+                  class: "button-link" %>
+            <%= link_to "Remove", system_management_path(tab: "tags", confirm_remove_tag_id: tag.id),
+                  class: "btn-delete" %>
+          <% end %>
         </div>
       <% end %>
     </li>
