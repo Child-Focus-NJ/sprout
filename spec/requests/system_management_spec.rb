@@ -2,8 +2,16 @@ require "rails_helper"
 
 RSpec.describe "SystemManagement", type: :request do
   let(:admin) { create(:user, role: :admin) }
+  let(:volunteer) { create(:volunteer, email: "sammy123@childfocusnj.org", first_name: "Samantha", last_name: "Ray") }
 
-  before { login_as(admin, scope: :user) }
+  before do
+    login_as(admin, scope: :user)
+    FileUtils.mkdir_p(Rails.root.join("tmp", "test_downloads"))
+  end
+
+  after do
+    FileUtils.rm_f(Dir[Rails.root.join("tmp", "test_downloads", "*")])
+  end
 
   describe "GET /system_management" do
     it "returns 200" do
@@ -97,6 +105,48 @@ RSpec.describe "SystemManagement", type: :request do
         follow_redirect!
         expect(response.body).to include("No file selected")
       end
+    end
+  end
+
+  describe "POST /system_management/export_data" do
+    it "exports volunteer data to Excel filtered by status and date range" do
+      volunteer
+
+      post export_data_system_management_path, params: {
+        "Title" => "Attendees2024",
+        "export format" => "Excel",
+        "Status" => "Attended an Information Session",
+        "Start Date" => "01/01/2024",
+        "End Date" => "12/31/2026",
+        commit: "Export Data"
+      }
+
+      expect(response).to have_http_status(:ok)
+      expect(Rails.root.join("tmp", "test_downloads", "Attendees2024.xlsx")).to exist
+    end
+
+    it "includes the volunteer's data in the Excel file" do
+      volunteer.update!(first_session_attended_at: Date.new(2024, 6, 1))
+      session = create(:information_session, scheduled_at: 1.week.from_now)
+      create(:session_registration, volunteer: volunteer, information_session: session)
+
+      post export_data_system_management_path, params: {
+        "Title" => "Attendees2024",
+        "export format" => "Excel",
+        "Status" => "Attended an Information Session",
+        "Start Date" => "01/01/2024",
+        "End Date" => "12/31/2026",
+        commit: "Export Data"
+      }
+
+      xlsx_path = Rails.root.join("tmp", "test_downloads", "Attendees2024.xlsx")
+      expect(xlsx_path).to exist
+
+      workbook = Roo::Spreadsheet.open(xlsx_path.to_s)
+      sheet_data = workbook.sheet(0).to_a.flatten
+      expect(sheet_data).to include("Samantha Ray")
+      expect(sheet_data).to include("sammy123@childfocusnj.org")
+      expect(sheet_data).to include("Attended an Information Session")
     end
   end
 end
