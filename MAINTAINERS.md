@@ -1,7 +1,7 @@
 # Maintainers and Contributors
 ## Maintainers
 * Dr. Peter DePasquale (pd80@nyu.edu)
-##  Contributors (Current)
+## Contributors (Current)
 * Sufyan Wayah (Senior, Computer Science and Engineering)
 * Alisha Zaman (Senior, Computer Science and Engineering)
 * Will Roche (Senior, Computer Science and Engineering)
