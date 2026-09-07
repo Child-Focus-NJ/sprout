@@ -5,8 +5,8 @@ class ReportingExportingController < ApplicationController
   def export_report
     title = params["Title"].presence || "report"
     y_axis = params["y-axis"]
-    start_date = Date.strptime(params["Start Date"], "%m/%d/%Y") rescue nil
-    end_date = Date.strptime(params["End Date"], "%m/%d/%Y") rescue nil
+    start_date = parse_iso_date(params["Start Date"])
+    end_date = parse_iso_date(params["End Date"])
 
     if start_date && end_date && start_date > end_date
       return redirect_to reporting_exporting_index_path, alert: "Start Date cannot be after End Date"
@@ -47,18 +47,23 @@ class ReportingExportingController < ApplicationController
 
       pdf = Prawn::Document.new
 
+      pdf.image Rails.root.join("app", "assets", "images", "child_focus_logo.jpg").to_s, width: 100, position: :center
+      pdf.move_down 20
+
       pdf.text title, size: 18, style: :bold
       pdf.move_down 20
 
       chart_width = 400
       chart_height = 200
-      bar_width = [ (chart_width.to_f / labels.length) - 10, 5 ].max
+      slot_width = chart_width.to_f / labels.length
+      gap = [ slot_width * 0.2, 10 ].min
+      bar_width = [ slot_width - gap, 2 ].max
       max_count = counts.max.to_f.nonzero? || 1.0
       base_y = pdf.cursor - chart_height
 
       labels.each_with_index do |label, i|
         bar_height = (counts[i] / max_count) * chart_height
-        x = 50 + i * (bar_width + 10)
+        x = 50 + i * slot_width
         y = base_y + bar_height
 
         pdf.fill_color "4A90D9"

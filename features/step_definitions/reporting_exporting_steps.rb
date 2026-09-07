@@ -40,7 +40,12 @@ end
 
 Given('I have filled out the {string} field with {string} in the create a report section') do |field, value|
   within('#create-report-section') do
-    fill_in field, with: value
+    field_element = find_field(field)
+    if field_element[:type] == 'date'
+      execute_script("arguments[0].value = arguments[1]", field_element, value)
+    else
+      fill_in field, with: value
+    end
   end
 end
 

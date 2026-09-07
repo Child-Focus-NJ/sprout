@@ -27,8 +27,8 @@ RSpec.describe "Reporting and exporting", type: :request do
     it "exports a PDF report of information session sign-ups by year" do
       post export_report_reporting_exporting_index_path, params: {
         "y-axis" => "information session sign-ups",
-        "Start Date" => "01/01/2024",
-        "End Date" => "12/31/2026",
+        "Start Date" => "2024-01-01",
+        "End Date" => "2026-12-31",
         "Title" => "sign-ups24-26",
         "report format" => "PDF",
         commit: "Create Report"
@@ -41,8 +41,8 @@ RSpec.describe "Reporting and exporting", type: :request do
     it "exports a PDF report of applications by year" do
       post export_report_reporting_exporting_index_path, params: {
         "y-axis" => "applications",
-        "Start Date" => "01/01/2024",
-        "End Date" => "12/31/2026",
+        "Start Date" => "2024-01-01",
+        "End Date" => "2026-12-31",
         "Title" => "applications24-26",
         "report format" => "PDF",
         commit: "Create Report"
@@ -65,8 +65,8 @@ RSpec.describe "Reporting and exporting", type: :request do
     it "redirects with an alert when Start Date is after End Date" do
       post export_report_reporting_exporting_index_path, params: {
         "y-axis" => "applications",
-        "Start Date" => "12/31/2026",
-        "End Date" => "01/01/2024",
+        "Start Date" => "2026-12-31",
+        "End Date" => "2024-01-01",
         "Title" => "backwards-range",
         "report format" => "PDF",
         commit: "Create Report"
@@ -85,8 +85,8 @@ RSpec.describe "Reporting and exporting", type: :request do
 
       post export_report_reporting_exporting_index_path, params: {
         "y-axis" => "information session sign-ups",
-        "Start Date" => "02/01/2026",
-        "End Date" => "04/30/2026",
+        "Start Date" => "2026-02-01",
+        "End Date" => "2026-04-30",
         "Title" => "feb-apr-2026",
         "report format" => "PDF",
         commit: "Create Report"
@@ -111,8 +111,8 @@ RSpec.describe "Reporting and exporting", type: :request do
 
       post export_report_reporting_exporting_index_path, params: {
         "y-axis" => "information session sign-ups",
-        "Start Date" => "07/02/2023",
-        "End Date" => "07/02/2026",
+        "Start Date" => "2023-07-02",
+        "End Date" => "2026-07-02",
         "Title" => "anchored-3yr",
         "report format" => "PDF",
         commit: "Create Report"
