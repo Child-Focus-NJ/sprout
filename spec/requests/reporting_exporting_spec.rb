@@ -127,5 +127,38 @@ RSpec.describe "Reporting and exporting", type: :request do
       expect(text).to include("Jul 2, 2024 - Jul 1, 2025")
       expect(text).to include("Jul 2, 2025 - Jul 2, 2026")
     end
+
+    it "falls back to a compact year label when there are too many windows for the full date range to fit" do
+      post export_report_reporting_exporting_index_path, params: {
+        "y-axis" => "information session sign-ups",
+        "Start Date" => "2016-06-15",
+        "End Date" => "2026-06-15",
+        "Title" => "ten-year-range",
+        "report format" => "PDF",
+        commit: "Create Report"
+      }
+
+      expect(response).to have_http_status(:ok)
+      pdf_path = Rails.root.join("tmp", "test_downloads", "ten-year-range.pdf")
+      expect(pdf_path).to exist
+
+      text = PDF::Reader.new(pdf_path).pages.map(&:text).join(" ")
+      expect(text).to include("2016-2017")
+      expect(text).to include("2025-2026")
+    end
+
+    it "does not error for an extreme multi-decade date range" do
+      post export_report_reporting_exporting_index_path, params: {
+        "y-axis" => "information session sign-ups",
+        "Start Date" => "1926-01-01",
+        "End Date" => "2026-01-01",
+        "Title" => "hundred-year-range",
+        "report format" => "PDF",
+        commit: "Create Report"
+      }
+
+      expect(response).to have_http_status(:ok)
+      expect(Rails.root.join("tmp", "test_downloads", "hundred-year-range.pdf")).to exist
+    end
   end
 end

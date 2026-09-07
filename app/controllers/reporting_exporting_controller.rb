@@ -38,12 +38,12 @@ class ReportingExportingController < ApplicationController
         else
           "#{range_start.strftime('%b %-d, %Y')} - #{range_end.strftime('%b %-d, %Y')}"
         end
+        short_label = range_start.year == range_end.year ? range_start.year.to_s : "#{range_start.year}-#{range_end.year}"
 
-        [ label, count ]
+        [ label, short_label, count ]
       end
 
-      labels = bars.map(&:first)
-      counts = bars.map(&:last)
+      labels, short_labels, counts = bars.transpose
 
       pdf = Prawn::Document.new
 
@@ -58,6 +58,7 @@ class ReportingExportingController < ApplicationController
       slot_width = chart_width.to_f / labels.length
       gap = [ slot_width * 0.2, 10 ].min
       bar_width = [ slot_width - gap, 2 ].max
+      min_label_font_size = 5
       max_count = counts.max.to_f.nonzero? || 1.0
       base_y = pdf.cursor - chart_height
 
@@ -70,7 +71,12 @@ class ReportingExportingController < ApplicationController
         pdf.fill_rectangle [ x, y ], bar_width, bar_height
 
         pdf.fill_color "000000"
-        pdf.draw_text label, at: [ x, base_y - 15 ], size: 10
+        axis_label = pdf.width_of(label, size: min_label_font_size) <= slot_width ? label : short_labels[i]
+        begin
+          pdf.text_box axis_label, at: [ x, base_y - 15 ], width: slot_width, size: 10,
+            single_line: true, overflow: :shrink_to_fit, min_font_size: min_label_font_size
+        rescue Prawn::Errors::CannotFit
+        end
         pdf.draw_text counts[i].to_s, at: [ x, y + 2 ], size: 8
       end
 
