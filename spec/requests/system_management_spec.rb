@@ -148,6 +148,21 @@ RSpec.describe "SystemManagement", type: :request do
       expect(sheet_data).to include("sammy123@childfocusnj.org")
       expect(sheet_data).to include("Attended an Information Session")
     end
+
+    it "redirects with an alert when Start Date is after End Date" do
+      post export_data_system_management_path, params: {
+        "Title" => "backwards-range",
+        "export format" => "Excel",
+        "Start Date" => "12/31/2026",
+        "End Date" => "01/01/2024",
+        commit: "Export Data"
+      }
+
+      expect(response).to redirect_to(system_management_path)
+      follow_redirect!
+      expect(response.body).to include("Start Date cannot be after End Date")
+      expect(Rails.root.join("tmp", "test_downloads", "backwards-range.xlsx")).not_to exist
+    end
   end
 end
 

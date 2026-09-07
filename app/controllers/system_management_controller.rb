@@ -31,6 +31,10 @@ class SystemManagementController < ApplicationController
     start_date = Date.strptime(params["Start Date"], "%m/%d/%Y") rescue nil
     end_date = Date.strptime(params["End Date"], "%m/%d/%Y") rescue nil
 
+    if start_date && end_date && start_date > end_date
+      return redirect_to system_management_path, alert: "Start Date cannot be after End Date"
+    end
+
     volunteers = Volunteer.all
 
     if status_filter == "Attended an Information Session"

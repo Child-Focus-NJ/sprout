@@ -6,12 +6,7 @@
     <%= form_with url: export_report_reporting_exporting_index_path, method: :post, local: true, data: { turbo: false } do |f| %>
       <div class="grid gap-3 max-w-md">
         <div class="form-row">
-          <%= label_tag "x-axis", "X-Axis", class: "font-semibold text-gray-800" %>
-          <%= select_tag "x-axis", options_for_select(["years"]), include_blank: "Select...", class: "input-large" %>
-        </div>
-
-        <div class="form-row">
-          <%= label_tag "y-axis", "Y-Axis", class: "font-semibold text-gray-800" %>
+          <%= label_tag "y-axis", "Report On", class: "font-semibold text-gray-800" %>
           <%= select_tag "y-axis", options_for_select(["information session sign-ups", "applications"]), include_blank: "Select...", class: "input-large" %>
         </div>
 
@@ -26,17 +21,17 @@
         </div>
 
         <div class="form-row">
-          <%= label_tag "Title", "Title", class: "font-semibold text-gray-800" %>
-          <%= text_field_tag "Title", nil, class: "input-large" %>
-        </div>
-
-        <div class="form-row">
           <%= label_tag "report format", "Report Format", class: "font-semibold text-gray-800" %>
           <%= select_tag "report format", options_for_select(["PDF"]), include_blank: "Select...", class: "input-large" %>
         </div>
 
+        <div class="form-row">
+          <%= label_tag "Title", "Title", class: "font-semibold text-gray-800" %>
+          <%= text_field_tag "Title", nil, class: "input-large" %>
+        </div>
+
         <div class="inline-form mt-1">
-          <%= submit_tag "Export Report", name: "commit", class: "button-primary" %>
+          <%= submit_tag "Create Report", name: "commit", class: "button-primary" %>
         </div>
       </div>
     <% end %>
