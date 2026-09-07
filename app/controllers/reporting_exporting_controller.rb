@@ -7,7 +7,6 @@ class ReportingExportingController < ApplicationController
     y_axis = params["y-axis"]
     start_date = Date.strptime(params["Start Date"], "%m/%d/%Y") rescue nil
     end_date = Date.strptime(params["End Date"], "%m/%d/%Y") rescue nil
-    action = params["commit"]
 
     if start_date && end_date && start_date > end_date
       return redirect_to reporting_exporting_index_path, alert: "Start Date cannot be after End Date"
@@ -53,7 +52,7 @@ class ReportingExportingController < ApplicationController
 
       chart_width = 400
       chart_height = 200
-      bar_width = chart_width / labels.length - 10
+      bar_width = [ (chart_width.to_f / labels.length) - 10, 5 ].max
       max_count = counts.max.to_f.nonzero? || 1.0
       base_y = pdf.cursor - chart_height
 
