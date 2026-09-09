@@ -8,6 +8,8 @@ Rails.application.routes.draw do
   get "admin/settings", to: "admin/settings#index"
 
   namespace :admin do
+    resource :data_export, only: [ :create ], controller: "data_exports"
+
     resources :communication_templates do
       member do
         get :preview

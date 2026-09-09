@@ -88,6 +88,22 @@ Then('the excel sheet should contain {string}') do |expected_value|
     "Expected Excel to contain '#{expected_value}' but found: #{all_cell_values.first(20).inspect}"
 end
 
+Then('a full data export file should be in my downloads folder') do
+  pattern = File.join(DownloadHelpers::DOWNLOAD_PATH, 'sprout-full-export-*.xlsx')
+  Timeout.timeout(10) do
+    sleep 0.5 until Dir[pattern].any?
+  end
+  expect(Dir[pattern]).not_to be_empty
+end
+
+Then('the exported workbook should have a sheet named {string}') do |sheet_name|
+  xlsx_files = Dir[File.join(DownloadHelpers::DOWNLOAD_PATH, '*.xlsx')]
+  expect(xlsx_files).not_to be_empty, "No Excel file found in downloads folder"
+
+  workbook = RubyXL::Parser.parse(xlsx_files.last)
+  expect(workbook.worksheets.map(&:sheet_name)).to include(sheet_name)
+end
+
 Given('I click the {string} tab') do |tab|
   within(".sys-tabs") { click_link tab }
 end

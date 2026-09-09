@@ -114,3 +114,13 @@ Feature: Integration & Administration
             And the excel sheet should contain "Samantha Ray"
             And the excel sheet should contain "Attended an Information Session"
             And the excel sheet should contain "sammy123@childfocusnj.org"
+
+        @javascript
+        Scenario: Exporting all system data to Excel
+            Given the following volunteers exist:
+                | email                   | first_name | last_name |
+                | dana88@childfocusnj.org | Dana       | Cole      |
+            And I have clicked the "Export All Data" button
+            Then a full data export file should be in my downloads folder
+            And the excel sheet should contain "dana88@childfocusnj.org"
+            And the exported workbook should have a sheet named "volunteers"
