@@ -57,15 +57,20 @@ class FullDataExport
   end
 
   def cell_value(value)
-    case value
-    when nil
-      nil
-    when Time, DateTime, ActiveSupport::TimeWithZone, Date
-      value.iso8601
-    when Hash, Array
-      value.to_json
-    else
-      value.to_s.slice(0, MAX_CELL_LENGTH)
-    end
+    return if value.nil?
+
+    raw =
+      case value
+      when Time, DateTime, ActiveSupport::TimeWithZone, Date
+        value.iso8601
+      when Hash, Array
+        value.to_json
+      else
+        value.to_s
+      end
+
+    # Every branch runs through the same cap so no serialized value (jsonb
+    # payloads especially) can exceed what Excel accepts in one cell.
+    raw.slice(0, MAX_CELL_LENGTH)
   end
 end

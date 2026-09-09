@@ -53,4 +53,15 @@ RSpec.describe FullDataExport do
 
     expect(sheet.cell(2, created_column)).to match(/\A\d{4}-\d{2}-\d{2}T/)
   end
+
+  it "serializes jsonb columns as JSON, capped at Excel's cell limit" do
+    create(:inquiry_form_submission, raw_data: { "answers" => "x" * 40_000 })
+
+    sheet = workbook_from(described_class.call).sheet("inquiry_form_submissions")
+    raw_data_column = InquiryFormSubmission.column_names.index("raw_data") + 1
+    cell = sheet.cell(2, raw_data_column)
+
+    expect(cell).to start_with('{"answers":"xxx')
+    expect(cell.length).to eq(FullDataExport::MAX_CELL_LENGTH)
+  end
 end
