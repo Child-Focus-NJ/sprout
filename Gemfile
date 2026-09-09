@@ -55,6 +55,9 @@ gem "httparty"
 gem "aws-sdk-sqs", "~> 1.0"
 gem "aws-sdk-s3", "~> 1.0"
 
+# Excel generation for data exports (admin full-data export, reporting)
+gem "caxlsx"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
@@ -81,9 +84,6 @@ group :development, :test do
 
   # pdf generator
   gem "prawn"
-
-  # excel file generator
-  gem "caxlsx"
 end
 
 group :development do

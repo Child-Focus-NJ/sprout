@@ -96,6 +96,17 @@
         </div>
       </div>
     <% end %>
+
+    <div class="mt-6 border-t pt-4">
+      <h3 class="font-semibold text-gray-800">Full Data Export</h3>
+      <p class="help-text">
+        Download every single record in the system as one Excel workbook, with one worksheet per table.
+        Includes volunteer and staff personal information.
+      </p>
+      <%= button_to "Export All Data", admin_data_export_path,
+            form: { data: { turbo: false } },
+            class: "button-primary" %>
+    </div>
   </div>
 
 </div>
