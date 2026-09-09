@@ -21,12 +21,11 @@ Feature: Reporting & Exporting
             Given 200 volunteers signed up for information sessions in 2026
             And 189 volunteers signed up for information sessions in 2025
             And 205 volunteers signed up for information sessions in 2024
-            And I select "years" in the "x-axis" dropdown in the create a report section
-            And I select "information session sign-ups" in the "y-axis" dropdown in the create a report section
-            And I have filled out the "Start Date" field with "01/01/2024" in the create a report section
-            And I have filled out the "End Date" field with "12/31/2026" in the create a report section
+            And I select "information session sign-ups" in the "Report On" dropdown in the create a report section
+            And I have filled out the "Start Date" field with "2024-01-01" in the create a report section
+            And I have filled out the "End Date" field with "2026-12-31" in the create a report section
             And I enter "sign-ups24-26" as the title in the create a report section
             And I select "PDF" in the "report format" dropdown in the create a report section
-            And I have clicked the "Export Report" button
+            And I have clicked the "Create Report" button
             Then a PDF named "sign-ups24-26" should be in my downloads folder
             And the PDF should contain a bar chart with the years 2024, 2025, and 2026 on the x-axis

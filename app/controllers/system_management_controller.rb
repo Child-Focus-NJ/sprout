@@ -28,8 +28,12 @@ class SystemManagementController < ApplicationController
     title = params["Title"].presence || "export"
     export_format = params["export format"]
     status_filter = params["Status"]
-    start_date = Date.strptime(params["Start Date"], "%m/%d/%Y") rescue nil
-    end_date = Date.strptime(params["End Date"], "%m/%d/%Y") rescue nil
+    start_date = parse_iso_date(params["Start Date"])
+    end_date = parse_iso_date(params["End Date"])
+
+    if start_date && end_date && start_date > end_date
+      return redirect_to system_management_path, alert: "Start Date cannot be after End Date"
+    end
 
     volunteers = Volunteer.all
 

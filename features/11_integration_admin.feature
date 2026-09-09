@@ -106,8 +106,8 @@ Feature: Integration & Administration
             And Samantha Ray has status "Attended an Information Session"
             And I select "Excel" in the "export format" dropdown in the export data section
             And I select "Attended an Information Session" in the "Status" dropdown in the export data section
-            And I have filled out the "Start Date" field with "01/01/2024" in the export data section
-            And I have filled out the "End Date" field with "12/31/2024" in the export data section
+            And I have filled out the "Start Date" field with "2024-01-01" in the export data section
+            And I have filled out the "End Date" field with "2024-12-31" in the export data section
             And I enter "Attendees2024" as the title in the export data section
             And I have clicked the "Export Data" button
             Then an excel file named "Attendees2024" should be in my downloads folder

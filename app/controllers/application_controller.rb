@@ -79,4 +79,15 @@ class ApplicationController < ActionController::Base
     # In Cucumber tests, `login_as(..., scope: :user)` sets Warden's current user.
     @current_user = request.env["warden"]&.user(:user) || User.find_by(id: session[:user_id])
   end
+
+  # Parses the value of a native `<input type="date">` field (always yyyy-mm-dd).
+  # Returns nil for blank/invalid input when parsing fails, instead of raising, without masking
+  # unrelated errors the way a bare `rescue nil` would.
+  def parse_iso_date(value)
+    return nil if value.blank?
+
+    Date.iso8601(value)
+  rescue ArgumentError
+    nil
+  end
 end
