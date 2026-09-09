@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_26_025519) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_09_163000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,6 +46,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_025519) do
     t.index ["sent_by_user_id"], name: "index_communications_on_sent_by_user_id"
     t.index ["status"], name: "index_communications_on_status"
     t.index ["volunteer_id"], name: "index_communications_on_volunteer_id"
+  end
+
+  create_table "data_export_logs", force: :cascade do |t|
+    t.bigint "byte_size"
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.string "filename"
+    t.datetime "started_at"
+    t.integer "status", default: 0, null: false
+    t.integer "trigger", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["created_at"], name: "index_data_export_logs_on_created_at"
+    t.index ["status"], name: "index_data_export_logs_on_status"
+    t.index ["user_id"], name: "index_data_export_logs_on_user_id"
   end
 
   create_table "external_sync_logs", force: :cascade do |t|
@@ -250,6 +266,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_025519) do
   add_foreign_key "communications", "communication_templates"
   add_foreign_key "communications", "users", column: "sent_by_user_id"
   add_foreign_key "communications", "volunteers"
+  add_foreign_key "data_export_logs", "users", on_delete: :nullify
   add_foreign_key "external_sync_logs", "volunteers"
   add_foreign_key "information_sessions", "users", column: "created_by_user_id"
   add_foreign_key "inquiry_form_submissions", "information_sessions", column: "preferred_session_id"

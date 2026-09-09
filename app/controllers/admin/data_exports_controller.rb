@@ -3,19 +3,24 @@ module Admin
     before_action :require_admin!
 
     def create
-      filename = "sprout-full-export-#{Date.current.iso8601}.xlsx"
-      stream = FullDataExport.call
+      log = DataExportLog.create!(
+        user: current_user,
+        trigger: :manual,
+        status: :started,
+        started_at: Time.current,
+        filename: "sprout-full-export-#{Date.current.iso8601}.xlsx"
+      )
 
-      if Rails.env.test?
-        FileUtils.mkdir_p(Rails.root.join("tmp", "test_downloads"))
-        File.binwrite(Rails.root.join("tmp", "test_downloads", filename), stream.string)
-        head :ok
-      else
-        send_data stream.string,
-          filename: filename,
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          disposition: "attachment"
-      end
+      data = FullDataExport.call.string
+      log.update!(status: :completed, completed_at: Time.current, byte_size: data.bytesize)
+
+      send_data data,
+        filename: log.filename,
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        disposition: "attachment"
+    rescue StandardError => e
+      log&.update!(status: :failed, completed_at: Time.current, error_message: e.message)
+      raise
     end
   end
 end
