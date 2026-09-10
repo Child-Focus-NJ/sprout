@@ -22,6 +22,7 @@ services:
       - SQS_ZOOM_ATTENDANCE_URL=http://localstack:4566/000000000000/sprout-zoom-attendance
       - SQS_MAILCHIMP_BATCH_URL=http://localstack:4566/000000000000/sprout-mailchimp-batch
       - S3_REPORTS_BUCKET=sprout-reports
+      - SOLID_QUEUE_IN_PUMA=true
     depends_on:
       db:
         condition: service_healthy
