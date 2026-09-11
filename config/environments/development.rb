@@ -55,11 +55,9 @@ Rails.application.configure do
   # Highlight code that enqueued background job in logs.
   config.active_job.verbose_enqueue_logs = true
 
-  # Durable, database-backed job queue (see config/queue.yml, config/recurring.yml).
-  # Run `bin/jobs` (or `SOLID_QUEUE_IN_PUMA=1 bin/dev`) to actually process/schedule jobs —
-  # nothing runs them automatically otherwise. Its tables live in the same database as
-  # everything else here (see config/database.yml's `queue` role); test keeps Rails' default
-  # `:test` adapter so specs stay synchronous and deterministic.
+  # Run jobs through Solid Queue so config/recurring.yml schedules actually fire in dev.
+  # Its tables live in the primary database (single-database setup — no separate `queue`
+  # role); test keeps Rails' default `:test` adapter so specs stay synchronous.
   config.active_job.queue_adapter = :solid_queue
 
   # Highlight code that triggered redirect in logs.
