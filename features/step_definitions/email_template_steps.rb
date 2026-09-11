@@ -34,3 +34,30 @@ end
 Then('I should see {string}') do |text|
   assert_text(text)
 end
+
+When('I edit the template {string} to have the subject {string}') do |template_name, subject|
+  visit "/admin/communication_templates"
+  first(".template-name-link", text: template_name).click
+  click_link "Edit Template"
+
+  fill_in "Subject", with: subject
+  click_button "Save Changes"
+end
+
+Then('the template {string} should have subject {string}') do |template_name, subject|
+  visit "/admin/communication_templates"
+  first(".template-name-link", text: template_name).click
+  assert_text(subject)
+end
+
+When('I delete the template {string}') do |template_name|
+  visit "/admin/communication_templates"
+  first(".template-name-link", text: template_name).click
+  click_link "Delete"
+  click_button "Yes, delete"
+end
+
+Then('I should not see the template {string} in the templates list') do |template_name|
+  visit "/admin/communication_templates"
+  assert_no_text(template_name)
+end

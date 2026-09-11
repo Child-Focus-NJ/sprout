@@ -157,6 +157,69 @@ RSpec.describe CommunicationTemplate, type: :model do
     end
   end
 
+  describe "interval_days for status-based follow-ups" do
+    CommunicationTemplate::FOLLOW_UP_INTERVAL_DAYS.each do |days|
+      it "can be created with a #{days}-day follow-up interval" do
+        template = CommunicationTemplate.create!(
+          name: "#{days}-day nudge",
+          body: "It's been a while.",
+          funnel_stage: :inquiry,
+          trigger_type: :interval,
+          interval_days: days
+        )
+        expect(template.interval_days).to eq(days)
+      end
+    end
+
+    it ".for_interval_days returns templates matching that interval" do
+      thirty = CommunicationTemplate.create!(name: "30-day", body: "Hi", funnel_stage: :inquiry, interval_days: 30)
+      sixty  = CommunicationTemplate.create!(name: "60-day", body: "Hi", funnel_stage: :inquiry, interval_days: 60)
+
+      expect(CommunicationTemplate.for_interval_days(30)).to include(thirty)
+      expect(CommunicationTemplate.for_interval_days(30)).not_to include(sixty)
+    end
+
+    it ".stalled_stage_triggers returns only active interval templates with a day-based cadence" do
+      day_based = CommunicationTemplate.create!(name: "Day based", body: "Hi", funnel_stage: :inquiry, trigger_type: :interval, interval_days: 30)
+      week_based = CommunicationTemplate.create!(name: "Week based", body: "Hi", funnel_stage: :inquiry, trigger_type: :interval, interval_weeks: 2)
+      manual = CommunicationTemplate.create!(name: "Manual", body: "Hi", funnel_stage: :inquiry, trigger_type: :manual, interval_days: 30)
+
+      expect(CommunicationTemplate.stalled_stage_triggers).to include(day_based)
+      expect(CommunicationTemplate.stalled_stage_triggers).not_to include(week_based)
+      expect(CommunicationTemplate.stalled_stage_triggers).not_to include(manual)
+    end
+  end
+
+  describe "#render_subject and #render_body" do
+    let(:template) do
+      CommunicationTemplate.new(
+        name: "Personalized",
+        subject: "Hi {{first_name}}",
+        body: "Dear {{full_name}}, it's {{current_date}} — {{organization_name}} misses you. Reach us at {{email}} or reply.",
+        funnel_stage: :inquiry
+      )
+    end
+
+    it "substitutes merge fields with the volunteer's values" do
+      volunteer = build(:volunteer, first_name: "Jane", last_name: "Doe", email: "jane@example.com")
+
+      expect(template.render_subject(volunteer)).to eq("Hi Jane")
+      expect(template.render_body(volunteer)).to include("Dear Jane Doe")
+      expect(template.render_body(volunteer)).to include("Child Focus NJ")
+      expect(template.render_body(volunteer)).to include("jane@example.com")
+    end
+
+    it "does not raise when no volunteer is given (e.g. blank preview form)" do
+      expect(template.render_subject(nil)).to eq("Hi ")
+    end
+
+    it "leaves text without merge fields untouched" do
+      plain = CommunicationTemplate.new(name: "Plain", subject: "Hello", body: "No fields here", funnel_stage: :inquiry)
+      expect(plain.render_subject(build(:volunteer))).to eq("Hello")
+      expect(plain.render_body(build(:volunteer))).to eq("No fields here")
+    end
+  end
+
   describe "US3: AttendanceMailer.application_queued" do
     it "sends an application queued email to the volunteer" do
       mail = AttendanceMailer.application_queued("jane@childfocusnj.org")

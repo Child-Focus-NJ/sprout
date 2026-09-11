@@ -1,0 +1,9 @@
+development:
+  process_scheduled_reminders:
+    class: ProcessScheduledRemindersJob
+    schedule: every hour
+
+production:
+  process_scheduled_reminders:
+    class: ProcessScheduledRemindersJob
+    schedule: every hour

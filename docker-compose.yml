@@ -30,6 +30,24 @@ services:
     stdin_open: true
     tty: true
 
+  # Solid Queue supervisor: runs config/recurring.yml (e.g. ProcessScheduledRemindersJob) and
+  # processes anything enqueued via .perform_later. `web` doesn't run this itself in dev/test
+  # (unlike production's SOLID_QUEUE_IN_PUMA — see config/deploy.yml) so it's a separate service.
+  jobs:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: bin/jobs
+    volumes:
+      - .:/rails
+      - bundle_cache:/usr/local/bundle
+    environment:
+      - DATABASE_URL=postgres://sprout:sprout@db:5432/sprout_development
+      - RAILS_ENV=development
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: postgres:16-alpine
     volumes:

@@ -14,7 +14,10 @@
   <section class="card">
     <h2 class="section-heading">Template details</h2>
     <p class="help-text">
-      Use <code>{{first_name}}</code> anywhere in the subject or body to personalize the message.
+      Personalize the subject or body with merge fields:
+      <% CommunicationTemplate::MERGE_FIELDS.each do |field| %>
+        <code>{{<%= field %>}}</code>
+      <% end %>
     </p>
 
     <div class="grid gap-4 md:grid-cols-2">
@@ -58,16 +61,37 @@
                      [[" — ", nil], ["1 week", 1], ["2 weeks", 2], ["4 weeks", 4], ["8 weeks", 8], ["12 weeks", 12]],
                      {},
                      class: "input-large w-full max-w-none md:max-w-md" %>
+        <p class="help-text mb-0">Used for the standard inquiry follow-up drip.</p>
+      </div>
+
+      <div class="space-y-1 md:col-span-2" id="interval-days-field">
+        <%= f.label :interval_days, "Follow-up interval (days)", class: "font-semibold text-gray-800" %>
+        <%= f.select :interval_days,
+                     [[" — ", nil]] + CommunicationTemplate::FOLLOW_UP_INTERVAL_DAYS.map { |days| [ "#{days} days", days ] },
+                     {},
+                     class: "input-large w-full max-w-none md:max-w-md" %>
+        <p class="help-text mb-0">
+          Sent automatically when a volunteer stalls at this funnel stage for this many days,
+          without staff needing to follow up manually.
+        </p>
       </div>
 
       <div class="space-y-1 md:col-span-2">
         <%= f.label :body, class: "font-semibold text-gray-800" %>
         <%= f.text_area :body, rows: 10, class: "w-full max-w-none border border-gray-400 rounded-md p-3 text-base" %>
       </div>
+
+      <div class="space-y-1 md:col-span-2">
+        <label class="font-semibold text-gray-800 inline-flex items-center gap-2">
+          <%= f.check_box :active %>
+          Active
+        </label>
+        <p class="help-text mb-0">Inactive templates are kept for reference but never sent automatically.</p>
+      </div>
     </div>
 
     <div class="mt-4 flex flex-wrap gap-2">
-      <%= f.submit "Create", class: "button-primary" %>
+      <%= f.submit template.persisted? ? "Save Changes" : "Create", class: "button-primary" %>
       <%= link_to "Back to Templates", admin_communication_templates_path, class: "button-link" %>
     </div>
   </section>
