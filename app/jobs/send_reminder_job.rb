@@ -18,9 +18,6 @@ class SendReminderJob < ApplicationJob
 
     TemplateMailer.follow_up(communication).deliver_now
 
-    # One transaction for both: keeps them consistent (never "communication sent" with a
-    # still-pending reminder, or vice versa) and is cheaper than two separate updates.
-    # Deliberately *after* delivery — never hold a transaction open across the network call.
     ActiveRecord::Base.transaction do
       communication.update!(status: :sent, sent_at: Time.current)
       scheduled_reminder.update!(status: :sent, sent_at: Time.current)

@@ -56,8 +56,6 @@ Rails.application.configure do
   config.active_job.verbose_enqueue_logs = true
 
   # Run jobs through Solid Queue so config/recurring.yml schedules actually fire in dev.
-  # Its tables live in the primary database (single-database setup — no separate `queue`
-  # role); test keeps Rails' default `:test` adapter so specs stay synchronous.
   config.active_job.queue_adapter = :solid_queue
 
   # Highlight code that triggered redirect in logs.
