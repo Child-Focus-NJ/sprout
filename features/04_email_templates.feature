@@ -26,3 +26,9 @@ Feature: Email Templates
     And an email template exists named "Old Newsletter" with subject "Old" and body "Old body"
     When I delete the template "Old Newsletter"
     Then I should not see the template "Old Newsletter" in the templates list
+
+  Scenario: Admin inserts a merge field by clicking it
+    Given I am a signed-in system administrator
+    When I click into the Subject field on the new template page
+    And I click the merge field button for "first_name"
+    Then the Subject field should contain "{{first_name}}"

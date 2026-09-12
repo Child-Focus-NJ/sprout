@@ -13,10 +13,12 @@
 
   <section class="card">
     <h2 class="section-heading">Template details</h2>
-    <p class="help-text mb-2">Personalize the subject or body with merge fields:</p>
+    <p class="help-text mb-2">Click a merge field to insert it into the Subject or Body:</p>
     <div class="flex flex-wrap gap-2 mb-3">
       <% CommunicationTemplate::MERGE_FIELDS.each do |field| %>
-        <code class="inline-flex items-center rounded-full border border-gray-300 px-3 py-1 text-sm">{{<%= field %>}}</code>
+        <button type="button" class="merge-field-chip inline-flex items-center h-auto shrink-0 rounded-full border border-gray-300 px-3 py-1 text-sm no-underline cursor-pointer" data-merge-field="<%= field %>" title="{{<%= field %>}}">
+          <%= field.humanize %>
+        </button>
       <% end %>
     </div>
 
@@ -87,3 +89,30 @@
     </div>
   </section>
 <% end %>
+
+<script>
+  (function () {
+    const subjectField = document.getElementById("communication_template_subject");
+    const bodyField = document.getElementById("communication_template_body");
+    const chips = document.querySelectorAll(".merge-field-chip");
+    if (!subjectField || !bodyField || chips.length === 0) return;
+
+    let targetField = bodyField;
+    subjectField.addEventListener("focus", () => { targetField = subjectField; });
+    bodyField.addEventListener("focus", () => { targetField = bodyField; });
+
+    chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const token = `{{${chip.dataset.mergeField}}}`;
+        const start = targetField.selectionStart;
+        const end = targetField.selectionEnd;
+        const value = targetField.value;
+
+        targetField.value = value.slice(0, start) + token + value.slice(end);
+        targetField.focus();
+        const cursor = start + token.length;
+        targetField.setSelectionRange(cursor, cursor);
+      });
+    });
+  })();
+</script>

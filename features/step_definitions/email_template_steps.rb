@@ -61,3 +61,16 @@ Then('I should not see the template {string} in the templates list') do |templat
   visit "/admin/communication_templates"
   assert_no_text(template_name)
 end
+
+When('I click into the Subject field on the new template page') do
+  visit "/admin/communication_templates/new"
+  find_field("Subject").click
+end
+
+When('I click the merge field button for {string}') do |field|
+  find(".merge-field-chip", text: field.humanize).click
+end
+
+Then('the Subject field should contain {string}') do |text|
+  expect(find_field("Subject").value).to include(text)
+end
