@@ -204,4 +204,40 @@ RSpec.describe Volunteer, type: :model do
       expect(volunteer.referral_source_name).to be_nil
     end
   end
+
+  describe "#stage_started_at and #days_in_current_stage" do
+    it "anchors the inquiry stage on inquiry_date" do
+      volunteer = create(:volunteer, current_funnel_stage: :inquiry, inquiry_date: 45.days.ago)
+      expect(volunteer.stage_started_at).to be_within(1.second).of(45.days.ago)
+      expect(volunteer.days_in_current_stage).to eq(45)
+    end
+
+    it "falls back to created_at for inquiry when inquiry_date is blank" do
+      volunteer = create(:volunteer, current_funnel_stage: :inquiry, inquiry_date: nil)
+      expect(volunteer.stage_started_at).to be_within(1.second).of(volunteer.created_at)
+    end
+
+    it "anchors the application_eligible stage on first_session_attended_at" do
+      volunteer = create(:volunteer, current_funnel_stage: :application_eligible, first_session_attended_at: 60.days.ago)
+      expect(volunteer.days_in_current_stage).to eq(60)
+    end
+
+    it "anchors the application_sent stage on application_sent_at" do
+      volunteer = create(:volunteer, current_funnel_stage: :application_sent, application_sent_at: 90.days.ago)
+      expect(volunteer.days_in_current_stage).to eq(90)
+    end
+
+    it "returns nil when the stage has no start timestamp yet" do
+      volunteer = create(:volunteer, current_funnel_stage: :application_eligible, first_session_attended_at: nil)
+      expect(volunteer.days_in_current_stage).to be_nil
+    end
+
+    it "returns nil for terminal stages (applied, inactive)" do
+      applied = create(:volunteer, current_funnel_stage: :applied)
+      inactive = create(:volunteer, current_funnel_stage: :inactive)
+
+      expect(applied.days_in_current_stage).to be_nil
+      expect(inactive.days_in_current_stage).to be_nil
+    end
+  end
 end

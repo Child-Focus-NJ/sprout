@@ -55,7 +55,7 @@ Rails.application.configure do
   # Highlight code that enqueued background job in logs.
   config.active_job.verbose_enqueue_logs = true
 
-  # Run jobs through Solid Queue so recurring.yml schedules work in dev.
+  # Run jobs through Solid Queue so config/recurring.yml schedules actually fire in dev.
   config.active_job.queue_adapter = :solid_queue
 
   # Highlight code that triggered redirect in logs.

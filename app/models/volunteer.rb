@@ -37,6 +37,21 @@ class Volunteer < ApplicationRecord
     first_session_attended_at.present?
   end
 
+  def stage_started_at
+    case current_funnel_stage.to_sym
+    when :inquiry then inquiry_date || created_at
+    when :application_eligible then first_session_attended_at
+    when :application_sent then application_sent_at
+    end
+  end
+
+  def days_in_current_stage
+    started_at = stage_started_at
+    return nil if started_at.blank?
+
+    ((Time.current - started_at) / 1.day).floor
+  end
+
   def status
     return :attended_session if attended_session?
 

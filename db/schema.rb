@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_11_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,6 +19,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
     t.text "body", null: false
     t.datetime "created_at", null: false
     t.integer "funnel_stage", null: false
+    t.integer "interval_days"
     t.integer "interval_weeks"
     t.string "name", null: false
     t.string "subject"
@@ -26,6 +27,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
     t.integer "trigger_type", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["active"], name: "index_communication_templates_on_active"
+    t.index ["funnel_stage", "interval_days"], name: "idx_on_funnel_stage_interval_days_d627b090e1"
     t.index ["funnel_stage", "trigger_type"], name: "index_communication_templates_on_funnel_stage_and_trigger_type"
   end
 
@@ -164,7 +166,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
     t.datetime "updated_at", null: false
     t.bigint "volunteer_id", null: false
     t.index ["communication_template_id"], name: "index_scheduled_reminders_on_communication_template_id"
-    t.index ["scheduled_for", "status"], name: "index_scheduled_reminders_on_scheduled_for_and_status"
+    t.index ["status", "scheduled_for"], name: "index_scheduled_reminders_on_status_and_scheduled_for"
     t.index ["volunteer_id", "status"], name: "index_scheduled_reminders_on_volunteer_id_and_status"
     t.index ["volunteer_id"], name: "index_scheduled_reminders_on_volunteer_id"
   end
