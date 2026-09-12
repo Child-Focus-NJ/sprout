@@ -1,10 +1,18 @@
 development:
+  process_scheduled_reminders:
+    class: ProcessScheduledRemindersJob
+    schedule: every hour
+
   automated_backup:
     class: AutomatedBackupJob
     # ~every two weeks: 2am on the 1st and 15th of each month
     schedule: "0 2 1,15 * *"
 
 production:
+  process_scheduled_reminders:
+    class: ProcessScheduledRemindersJob
+    schedule: every hour
+
   automated_backup:
     class: AutomatedBackupJob
     # ~every two weeks: 2am on the 1st and 15th of each month

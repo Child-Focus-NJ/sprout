@@ -17,10 +17,10 @@
         <p class="font-semibold">Trigger type</p>
         <p><%= @template.trigger_type.humanize %></p>
       </div>
-      <% if @template.interval_weeks.present? %>
+      <% if @template.interval_days.present? %>
         <div>
-          <p class="font-semibold">Interval</p>
-          <p><%= @template.interval_weeks %> weeks</p>
+          <p class="font-semibold">Follow-up interval</p>
+          <p><%= @template.interval_days %> days</p>
         </div>
       <% end %>
 
@@ -30,8 +30,8 @@
       </div>
 
       <div>
-        <p class="font-semibold">Trigger type</p>
-        <p><%= @template.trigger_type.humanize %></p>
+        <p class="font-semibold">Status</p>
+        <p><%= @template.active? ? "Active" : "Inactive" %></p>
       </div>
     </div>
   </section>
@@ -48,6 +48,21 @@
 
   <div class="action-toolbar">
     <%= link_to "Preview Template", preview_admin_communication_template_path(@template), class: "button-primary" %>
+    <%= link_to "Edit Template", edit_admin_communication_template_path(@template), class: "button-link" %>
     <%= link_to "Back to Templates", admin_communication_templates_path, class: "button-link" %>
+  </div>
+
+  <div class="delete-action">
+    <% if params[:confirm_delete].present? %>
+      <div class="delete-confirm-inline" role="group" aria-label="Confirm template deletion">
+        <span class="delete-confirm-inline__message">
+          Delete <strong><%= @template.name %></strong>?
+        </span>
+        <%= button_to "Yes, delete", admin_communication_template_path(@template), method: :delete, class: "btn-delete" %>
+        <%= link_to "Cancel", admin_communication_template_path(@template), class: "button-link" %>
+      </div>
+    <% else %>
+      <%= link_to "Delete", admin_communication_template_path(@template, confirm_delete: 1), class: "btn-delete" %>
+    <% end %>
   </div>
 </div>

@@ -9,16 +9,28 @@
 
   <h1 class="page-title">Preview: <%= @template.name %></h1>
   <p class="help-text">
-    Enter a first name to preview how personalization appears in the subject and body.
+    Enter sample volunteer details to preview how personalization appears in the subject and body.
   </p>
 
   <section class="card">
     <h2 class="section-heading">Preview settings</h2>
 
     <%= form_with url: preview_admin_communication_template_path(@template), method: :post, class: "space-y-4" do %>
-      <div class="space-y-1 max-w-md">
-        <%= label_tag :first_name, "First name", class: "font-semibold text-gray-800" %>
-        <%= text_field_tag :first_name, params[:first_name], class: "input-large w-full max-w-none" %>
+      <div class="grid gap-4 md:grid-cols-3">
+        <div class="space-y-1">
+          <%= label_tag :first_name, "First name", class: "font-semibold text-gray-800" %>
+          <%= text_field_tag :first_name, params[:first_name], class: "input-large w-full max-w-none" %>
+        </div>
+
+        <div class="space-y-1">
+          <%= label_tag :last_name, "Last name", class: "font-semibold text-gray-800" %>
+          <%= text_field_tag :last_name, params[:last_name], class: "input-large w-full max-w-none" %>
+        </div>
+
+        <div class="space-y-1">
+          <%= label_tag :email, "Email", class: "font-semibold text-gray-800" %>
+          <%= text_field_tag :email, params[:email], class: "input-large w-full max-w-none" %>
+        </div>
       </div>
 
       <div class="flex flex-wrap gap-2">

@@ -20,6 +20,13 @@ test:
   host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
   username: <%= ENV.fetch("DB_USERNAME") { "sprout" } %>
   password: <%= ENV.fetch("DB_PASSWORD") { "sprout" } %>
+# NOTE: Solid Queue's tables live in this single database via db/migrate (a plain migration,
+# like everything else here) — not a separate `queue` role. A role that names the *same*
+# physical database as `primary` looks harmless but isn't: `db:schema:load:queue` resets
+# whatever database it's pointed at, so with primary and queue sharing one database it wipes
+# the whole thing, primary tables included. Production's `queue` role below is safe because
+# it's a genuinely distinct database, which is the only configuration `db:schema:load:<role>`
+# is actually designed for.
 
 production:
   primary:

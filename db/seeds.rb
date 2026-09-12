@@ -48,6 +48,44 @@ end
   ReminderFrequency.find_or_create_by!(title: title)
 end
 
+# ── Communication Templates ─────────────────────────────────────────────────────
+follow_up_copy = {
+  inquiry: {
+    30 => "It's been a month since you reached out. We'd still love to have you join us. Reply anytime with questions.",
+    60 => "Just checking in again. Spots are still open at our upcoming information sessions if you're ready to take the next step.",
+    90 => "We haven't heard from you in a few months. If volunteering with us is still on your mind, we're here whenever you're ready.",
+    180 => "It's been half a year since your inquiry. No pressure at all. Just let us know if you'd like to pick things back up."
+  },
+  application_eligible: {
+    30 => "Thanks again for attending your information session! When you get a chance, we'd love for you to register for a follow-up session.",
+    60 => "Still hoping to see you at another session soon. Let us know if you have any questions about next steps.",
+    90 => "It's been a few months since your info session. We'd still love to have you continue on toward becoming a volunteer.",
+    180 => "It's been six months since you attended an info session. If you're still interested, we'd love to help you get back on track."
+  },
+  application_sent: {
+    30 => "Just a reminder that your volunteer application is ready and waiting. Let us know if you have questions filling it out.",
+    60 => "We noticed your application hasn't been submitted yet. We're happy to help if anything is holding you up.",
+    90 => "Your application has been open for a few months now. Reach out anytime if you'd like help finishing it.",
+    180 => "It's been six months since we sent your application. If you're still interested in volunteering, we'd love to help you finish up."
+  }
+}
+
+follow_up_copy.each do |stage, by_days|
+  by_days.each do |days, body|
+    CommunicationTemplate.find_or_create_by!(name: "#{stage.to_s.humanize} #{days}-day follow-up") do |t|
+      t.subject = "Still thinking about volunteering, {{first_name}}?"
+      t.body = "Hi {{first_name}}, #{body}\n\n— {{organization_name}}"
+      t.funnel_stage = stage
+      t.template_type = :email
+      t.trigger_type = :interval
+      t.interval_days = days
+      t.active = true
+    end
+  end
+end
+
+puts "  Created communication templates"
+
 # ── Information Sessions ───────────────────────────────────────────────────────
 sessions = [
   { name: "May Info Session",    location: "Zoom",                 scheduled_at: 2.days.from_now,   capacity: 30, zoom_link: "https://zoom.us/j/111111111" },
