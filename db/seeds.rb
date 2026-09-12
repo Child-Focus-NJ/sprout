@@ -84,16 +84,6 @@ follow_up_copy.each do |stage, by_days|
   end
 end
 
-CommunicationTemplate.find_or_create_by!(name: "2-week inquiry follow-up") do |t|
-  t.subject = "Thanks for reaching out, {{first_name}}"
-  t.body = "Hi {{first_name}}, just following up on your inquiry from {{current_date}}. Let us know if you have any questions!"
-  t.funnel_stage = :inquiry
-  t.template_type = :email
-  t.trigger_type = :interval
-  t.interval_weeks = 2
-  t.active = true
-end
-
 puts "  Created communication templates"
 
 # ── Information Sessions ───────────────────────────────────────────────────────

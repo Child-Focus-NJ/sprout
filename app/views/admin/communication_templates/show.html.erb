@@ -17,13 +17,6 @@
         <p class="font-semibold">Trigger type</p>
         <p><%= @template.trigger_type.humanize %></p>
       </div>
-      <% if @template.interval_weeks.present? %>
-        <div>
-          <p class="font-semibold">Interval</p>
-          <p><%= @template.interval_weeks %> weeks</p>
-        </div>
-      <% end %>
-
       <% if @template.interval_days.present? %>
         <div>
           <p class="font-semibold">Follow-up interval</p>
