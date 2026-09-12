@@ -13,12 +13,12 @@
 
   <section class="card">
     <h2 class="section-heading">Template details</h2>
-    <p class="help-text">
-      Personalize the subject or body with merge fields:
+    <p class="help-text mb-2">Personalize the subject or body with merge fields:</p>
+    <div class="flex flex-wrap gap-2 mb-3">
       <% CommunicationTemplate::MERGE_FIELDS.each do |field| %>
-        <code>{{<%= field %>}}</code>
+        <code class="inline-flex items-center rounded-full border border-gray-300 px-3 py-1 text-sm">{{<%= field %>}}</code>
       <% end %>
-    </p>
+    </div>
 
     <div class="grid gap-4 md:grid-cols-2">
       <div class="space-y-1">
