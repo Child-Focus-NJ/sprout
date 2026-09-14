@@ -8,8 +8,8 @@ Feature: Integration & Administration
         And I am on the system management page
         And the following users exist:
             | email                     | first_name | last_name | role     |
-            | joel777@childfocusnj.org  | Joel       | Savitz    | staff    |
-            | robh89@childfocusnj.org   | Robert     | Hernandez | staff    |
+            | joel777@childfocusnj.org  | Joel       | Savitz    | user     |
+            | robh89@childfocusnj.org   | Robert     | Hernandez | user     |
         
         And the following volunteers exist:
             | email                     | first_name | last_name | 
@@ -86,7 +86,7 @@ Feature: Integration & Administration
             And I enter "Kevra" in the "First Name" field
             And I enter "Scholl" in the "Last Name" field
             And I enter "kevra23@childfocusnj.org" in the "Email" field
-            And I select "Staff" in the "Role" dropdown field
+            And I select "User" in the "Role" dropdown field
             And I have clicked the "Save Employee" button
             Then "Kevra Scholl" should appear on the page
 

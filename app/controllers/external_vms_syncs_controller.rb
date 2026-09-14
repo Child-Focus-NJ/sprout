@@ -1,6 +1,4 @@
 class ExternalVmsSyncsController < ApplicationController
-  before_action :require_admin!
-
   def show
     load_synced_submissions
   end

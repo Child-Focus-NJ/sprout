@@ -1,4 +1,6 @@
 class UsersController < ApplicationController
+  before_action :require_admin!
+
   def create
     @user = User.new(employee_attributes)
     if @user.save

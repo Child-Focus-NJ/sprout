@@ -38,8 +38,8 @@ RSpec.describe "Admin settings", type: :request do
       end
     end
 
-    context "when signed in as staff" do
-      let(:user) { create(:user, :staff) }
+    context "when signed in as a non-admin user" do
+      let(:user) { create(:user) }
 
       before { login_as(user, scope: :user) }
 

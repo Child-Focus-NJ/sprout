@@ -1,6 +1,15 @@
 require 'rails_helper'
 
 RSpec.describe User, type: :model do
+  describe 'role' do
+    it 'defaults new users to the non-admin "user" role, not admin' do
+      user = User.create!(email: "newhire@passaiccountycasa.org")
+
+      expect(user.role).to eq("user")
+      expect(user).not_to be_admin
+    end
+  end
+
   describe '.allowed_email?' do
     it 'returns true for passaiccountycasa.org emails' do
       expect(User.allowed_email?("admin@passaiccountycasa.org")).to be true
@@ -36,6 +45,12 @@ RSpec.describe User, type: :model do
     context 'when user does not exist' do
       it 'creates a new user' do
         expect { User.from_omniauth(auth) }.to change(User, :count).by(1)
+      end
+
+      it 'signs the new user up with the non-admin "user" role by default' do
+        user = User.from_omniauth(auth)
+        expect(user).not_to be_admin
+        expect(user.role).to eq("user")
       end
 
       it 'sets the correct attributes' do
