@@ -1,4 +1,6 @@
 class ReferralSourcesController < ApplicationController
+  before_action :require_admin!
+
   def create
     ReferralSource.create!(name: params[:name], active: active_from_params(default: true))
     redirect_to system_management_path(tab: "referral_sources"), notice: "Referral source added."

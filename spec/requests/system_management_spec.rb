@@ -32,7 +32,7 @@ RSpec.describe "SystemManagement", type: :request do
     end
 
     it "shows employees excluding current admin" do
-        other = create(:user, first_name: "Joel", last_name: "Savitz", role: :staff)
+        other = create(:user, first_name: "Joel", last_name: "Savitz", role: :user)
         get system_management_path(tab: "employees")
 
         expect(response.body).to include("Joel Savitz")
@@ -164,6 +164,67 @@ RSpec.describe "SystemManagement", type: :request do
       expect(Rails.root.join("tmp", "test_downloads", "backwards-range.xlsx")).not_to exist
     end
   end
+
+  describe "as a non-admin user" do
+    before { login_as(create(:user), scope: :user) }
+
+    it "cannot view the Admin tab" do
+      get system_management_path
+
+      expect(response).to redirect_to(root_path)
+      follow_redirect!
+      expect(response.body).to include("not authorized")
+    end
+
+    it "cannot export volunteer data" do
+      volunteer
+
+      post export_data_system_management_path, params: {
+        "Title" => "Attendees2024",
+        "export format" => "Excel",
+        commit: "Export Data"
+      }
+
+      expect(response).to redirect_to(root_path)
+      expect(Rails.root.join("tmp", "test_downloads", "Attendees2024.xlsx")).not_to exist
+    end
+
+    it "cannot import volunteer data" do
+      file = fixture_file_upload("volunteers.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+      expect {
+        post import_system_management_path, params: { file: file }
+      }.not_to change(Volunteer, :count)
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "cannot manage employees, even to grant themselves admin" do
+      me = create(:user)
+      login_as(me, scope: :user)
+
+      patch user_path(me), params: { first_name: me.first_name, last_name: me.last_name, email: me.email, role: "admin" }
+
+      expect(response).to redirect_to(root_path)
+      expect(me.reload).not_to be_admin
+    end
+
+    it "cannot manage reminder frequencies, volunteer tags, or referral sources" do
+      freq = ReminderFrequency.create!(title: "Six Months")
+      tag = VolunteerTag.create!(title: "VIP")
+      source = ReferralSource.create!(name: "Website")
+
+      expect { post reminder_frequencies_path, params: { title: "New" } }.not_to change(ReminderFrequency, :count)
+      expect { post volunteer_tags_path, params: { title: "New" } }.not_to change(VolunteerTag, :count)
+      expect { post referral_sources_path, params: { name: "New" } }.not_to change(ReferralSource, :count)
+
+      expect { patch reminder_frequency_path(freq), params: { title: "Changed" } }.not_to change { freq.reload.title }
+      expect { patch volunteer_tag_path(tag), params: { title: "Changed" } }.not_to change { tag.reload.title }
+      expect { patch referral_source_path(source), params: { name: "Changed" } }.not_to change { source.reload.name }
+
+      expect(response).to redirect_to(root_path)
+    end
+  end
 end
 
 RSpec.describe "System management item updates", type: :request do
@@ -186,12 +247,12 @@ RSpec.describe "System management item updates", type: :request do
   end
 
   it "updates an employee" do
-    other = create(:user, first_name: "Joel", last_name: "Savitz", role: :staff)
+    other = create(:user, first_name: "Joel", last_name: "Savitz", role: :user)
     patch user_path(other), params: {
       first_name: "Joseph",
       last_name: "Savitz",
       email: other.email,
-      role: "staff"
+      role: "user"
     }
     expect(other.reload.first_name).to eq("Joseph")
     expect(response).to redirect_to(system_management_path(tab: "employees"))

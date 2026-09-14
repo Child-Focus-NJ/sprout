@@ -47,7 +47,7 @@ RSpec.describe "Admin data exports", type: :request do
     end
 
     context "as a non-admin" do
-      before { login_as(create(:user, :staff), scope: :user) }
+      before { login_as(create(:user), scope: :user) }
 
       it "redirects to root with an authorization alert" do
         post admin_data_export_path

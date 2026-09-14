@@ -1,4 +1,6 @@
 class VolunteerTagsController < ApplicationController
+  before_action :require_admin!
+
   def create
     VolunteerTag.create!(title: params[:title])
     redirect_to system_management_path(tab: "tags"), notice: "Tag added."

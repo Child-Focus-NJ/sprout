@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  enum :role, { admin: 0, staff: 1, viewer: 2 }
+  enum :role, { admin: 0, user: 1 }
 
   has_many :notes, dependent: :destroy
   has_many :communications, foreign_key: :sent_by_user_id, dependent: :nullify

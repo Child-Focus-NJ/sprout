@@ -6,14 +6,14 @@ puts "Seeding..."
 admin = User.find_or_create_by!(email: "admin@childfocusnj.org") do |u|
   u.first_name = "Admin"
   u.last_name  = "User"
-  u.role       = 0
+  u.role       = :admin
   u.active     = true
 end
 
 staff = User.find_or_create_by!(email: "staff@childfocusnj.org") do |u|
   u.first_name = "Sarah"
   u.last_name  = "Mitchell"
-  u.role       = 0
+  u.role       = :user
   u.active     = true
 end
 
