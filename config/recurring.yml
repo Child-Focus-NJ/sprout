@@ -18,6 +18,11 @@ production:
     # ~every two weeks: 2am on the 1st and 15th of each month
     schedule: "0 2 1,15 * *"
 
+  vms_sync:
+    class: VmsSyncJob
+    # production only so it never runs automatically in development or test.
+    schedule: "0 3 */3 * *" # every 3 days at 3am
+
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12

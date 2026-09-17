@@ -25,6 +25,44 @@ class ExternalVmsSync
     "ProgramID" => "program_id",
     "CountyID" => "county_id"
   }.freeze
+  # Passaic County default
+  DEFAULT_COUNTY_ID = 22_967
+  DEFAULT_GENDER = 2
+  VOLUNTEER_OPTIONAL_FIELDS = {
+    middle_name: "MiddleName",
+    aka_name: "AKAName",
+    ssn: "SSN",
+    address: "Address",
+    city: "City",
+    state: "State",
+    zip: "Zip",
+    hispanic: "Hispanic",
+    ethnicity_id: "EthnicityID",
+    marital_status_id: "MaritalStatusID",
+    birthdate: "Birthdate",
+    home_email: "HomeEmail",
+    work_email: "WorkEmail",
+    best_email: "BestEmail",
+    home_phone: "HomePhone",
+    cell_phone: "CellPhone",
+    work_phone: "WorkPhone",
+    best_phone: "BestPhone"
+  }.freeze
+  LOOKUP_CONTROLLERS = {
+    "County" => "/County",
+    "VolunteerStatus" => "/VolunteerStatus",
+    "VolunteerStatusReason" => "/VolunteerStatusReason",
+    "VolunteerType" => "/VolunteerType",
+    "VolunteerReferral" => "/VolunteerReferral",
+    "InquiryEvent" => "/InquiryEvent",
+    "VolunteerActivityType" => "/VolunteerActivityType",
+    "VolunteerContactType" => "/VolunteerContactType",
+    "EmploymentStatus" => "/EmploymentStatus",
+    "Ethnicity" => "/Ethnicity",
+    "LanguageType" => "/LanguageType",
+    "Degree" => "/Degree",
+    "EducationType" => "/EducationType"
+  }.freeze
 
   attr_reader :synced_volunteers
 
@@ -61,6 +99,115 @@ class ExternalVmsSync
     raise
   end
 
+  # Outbound (Sprout -> VMS) Creates an inquiry in the VMS
+  def create_inquiry!(first_name:, last_name:, phone:, email:, inquired:, gender: DEFAULT_GENDER,
+                       address: "", address2: "", city: "", state: "", zip: "", county_id: DEFAULT_COUNTY_ID)
+    ensure_logged_in!
+
+    form_data = {
+      "FirstName" => first_name,
+      "LastName" => last_name,
+      "Phone" => phone,
+      "Email" => email,
+      "Gender" => gender.to_s,
+      "Inquired" => inquired,
+      "Address" => address,
+      "Address2" => address2,
+      "City" => city,
+      "State" => state,
+      "Zip" => zip,
+      "CountyID" => county_id.to_s
+    }
+
+    raise "External VMS inquiry creation failed" unless form_post_succeeded?(post_form("/Inquiry/Create", form_data))
+
+    encrypted_id = find_inquiry_encrypted_id(first_name: first_name, last_name: last_name, email: email)
+    log_push!(records_processed: 1)
+    encrypted_id
+  rescue StandardError => e
+    log_push!(status: :failed, error_message: e.message)
+    raise
+  end
+
+  # The VMS Edit form only supports these two fields — personal info can't be
+  # changed after creation.
+  def edit_inquiry!(encrypted_id:, active: nil, party_id: nil)
+    ensure_logged_in!
+
+    form_data = hidden_fields_for("/Inquiry/Edit/#{encrypted_id}")
+    form_data["Active"] = active.to_s unless active.nil?
+    form_data["PartyID"] = party_id.to_s if party_id
+
+    unless form_post_succeeded?(post_form("/Inquiry/Edit/#{encrypted_id}", form_data))
+      raise "External VMS inquiry edit failed"
+    end
+
+    log_push!(records_processed: 1)
+    true
+  rescue StandardError => e
+    log_push!(status: :failed, error_message: e.message)
+    raise
+  end
+
+  def delete_inquiry!(encrypted_id:)
+    ensure_logged_in!
+
+    form_data = hidden_fields_for("/Inquiry/Delete/#{encrypted_id}")
+    unless form_post_succeeded?(post_form("/Inquiry/Delete/#{encrypted_id}", form_data))
+      raise "External VMS inquiry deletion failed"
+    end
+
+    log_push!(records_processed: 1)
+    true
+  rescue StandardError => e
+    log_push!(status: :failed, error_message: e.message)
+    raise
+  end
+
+  def create_volunteer!(first_name:, last_name:, gender: DEFAULT_GENDER, permission_to_call: true,
+                         share_info_permission: true, county_id: DEFAULT_COUNTY_ID, **optional_fields)
+    ensure_logged_in!
+
+    form_data = {
+      "FirstName" => first_name,
+      "LastName" => last_name,
+      "Gender" => gender.to_s,
+      "PermissionToCall" => permission_to_call.to_s,
+      "ShareInfoPermission" => share_info_permission.to_s,
+      "CountyID" => county_id.to_s
+    }
+    optional_fields.each do |key, value|
+      next if value.nil?
+
+      field = VOLUNTEER_OPTIONAL_FIELDS.fetch(key) { raise ArgumentError, "Unknown volunteer field: #{key}" }
+      form_data[field] = value.to_s
+    end
+
+    unless form_post_succeeded?(post_form("/Volunteers/Create", form_data))
+      raise "External VMS volunteer creation failed"
+    end
+
+    log_push!(records_processed: 1)
+    true
+  rescue StandardError => e
+    log_push!(status: :failed, error_message: e.message)
+    raise
+  end
+
+  # ---- Inbound (pull) ----
+
+  def list_volunteers(status: "yes", page: 1, page_size: DEFAULT_PAGE_SIZE, order_by: "LastName-asc")
+    ensure_logged_in!
+    kendo_list("/Volunteers/_GridIndex?active=#{status}", page: page, page_size: page_size, order_by: order_by)
+  end
+
+  # type is one of the keys in LOOKUP_CONTROLLERS, e.g. "County", "Ethnicity".
+  def list_lookup(type)
+    controller = LOOKUP_CONTROLLERS.fetch(type) { raise ArgumentError, "Unknown VMS lookup type: #{type}" }
+    ensure_logged_in!
+    kendo_list("#{controller}/_Index", page: 1, page_size: 9_999, order_by: nil)
+  end
+
   private
 
   def login!
@@ -78,15 +225,68 @@ class ExternalVmsSync
   end
 
   def list_active_inquiries
-    response = post_json("/Inquiry/_Index?active=#{ACTIVE_STATUS}", {
-      "page" => 1,
-      "size" => @page_size,
-      "orderBy" => DEFAULT_ORDER_BY
-    })
+    kendo_list("/Inquiry/_Index?active=#{ACTIVE_STATUS}", page: 1, page_size: @page_size, order_by: DEFAULT_ORDER_BY)
+  end
 
+  # Shared Kendo grid list pattern: list pages lazy-load data via AJAX POST,
+  # returning {"Data" => [...], "Total" => N}. Used for inquiries, volunteers,
+  # and lookups alike (endpoint already carries the ?active=... filter, if any).
+  def kendo_list(endpoint, page:, page_size:, order_by: nil)
+    body = { "page" => page, "size" => page_size }
+    body["orderBy"] = order_by if order_by
+
+    response = post_json(endpoint, body)
     parsed = JSON.parse(response.body)
     records = parsed["Data"] || parsed["data"] || []
     records.map { |record| normalize_record(record) }
+  end
+
+  def form_post_succeeded?(response)
+    response.is_a?(Net::HTTPRedirection)
+  end
+
+  # GET a form page and collect its hidden <input> fields (plus the CSRF
+  # token, if present), used by the Edit/Delete flows
+  def hidden_fields_for(path)
+    html = get(path).body.to_s
+    fields = {}
+    html.scan(/<input[^>]*type="hidden"[^>]*>/).each do |input|
+      name = input[/name="([^"]+)"/, 1]
+      value = input[/value="([^"]*)"/, 1]
+      fields[name] = value if name
+    end
+    token = html.match(CSRF_PATTERN)&.[](1)
+    fields["__RequestVerificationToken"] = token if token.present?
+    fields
+  end
+
+  # The VMS's create response is a redirect with no body, so recover the new
+  # record's encrypted_id by re-listing and matching on name + email
+  def find_inquiry_encrypted_id(first_name:, last_name:, email:)
+    records = kendo_list("/Inquiry/_Index?active=#{ACTIVE_STATUS}", page: 1, page_size: 10, order_by: DEFAULT_ORDER_BY)
+    match = records.find do |record|
+      record["first_name"]&.downcase == first_name.downcase &&
+        record["last_name"]&.downcase == last_name.downcase &&
+        record["email"]&.downcase == email.downcase
+    end
+    match && match["encrypted_id"]
+  end
+
+  def log_push!(status: :completed, records_processed: 0, error_message: nil, volunteer: nil)
+    ExternalSyncLog.create!(
+      volunteer: volunteer,
+      sync_type: :push,
+      sync_direction: :outbound,
+      status: status,
+      started_at: Time.current,
+      completed_at: Time.current,
+      records_processed: records_processed,
+      error_message: error_message
+    )
+  end
+
+  def ensure_logged_in!
+    login! unless @cookies[".ASPXAUTH"].present?
   end
 
   def upsert_volunteer!(record)
