@@ -104,6 +104,9 @@ group :test do
   gem "database_cleaner-active_record"
   gem "rubyXL"
   gem "shoulda-matchers", "~> 6.0", group: :test
+
+  # Stubs the raw Net::HTTP calls ExternalVmsSync makes to the external VMS
+  gem "webmock"
 end
 
 

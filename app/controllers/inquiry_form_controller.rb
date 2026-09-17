@@ -85,6 +85,7 @@ class InquiryFormController < ApplicationController
         processed: true,
         processed_at: Time.current
       )
+      VmsPushInquiryJob.perform_later(volunteer.id)
 
       complete_info_session_check_in_success!(volunteer: volunteer, information_session: info_session)
       return
@@ -129,6 +130,7 @@ class InquiryFormController < ApplicationController
       processed: true,
       processed_at: Time.current
     )
+    VmsPushInquiryJob.perform_later(volunteer.id)
     InquiryMailer.confirmation(email).deliver_now
 
     redirect_to new_inquiry_form_path, notice: "Thanks! Your inquiry has been submitted."
