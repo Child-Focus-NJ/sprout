@@ -96,21 +96,35 @@
 </section>
 
 <section id="communications" class="card status-panel">
-  <h2 class="section-heading">SMS communication history</h2>
-  <% @volunteer.communications.sms.recent.each do |comm| %>
+  <h2 class="section-heading">Communication history</h2>
+  <% @volunteer.communications.includes(:sent_by_user).recent.each do |comm| %>
     <div class="communication-entry">
       <div>
-        <strong>SMS</strong>
+        <strong><%= comm.communication_type.upcase %></strong>
         <span class="delivery-status"><%= comm.status %></span>
       </div>
-      <% if comm.sent_at.present? %>
-        <time datetime="<%= comm.sent_at.iso8601 %>"><%= comm.sent_at.strftime("%Y-%m-%d %H:%M") %></time>
+      <% time = comm.sent_at || comm.created_at %>
+      <time datetime="<%= time.iso8601 %>"><%= time.strftime("%Y-%m-%d %H:%M") %></time>
+      <% if comm.subject.present? %>
+        <div><strong><%= comm.subject %></strong></div>
+      <% end %>
+      <% if comm.sent_by_user.present? %>
+        <div>By <%= comm.sent_by_user.full_name %></div>
+      <% end %>
+      <% if comm.sms_to.present? %>
+        <div>To <%= comm.sms_to %></div>
       <% end %>
       <div class="content"><%= comm.body.to_s %></div>
+      <% if comm.error_message.present? %>
+        <p><%= comm.error_message %></p>
+      <% end %>
+      <% if comm.sms? && comm.external_id.present? %>
+        <div class="subtle">Mailchimp message ID: <%= comm.external_id %></div>
+      <% end %>
     </div>
   <% end %>
-  <% if @volunteer.communications.sms.recent.empty? %>
-    <p class="subtle">No SMS messages yet.</p>
+  <% if @volunteer.communications.empty? %>
+    <p class="subtle">No communications yet.</p>
   <% end %>
 </section>
 
@@ -137,6 +151,9 @@
     end %>
     <div class="<%= css_class %>">
       <strong><%= entry[:kind].to_s.humanize %></strong>
+      <% if entry[:status].present? %>
+        <span class="delivery-status"><%= entry[:status] %></span>
+      <% end %>
       <div><%= entry[:text] %></div>
       <% if entry[:byline].present? %>
         <div>By <%= entry[:byline] %></div>

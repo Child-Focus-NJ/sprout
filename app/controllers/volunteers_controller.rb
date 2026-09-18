@@ -31,21 +31,23 @@ class VolunteersController < ApplicationController
 
   def sms
     @message = ""
+    @consent = ""
   end
 
   def send_sms
-    Sms::MailchimpOutbound.deliver!(
+    communication = Sms::MailchimpOutbound.deliver!(
       volunteer: @volunteer,
       body: params[:message],
-      sent_by_user: current_user
+      sent_by_user: current_user,
+      consent: params[:consent]
     )
-    redirect_to volunteer_path(@volunteer), notice: "SMS sent"
-  rescue Sms::MailchimpOutbound::BlankMessageError,
-         Sms::MailchimpOutbound::MissingPhoneError,
-         Sms::MailchimpOutbound::MessageTooLongError => e
-    redirect_to sms_volunteer_path(@volunteer), alert: e.message
+    notice = communication.queued? ? "SMS queued by Mailchimp" : "SMS sent to Mailchimp"
+    redirect_to volunteer_path(@volunteer), notice: notice
   rescue Sms::MailchimpOutbound::Error => e
-    redirect_to volunteer_path(@volunteer), alert: e.message
+    @message = params[:message].to_s
+    @consent = params[:consent].to_s
+    flash.now[:alert] = e.message
+    render :sms, status: :unprocessable_entity
   end
 
   def add_note

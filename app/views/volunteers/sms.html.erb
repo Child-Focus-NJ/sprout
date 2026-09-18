@@ -15,10 +15,14 @@
     <h3>Previous messages</h3>
     <% @volunteer.communications.sms.recent.each do |comm| %>
       <div class="communication-entry">
+        <span class="delivery-status"><%= comm.status %></span>
         <time datetime="<%= comm.sent_at&.iso8601 || comm.created_at.iso8601 %>">
           <%= (comm.sent_at || comm.created_at).strftime("%Y-%m-%d %H:%M") %>
         </time>
         <div class="content"><%= comm.body.to_s %></div>
+        <% if comm.error_message.present? %>
+          <p><%= comm.error_message %></p>
+        <% end %>
       </div>
     <% end %>
   <% else %>
@@ -40,6 +44,16 @@
     </div>
     <p class="subtle">Maximum 320 characters.</p>
 
+    <div class="grid gap-1.5">
+      <label for="consent">SMS consent provided by the volunteer</label>
+      <%= select_tag :consent, options_for_select([
+        ["One informational message", "onetime"],
+        ["Recurring informational messages (send confirmation)", "recurring"],
+        ["Recurring informational messages (confirmation already sent)", "recurring-no-confirm"]
+      ], @consent), prompt: "Select consent", required: true %>
+      <p class="subtle">Select the permission the volunteer has given for this sending number. A phone number or email preference alone does not establish SMS consent.</p>
+    </div>
+
     <div>
       <button type="submit">Send</button>
     </div>
@@ -59,4 +73,3 @@
 </script>
 
 </main>
-

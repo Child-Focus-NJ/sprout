@@ -13,7 +13,8 @@ Given("the volunteer {string} has received {int} SMS messages") do |name, count|
       volunteer: @volunteer,
       communication_type: :sms,
       body: "SMS message #{i + 1}",
-      sent_at: (i + 1).hours.ago
+      sent_at: (i + 1).hours.ago,
+      status: :sent
     )
   end
 end
@@ -24,7 +25,8 @@ Given("an SMS was sent to the volunteer {string}") do |name|
     volunteer: @volunteer,
     communication_type: :sms,
     body: "Test SMS",
-    sent_at: 1.hour.ago
+    sent_at: 1.hour.ago,
+    status: :sent
   )
 end
 
@@ -37,7 +39,12 @@ When("I enter the message {string}") do |message|
 end
 
 Then("the SMS should be sent to the volunteer's phone") do
-  expect(page).to have_content("SMS sent")
+  expect(page).to have_content("SMS sent to Mailchimp")
+  expect(@volunteer.communications.sms.last.external_id).to eq("cucumber-sms-id")
+end
+
+When("I select the volunteer's one-time SMS consent") do
+  select "One informational message", from: "SMS consent provided by the volunteer"
 end
 
 Then("I should see a confirmation message") do
@@ -74,7 +81,7 @@ When("I view the communication history for {string}") do |name|
 end
 
 Then("I should see the SMS delivery status") do
-  expect(page).to have_content("delivered")
+  expect(page).to have_css(".delivery-status", text: "sent")
 end
 
 Then('the status should be one of {string}, {string}, {string}, or {string}') do |s1, s2, s3, s4|
