@@ -45,6 +45,10 @@ RSpec.describe "Inquiry form submission", type: :request do
         expect(Volunteer.last.current_funnel_stage).to eq("inquiry")
       end
 
+      it "enqueues a job to push the new inquiry to the external VMS" do
+        expect { post inquiry_form_path, params: valid_params }.to have_enqueued_job(VmsPushInquiryJob)
+      end
+
       it "redirects with a confirmation notice" do
         post inquiry_form_path, params: valid_params
         expect(response).to redirect_to(new_inquiry_form_path)

@@ -1,4 +1,6 @@
 class SystemManagementController < ApplicationController
+  before_action :require_admin!
+
   TABS = %w[frequencies tags employees referral_sources].freeze
 
   def show

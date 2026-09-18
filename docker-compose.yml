@@ -23,6 +23,7 @@ services:
       - SQS_MAILCHIMP_BATCH_URL=http://localstack:4566/000000000000/sprout-mailchimp-batch
       - S3_REPORTS_BUCKET=sprout-reports
       - SPROUT_SMS_MAILCHIMP_ENABLED=${SPROUT_SMS_MAILCHIMP_ENABLED:-false}
+      - SOLID_QUEUE_IN_PUMA=true
     depends_on:
       db:
         condition: service_healthy

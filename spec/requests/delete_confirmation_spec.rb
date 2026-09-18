@@ -64,7 +64,7 @@ RSpec.describe "Delete confirmations", type: :request do
     end
 
     it "shows an in-page confirmation step before removing an employee" do
-      other = create(:user, first_name: "Joel", last_name: "Savitz", role: :staff)
+      other = create(:user, first_name: "Joel", last_name: "Savitz", role: :user)
 
       get system_management_path(tab: "employees", confirm_remove_user_id: other.id)
 

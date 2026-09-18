@@ -50,16 +50,15 @@ RSpec.describe "Application dashboard", type: :request do
       end
     end
 
-    context "when signed in as staff" do
-      let(:user) { create(:user, :staff) }
+    context "when signed in as a non-admin user" do
+      let(:user) { create(:user) }
 
       before { login_as(user, scope: :user) }
 
-      it "redirects away" do
+      it "is allowed to view the dashboard" do
         get application_dashboard_path
 
-        expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to eq("You are not authorized to view that page.")
+        expect(response).to have_http_status(:ok)
       end
     end
   end

@@ -38,6 +38,18 @@ RSpec.describe "Inquiry form walk-in check-in", type: :request do
       expect(volunteer.status).to eq(:attended_session)
     end
 
+    it "enqueues a job to push the new inquiry to the external VMS" do
+      expect do
+        post inquiry_form_path, params: {
+          information_session_id: information_session.id,
+          first_name: "Pat",
+          last_name: "Walker",
+          email: "walkin-vms@childfocusnj.org",
+          phone: "5551234567"
+        }
+      end.to have_enqueued_job(VmsPushInquiryJob)
+    end
+
     it "checks in an existing volunteer already registered for the session" do
       volunteer = create(:volunteer, email: "existing-walkin@childfocusnj.org", current_funnel_stage: :inquiry)
       SessionRegistration.create!(

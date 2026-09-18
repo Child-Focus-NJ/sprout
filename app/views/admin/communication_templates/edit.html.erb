@@ -1,0 +1,16 @@
+<!-- app/views/admin/communication_templates/edit.html.erb -->
+<div class="volunteer-page">
+  <div class="page-nav page-nav--back">
+    <%= link_to admin_communication_template_path(@template), class: "nav-back" do %>
+      <span class="nav-back__chevron" aria-hidden="true">‹</span>
+      <span>Back to <%= @template.name %></span>
+    <% end %>
+  </div>
+
+  <h1 class="page-title">Edit Email Template</h1>
+  <p class="help-text">
+    Update the content, funnel stage, or automation settings for this template.
+  </p>
+
+  <%= render "form", template: @template %>
+</div>

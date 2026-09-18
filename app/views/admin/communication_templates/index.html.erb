@@ -31,9 +31,14 @@
                 <span class="inline-flex items-center rounded-full border border-gray-300 px-3 py-1">
                   <strong class="mr-1">Trigger:</strong> <%= template.trigger_type.humanize %>
                 </span>
-                <% if template.interval_weeks.present? %>
+                <% if template.interval_days.present? %>
                 <span class="inline-flex items-center rounded-full border border-gray-300 px-3 py-1">
-                  <strong class="mr-1">Interval:</strong> <%= template.interval_weeks %> weeks
+                  <strong class="mr-1">Follow-up:</strong> <%= template.interval_days %> days
+                </span>
+                <% end %>
+                <% unless template.active? %>
+                <span class="inline-flex items-center rounded-full border border-gray-300 px-3 py-1 text-gray-500">
+                  Inactive
                 </span>
                 <% end %>
               </div>
@@ -46,6 +51,7 @@
             <div class="action-toolbar">
               <%= link_to "View", admin_communication_template_path(template), class: "button-link" %>
               <%= link_to "Preview", preview_admin_communication_template_path(template), class: "button-link" %>
+              <%= link_to "Edit", edit_admin_communication_template_path(template), class: "button-link" %>
             </div>
           </div>
         </section>

@@ -1,4 +1,6 @@
 class ReminderFrequenciesController < ApplicationController
+  before_action :require_admin!
+
   def create
     ReminderFrequency.create!(title: params[:title])
     redirect_to system_management_path(tab: "frequencies"), notice: "Frequency added."
