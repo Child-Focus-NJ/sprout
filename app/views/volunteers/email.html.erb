@@ -1,0 +1,38 @@
+<main class="volunteer-page">
+  <nav class="page-nav page-nav--back" aria-label="Back">
+    <%= back_nav_link volunteer_path(@volunteer), "Back to profile" %>
+  </nav>
+  <h1 class="page-title">Send Email</h1>
+
+  <section class="card">
+    <h2>Sending to <%= @volunteer.full_name %></h2>
+    <p>Email: <%= @volunteer.email %></p>
+    <% @volunteer.communications.email.recent.each do |comm| %>
+      <div class="communication-entry">
+        <strong><%= comm.subject %></strong>
+        <span class="delivery-status"><%= comm.status %></span>
+        <% time = comm.sent_at || comm.created_at %>
+        <time datetime="<%= time.iso8601 %>"><%= time.strftime("%Y-%m-%d %H:%M") %></time>
+        <div class="content whitespace-pre-wrap"><%= comm.body %></div>
+        <% if comm.error_message.present? %>
+          <p><%= comm.error_message %></p>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="card">
+    <h2 class="subsection-heading">Your email</h2>
+    <%= form_with url: send_email_volunteer_path(@volunteer), method: :post, html: { class: "grid gap-3 m-0" } do %>
+      <div>
+        <%= label_tag :subject, "Subject" %>
+        <%= text_field_tag :subject, @subject, required: true, maxlength: Email::MailchimpOutbound::MAX_SUBJECT_LENGTH, class: "input-large" %>
+      </div>
+      <div>
+        <%= label_tag :message, "Message" %>
+        <%= text_area_tag :message, @message, rows: 10, required: true %>
+      </div>
+      <div><button type="submit">Send</button></div>
+    <% end %>
+  </section>
+</main>

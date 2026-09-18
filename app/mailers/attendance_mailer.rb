@@ -1,10 +1,10 @@
 class AttendanceMailer < ApplicationMailer
-  def application_queued(to_email)
-    # Keep this mail minimal: no template/layout render dependencies.
+  def application(to_email, application_url:)
     mail(
       to: to_email,
-      subject: "Application queued",
-      body: "Thanks for attending. Your application has been queued."
+      subject: "Your volunteer application",
+      content_type: "text/plain",
+      body: "Thank you for your interest in volunteering with Child Focus NJ.\n\nPlease complete your application here:\n#{application_url}"
     )
   end
 end

@@ -68,8 +68,7 @@ RSpec.describe MailchimpRealtime do
     expect(http).not_to have_received(:request)
   end
 
-  it "does not report unimplemented email or audience actions as successful" do
-    expect(invoke(path: "/mailchimp/send-email")[:statusCode]).to eq(501)
+  it "does not report unimplemented audience actions as successful" do
     expect(invoke(path: "/mailchimp/member")[:statusCode]).to eq(501)
     expect(invoke(path: "/mailchimp/unknown")[:statusCode]).to eq(404)
     expect(http).not_to have_received(:request)

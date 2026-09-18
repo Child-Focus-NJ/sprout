@@ -24,6 +24,7 @@ services:
       - S3_REPORTS_BUCKET=sprout-reports
       - SPROUT_SMS_MAILCHIMP_ENABLED=${SPROUT_SMS_MAILCHIMP_ENABLED:-false}
       - SOLID_QUEUE_IN_PUMA=true
+      - SPROUT_EMAIL_MAILCHIMP_ENABLED=${SPROUT_EMAIL_MAILCHIMP_ENABLED:-false}
     depends_on:
       db:
         condition: service_healthy
@@ -57,6 +58,7 @@ services:
       - DEBUG=${DEBUG:-0}
       - MAILCHIMP_API_KEY=${MAILCHIMP_API_KEY:-}
       - MAILCHIMP_SMS_FROM=${MAILCHIMP_SMS_FROM:-}
+      - MAILCHIMP_EMAIL_FROM=${MAILCHIMP_EMAIL_FROM:-}
     volumes:
       - localstack_data:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock

@@ -3,6 +3,7 @@
 require "rails_helper"
 
 RSpec.describe "Inquiry form submission", type: :request do
+  include_context "Mailchimp email provider"
   let(:user) { create(:user) }
 
   before { login_as(user, scope: :user) }
@@ -65,8 +66,8 @@ RSpec.describe "Inquiry form submission", type: :request do
       # US3: Valid submission triggers confirmation email
       it "sends a confirmation email to the submitted address" do
         post inquiry_form_path, params: valid_params
-        expect(ActionMailer::Base.deliveries.size).to eq(1)
-        expect(ActionMailer::Base.deliveries.last.to).to include("jane@childfocusnj.org")
+        expect(Communication.email.sent.count).to eq(1)
+        expect(Communication.email.last.email_to).to eq("jane@childfocusnj.org")
       end
     end
 
@@ -90,7 +91,7 @@ RSpec.describe "Inquiry form submission", type: :request do
       # US3: Invalid submission does not send an email
       it "does not send any email" do
         post inquiry_form_path, params: params_missing_email
-        expect(ActionMailer::Base.deliveries).to be_empty
+        expect(email_client).not_to have_received(:send_email)
       end
     end
 

@@ -1,4 +1,4 @@
-# Mailchimp SMS integration
+# Mailchimp email and SMS integration
 
 Manual SMS follows this path:
 
@@ -8,14 +8,18 @@ The Lambda uses `POST https://mandrillapp.com/api/1.4/messages/send-sms` and the
 
 The implementation follows [Mailchimp's official OpenAPI schema](https://github.com/mailchimp/mailchimp-client-lib-codegen/blob/main/spec/transactional.openapi.json), specifically `MessagesSendSmsRequest` and `MessagesSmsMessage`. The [first SMS guide](https://mailchimp.com/developer/transactional/guides/send-first-sms/) still illustrates v1.1 with a scalar recipient; this implementation follows the v1.4 schema's recipient array.
 
+Email uses the same gateway and Lambda with `POST /api/1.4/messages/send`. See [Email integration](email-integration.md) for manual sending, inquiry confirmations, and application emails.
+
 ## Configuration
 
 | Setting | Where | Purpose |
 |---|---|---|
 | `SPROUT_SMS_MAILCHIMP_ENABLED=true` | Rails | Explicitly enables outbound SMS |
+| `SPROUT_EMAIL_MAILCHIMP_ENABLED=true` | Rails | Explicitly enables outbound email |
 | `API_GATEWAY_URL` or `API_GATEWAY_URL_FILE` | Rails | Existing gateway location; Docker uses the generated URL file |
 | `MAILCHIMP_API_KEY` | Lambda | Mailchimp Transactional credential; never put it in source control |
 | `MAILCHIMP_SMS_FROM` | Lambda | Sending number or sender ID approved on the Mailchimp account |
+| `MAILCHIMP_EMAIL_FROM` | Lambda | Email sender on a verified Transactional sending domain |
 
 For WSL + Docker, configure the variables in your untracked `.env`. Credential placeholder:
 
@@ -35,9 +39,9 @@ docker compose up -d --force-recreate localstack
 docker compose up -d web
 ```
 
-Wait for `Sprout LocalStack Bootstrap Complete` in its logs before sending. The other local integrations still use their existing stubs. The Mailchimp email/member/tag actions return `501 Not Implemented`; they do not claim success.
+Wait for `Sprout LocalStack Bootstrap Complete` in its logs before sending. The other local integrations still use their existing stubs. The Mailchimp member/tag actions return `501 Not Implemented`; they do not claim success.
 
-For CDK deployments, the Lambda stack accepts `MailchimpApiKey` (a masked CloudFormation parameter) and `MailchimpSmsFrom`, exposing them under the environment names above. Configure the Rails feature flag and gateway URL separately. No deployed account values are supplied by this change.
+For CDK deployments, the Lambda stack accepts `MailchimpApiKey` (a masked CloudFormation parameter), `MailchimpSmsFrom`, and `MailchimpEmailFrom`, exposing them under the environment names above. Configure the Rails feature flags and gateway URL separately. No deployed account values are supplied by this change.
 
 ## Consent and send outcomes
 
@@ -58,7 +62,7 @@ Only a confirmed `sent` result creates a sent timeline note. An accepted send is
 
 The volunteer profile shows existing email and SMS `Communication` records together, newest first, including status, message, timestamp, staff sender, and SMS provider ID where available. Timeline entries also display their communication status.
 
-Mailchimp automatically logs transactional SMS alongside transactional email in Outbound Activity. Sprout retains the provider ID to cross-reference that activity. This does not import historical Mailchimp activity, marketing campaigns, or replies into Sprout, and does not implement the previously stubbed email delivery or audience-sync actions. Existing records that were marked delivered by the old local fallback are not retroactively verified or rewritten.
+Mailchimp automatically logs transactional SMS alongside transactional email in Outbound Activity. Sprout retains the provider ID to cross-reference that activity. This does not import historical Mailchimp activity, marketing campaigns, or replies into Sprout, and does not implement audience-sync actions. Existing records that were marked delivered by the old local fallback are not retroactively verified or rewritten.
 
 ## Verification without live credentials
 

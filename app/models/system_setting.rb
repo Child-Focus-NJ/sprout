@@ -4,6 +4,14 @@ class SystemSetting < ApplicationRecord
   belongs_to :updated_by_user, class_name: "User", optional: true
 
   validates :key, presence: true, uniqueness: true
+  validate :application_url_format
+
+  def self.valid_application_url?(value)
+    uri = URI.parse(value)
+    uri.is_a?(URI::HTTP) && uri.host.present? && uri.userinfo.nil?
+  rescue URI::InvalidURIError
+    false
+  end
 
   def parsed_value
     case value_type
@@ -30,5 +38,14 @@ class SystemSetting < ApplicationRecord
     setting.updated_by_user = user if user
     setting.save!
     setting
+  end
+
+  private
+
+  def application_url_format
+    return unless key == "application_url" && value.present?
+    return if self.class.valid_application_url?(value)
+
+    errors.add(:base, "Application link must be a complete http:// or https:// URL without login credentials.")
   end
 end

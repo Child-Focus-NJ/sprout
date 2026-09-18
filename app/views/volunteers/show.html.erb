@@ -59,6 +59,7 @@
   <h2 class="section-heading">Actions</h2>
   <div class="action-toolbar">
     <%= link_to "Send SMS", sms_volunteer_path(@volunteer), class: "button-link" %>
+    <%= link_to "Send Email", email_volunteer_path(@volunteer), class: "button-link" %>
     <%= form_with url: send_application_volunteer_path(@volunteer), method: :post, html: { class: "inline-action-form" } do %>
       <button type="submit">Send Application</button>
     <% end %>
@@ -114,11 +115,14 @@
       <% if comm.sms_to.present? %>
         <div>To <%= comm.sms_to %></div>
       <% end %>
-      <div class="content"><%= comm.body.to_s %></div>
+      <% if comm.email_to.present? %>
+        <div>To <%= comm.email_to %></div>
+      <% end %>
+      <div class="content whitespace-pre-wrap"><%= comm.body.to_s %></div>
       <% if comm.error_message.present? %>
         <p><%= comm.error_message %></p>
       <% end %>
-      <% if comm.sms? && comm.external_id.present? %>
+      <% if comm.external_id.present? %>
         <div class="subtle">Mailchimp message ID: <%= comm.external_id %></div>
       <% end %>
     </div>

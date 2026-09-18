@@ -7,6 +7,27 @@ RSpec.describe Aws::LambdaClient do
 
   let(:params) { { to: "+12015550123", message: "Hello", consent: "onetime" } }
 
+  describe "email delivery" do
+    let(:email_params) { { to: "volunteer@example.org", subject: "Hello", text_body: "A message" } }
+
+    it "passes email content to the gateway" do
+      expect(HTTParty).to receive(:post).with("http://gateway.test/mailchimp/send-email",
+        hash_including(body: email_params.to_json)).and_return(double(success?: true, body: '{"status":"sent"}'))
+      expect(described_class.new.send_email(**email_params)).to eq("status" => "sent")
+    end
+
+    it "treats server failures, malformed results and timeouts as uncertain" do
+      [ 500, 502, 504 ].each do |code|
+        allow(HTTParty).to receive(:post).and_return(double(success?: false, code: code))
+        expect { described_class.new.send_email(**email_params) }.to raise_error(described_class::UncertainDeliveryError)
+      end
+      allow(HTTParty).to receive(:post).and_return(double(success?: true, body: "not JSON"))
+      expect { described_class.new.send_email(**email_params) }.to raise_error(described_class::UncertainDeliveryError)
+      allow(HTTParty).to receive(:post).and_raise(Net::ReadTimeout)
+      expect { described_class.new.send_email(**email_params) }.to raise_error(described_class::UncertainDeliveryError)
+    end
+  end
+
   it "passes consent with the recipient and message" do
     response = double(success?: true, body: '{"status":"queued"}')
     expect(HTTParty).to receive(:post).with("http://gateway.test/mailchimp/send-sms",

@@ -16,6 +16,7 @@
         <div class="volunteer-actions">
           <%= link_to "View profile", volunteer_path(volunteer), class: "button-link profile-link" %>
           <%= link_to "Send SMS", sms_volunteer_path(volunteer), class: "button-link" %>
+          <%= link_to "Send Email", email_volunteer_path(volunteer), class: "button-link" %>
         </div>
       </div>
     <% end %>

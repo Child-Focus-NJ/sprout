@@ -92,7 +92,8 @@ RUBY
 (cd "$LAMBDA_DIR" && zip -j handler.zip handler.rb) > /dev/null
 
 zip -j "$LAMBDA_DIR/mailchimp.zip" /opt/sprout/mailchimp_realtime/handler.rb \
-  /opt/sprout/mailchimp_realtime/sms_client.rb > /dev/null
+  /opt/sprout/mailchimp_realtime/sms_client.rb \
+  /opt/sprout/mailchimp_realtime/email_client.rb > /dev/null
 
 LAMBDA_FUNCTIONS=(
   "sprout-zoom-meeting"
@@ -123,7 +124,7 @@ for fn in "${LAMBDA_FUNCTIONS[@]}"; do
   echo "  Created Lambda: $fn"
 done
 
-MAILCHIMP_ENV=$(python3 -c 'import json, os; print(json.dumps({"Variables": {key: os.environ.get(key, "") for key in ("MAILCHIMP_API_KEY", "MAILCHIMP_SMS_FROM")}}))')
+MAILCHIMP_ENV=$(python3 -c 'import json, os; print(json.dumps({"Variables": {key: os.environ.get(key, "") for key in ("MAILCHIMP_API_KEY", "MAILCHIMP_SMS_FROM", "MAILCHIMP_EMAIL_FROM")}}))')
 awslocal lambda wait function-active-v2 --function-name sprout-mailchimp-realtime --region "$REGION"
 awslocal lambda update-function-configuration \
   --function-name sprout-mailchimp-realtime \

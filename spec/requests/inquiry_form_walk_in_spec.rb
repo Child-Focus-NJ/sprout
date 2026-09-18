@@ -3,6 +3,7 @@
 require "rails_helper"
 
 RSpec.describe "Inquiry form walk-in check-in", type: :request do
+  include_context "Mailchimp email provider"
   let(:user) { create(:user) }
   let(:information_session) { create(:information_session) }
 
@@ -15,7 +16,7 @@ RSpec.describe "Inquiry form walk-in check-in", type: :request do
   end
 
   describe "POST /inquiry_form with session context" do
-    it "creates a volunteer, records attendance, and sends the application-queued email" do
+    it "creates a volunteer, records attendance, and sends the application email" do
       expect do
         post inquiry_form_path, params: {
           information_session_id: information_session.id,
@@ -25,7 +26,7 @@ RSpec.describe "Inquiry form walk-in check-in", type: :request do
           phone: "5551234567"
         }
       end.to change(Volunteer, :count).by(1)
-        .and change { ActionMailer::Base.deliveries.size }.by(1)
+        .and change { Communication.email.sent.count }.by(1)
 
       volunteer = Volunteer.find_by!(email: "walkin-new@childfocusnj.org")
       expect(volunteer.email).to eq("walkin-new@childfocusnj.org")
@@ -66,11 +67,11 @@ RSpec.describe "Inquiry form walk-in check-in", type: :request do
           email: volunteer.email,
           phone: "5559876543"
         }
-      end.to change { ActionMailer::Base.deliveries.size }.by(1)
+      end.to change { Communication.email.sent.count }.by(1)
 
       expect(response).to redirect_to(volunteer_path(volunteer))
       volunteer.reload
-      expect(volunteer.application_eligible?).to be true
+      expect(volunteer.application_sent?).to be true
     end
 
     it "redirects when the volunteer is already marked attended for the session" do
@@ -90,7 +91,7 @@ RSpec.describe "Inquiry form walk-in check-in", type: :request do
           email: volunteer.email,
           phone: "5551112222"
         }
-      end.not_to change { ActionMailer::Base.deliveries.size }
+      end.not_to change { Communication.email.sent.count }
 
       expect(response).to redirect_to(volunteer_path(volunteer))
     end

@@ -23,13 +23,14 @@ module Aws
       post("/volunteer-management-system/sync", { volunteer_id: volunteer_id })
     end
 
-    def send_email(to:, subject:, html_body:, from_email: nil)
+    def send_email(to:, subject:, text_body:)
       post("/mailchimp/send-email", {
         to: to,
         subject: subject,
-        html_body: html_body,
-        from_email: from_email
+        text_body: text_body
       })
+    rescue JSON::ParserError, IOError, SystemCallError, Timeout::Error, SocketError, OpenSSL::SSL::SSLError
+      raise UncertainDeliveryError, "Email delivery could not be confirmed"
     end
 
     def send_sms(to:, message:, consent:)
@@ -84,8 +85,8 @@ module Aws
       )
 
       unless response.success?
-        if path == "/mailchimp/send-sms" && [ 500, 502, 504 ].include?(response.code)
-          raise UncertainDeliveryError, "SMS delivery could not be confirmed"
+        if %w[/mailchimp/send-sms /mailchimp/send-email].include?(path) && [ 500, 502, 504 ].include?(response.code)
+          raise UncertainDeliveryError, "Delivery could not be confirmed"
         end
         raise LambdaError, "Lambda #{path} returned #{response.code}"
       end

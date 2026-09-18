@@ -86,6 +86,10 @@ class LambdaStack(Stack):
             self, "MailchimpSmsFrom", type="String", default="",
             description="Approved Mailchimp SMS sending number or sender ID",
         )
+        mailchimp_email_from = CfnParameter(
+            self, "MailchimpEmailFrom", type="String", default="",
+            description="Email sender on a verified Mailchimp Transactional sending domain",
+        )
 
         self.mailchimp_realtime_fn = _lambda.Function(
             self,
@@ -103,6 +107,7 @@ class LambdaStack(Stack):
                 **common_env,
                 "MAILCHIMP_API_KEY": mailchimp_api_key.value_as_string,
                 "MAILCHIMP_SMS_FROM": mailchimp_sms_from.value_as_string,
+                "MAILCHIMP_EMAIL_FROM": mailchimp_email_from.value_as_string,
             },
             vpc=self._vpc,
             vpc_subnets=self._vpc_subnets,
