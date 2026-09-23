@@ -1,6 +1,8 @@
 class User < ApplicationRecord
   enum :role, { admin: 0, user: 1 }
 
+  before_validation :normalize_email
+
   has_many :notes, dependent: :destroy
   has_many :communications, foreign_key: :sent_by_user_id, dependent: :nullify
   has_many :status_changes, dependent: :nullify
@@ -23,32 +25,27 @@ class User < ApplicationRecord
   end
 
   def self.from_omniauth(auth)
-    name_parts = auth.info.name.to_s.split
-    email = auth.info.email.to_s.strip.downcase
+    email = normalize_email(auth.info.email)
     user = find_by(google_uid: auth.uid) || find_by(email: email)
+    return nil unless user
 
-    attrs = {
+    name_parts = auth.info.name.to_s.split
+    user.update!(
       google_uid: auth.uid,
-      email: email,
-      first_name: auth.info.first_name.presence || name_parts.first,
-      last_name: auth.info.last_name.presence || name_parts[1..].join(" ").presence,
-      avatar_url: auth.info.image.presence
-    }
-
-    if user
-      user.update!(
-        google_uid: attrs[:google_uid],
-        first_name: attrs[:first_name] || user.first_name,
-        last_name: attrs[:last_name] || user.last_name,
-        avatar_url: attrs[:avatar_url] || user.avatar_url
-      )
-      user
-    else
-      create!(attrs)
-    end
+      first_name: auth.info.first_name.presence || name_parts.first || user.first_name,
+      last_name: auth.info.last_name.presence || name_parts[1..].join(" ").presence || user.last_name,
+      avatar_url: auth.info.image.presence || user.avatar_url
+    )
+    user
   end
 
-  def self.allowed_email?(email)
-    email&.end_with?("@passaiccountycasa.org", "@nyu.edu") || false
+  def self.normalize_email(value)
+    value.to_s.strip.downcase.presence
+  end
+
+  private
+
+  def normalize_email
+    self.email = self.class.normalize_email(email)
   end
 end

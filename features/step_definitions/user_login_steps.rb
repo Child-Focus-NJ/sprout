@@ -35,7 +35,7 @@ When('I attempt Google OAuth with a non-allowed email') do
 end
 
 Then('I should see a rejected Google OAuth outcome') do
-  expect(page).to have_content(/Must use a Child Focus NJ associated email|Authentication failed/)
+  expect(page).to have_content(/has not been granted access|Authentication failed/)
 end
 
 Then('I will receive the message {string}') do |message|

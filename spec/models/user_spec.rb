@@ -10,21 +10,14 @@ RSpec.describe User, type: :model do
     end
   end
 
-  describe '.allowed_email?' do
-    it 'returns true for passaiccountycasa.org emails' do
-      expect(User.allowed_email?("admin@passaiccountycasa.org")).to be true
+  describe '.normalize_email' do
+    it 'strips whitespace and downcases' do
+      expect(User.normalize_email(" Admin@PassaicCountyCASA.org ")).to eq("admin@passaiccountycasa.org")
     end
 
-    it 'returns true for nyu.edu emails' do
-      expect(User.allowed_email?("izzy@nyu.edu")).to be true
-    end
-
-    it 'returns false for gmail.com emails' do
-      expect(User.allowed_email?("someone@gmail.com")).to be false
-    end
-
-    it 'returns false for nil' do
-      expect(User.allowed_email?(nil)).to be false
+    it 'returns nil for blank input' do
+      expect(User.normalize_email(nil)).to be_nil
+      expect(User.normalize_email("")).to be_nil
     end
   end
 
@@ -42,32 +35,68 @@ RSpec.describe User, type: :model do
       })
     end
 
-    context 'when user does not exist' do
-      it 'creates a new user' do
-        expect { User.from_omniauth(auth) }.to change(User, :count).by(1)
+    context 'when no whitelisted user matches the email' do
+      it 'does not create a user' do
+        expect { User.from_omniauth(auth) }.not_to change(User, :count)
       end
 
-      it 'signs the new user up with the non-admin "user" role by default' do
-        user = User.from_omniauth(auth)
-        expect(user).not_to be_admin
-        expect(user.role).to eq("user")
-      end
-
-      it 'sets the correct attributes' do
-        user = User.from_omniauth(auth)
-        expect(user.email).to eq("admin@passaiccountycasa.org")
-        expect(user.first_name).to eq("Jane")
-        expect(user.last_name).to eq("Doe")
-        expect(user.google_uid).to eq("google-uid-123")
-        expect(user.avatar_url).to eq("https://example.com/photo.jpg")
+      it 'returns nil' do
+        expect(User.from_omniauth(auth)).to be_nil
       end
     end
 
-    context 'when user already exists' do
-      before { User.from_omniauth(auth) }
+    context 'when a whitelisted user exists' do
+      before do
+        User.create!(email: "admin@passaiccountycasa.org", role: :user)
+      end
 
       it 'does not create a new user' do
         expect { User.from_omniauth(auth) }.not_to change(User, :count)
+      end
+
+      it 'links the Google account without changing their role' do
+        user = User.from_omniauth(auth)
+        expect(user.role).to eq("user")
+        expect(user.google_uid).to eq("google-uid-123")
+      end
+
+      it 'fills in their profile from Google' do
+        user = User.from_omniauth(auth)
+        expect(user.first_name).to eq("Jane")
+        expect(user.last_name).to eq("Doe")
+        expect(user.avatar_url).to eq("https://example.com/photo.jpg")
+      end
+
+      it 'matches regardless of email casing or whitespace in the Google response' do
+        mixed_case_auth = OmniAuth::AuthHash.new({
+          uid: "google-uid-999",
+          info: {
+            email: " Admin@PassaicCountyCASA.org ",
+            first_name: "Jane",
+            last_name: "Doe",
+            name: "Jane Doe",
+            image: nil
+          }
+        })
+
+        expect { User.from_omniauth(mixed_case_auth) }.not_to change(User, :count)
+      end
+
+      it 'still matches by google_uid if the email Google reports later changes' do
+        User.from_omniauth(auth)
+        renamed_auth = OmniAuth::AuthHash.new({
+          uid: "google-uid-123",
+          info: {
+            email: "renamed@passaiccountycasa.org",
+            first_name: "Jane",
+            last_name: "Doe",
+            name: "Jane Doe",
+            image: nil
+          }
+        })
+
+        user = User.from_omniauth(renamed_auth)
+        expect(user.email).to eq("admin@passaiccountycasa.org")
       end
 
       it 'links Google to an existing staff record with the same email' do
@@ -92,7 +121,8 @@ RSpec.describe User, type: :model do
         expect(existing.first_name).to eq("Izzy")
       end
 
-      it 'updates their info' do
+      it 'updates their info on subsequent logins' do
+        User.from_omniauth(auth)
         updated_auth = OmniAuth::AuthHash.new({
           uid: "google-uid-123",
           info: {
@@ -121,6 +151,10 @@ RSpec.describe User, type: :model do
             image: nil
           }
         })
+      end
+
+      before do
+        User.create!(email: "admin@passaiccountycasa.org", role: :user)
       end
 
       it 'falls back to splitting the full name' do
