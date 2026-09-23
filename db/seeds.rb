@@ -3,18 +3,22 @@
 puts "Seeding..."
 
 # ── Users (Employees) ──────────────────────────────────────────────────────────
-admin = User.find_or_create_by!(email: "admin@childfocusnj.org") do |u|
-  u.first_name = "Admin"
-  u.last_name  = "User"
+# The only account seeded in production is the primary CASA admin. Everyone
+# else is added afterward through the whitelist on the Employees tab.
+admin = User.find_or_create_by!(email: "sprout@passaiccountycasa.org") do |u|
+  u.first_name = "Sprout"
+  u.last_name  = "Admin"
   u.role       = :admin
   u.active     = true
 end
 
-staff = User.find_or_create_by!(email: "staff@childfocusnj.org") do |u|
-  u.first_name = "Sarah"
-  u.last_name  = "Mitchell"
-  u.role       = :user
-  u.active     = true
+unless Rails.env.production?
+  User.find_or_create_by!(email: "staff@childfocusnj.org") do |u|
+    u.first_name = "Sarah"
+    u.last_name  = "Mitchell"
+    u.role       = :user
+    u.active     = true
+  end
 end
 
 # ── Referral Sources ───────────────────────────────────────────────────────────
