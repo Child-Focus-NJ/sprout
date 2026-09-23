@@ -21,6 +21,36 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe 'clearing google_uid when email changes' do
+    it 'clears google_uid when the email is edited' do
+      user = User.create!(email: "old@passaiccountycasa.org", google_uid: "google-uid-123")
+
+      user.update!(email: "new@passaiccountycasa.org")
+
+      expect(user.google_uid).to be_nil
+    end
+
+    it 'leaves google_uid alone when other attributes change' do
+      user = User.create!(email: "admin@passaiccountycasa.org", google_uid: "google-uid-123")
+
+      user.update!(first_name: "Jane")
+
+      expect(user.google_uid).to eq("google-uid-123")
+    end
+
+    it 'no longer signs in with the old Google account after the email changes' do
+      user = User.create!(email: "old@passaiccountycasa.org", google_uid: "google-uid-123")
+      user.update!(email: "new@passaiccountycasa.org")
+
+      auth = OmniAuth::AuthHash.new({
+        uid: "google-uid-123",
+        info: { email: "old@passaiccountycasa.org", first_name: "Jane", last_name: "Doe", name: "Jane Doe" }
+      })
+
+      expect(User.from_omniauth(auth)).to be_nil
+    end
+  end
+
   describe '.from_omniauth' do
     let(:auth) do
       OmniAuth::AuthHash.new({

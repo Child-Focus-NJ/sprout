@@ -19,6 +19,19 @@ unless Rails.env.production?
     u.role       = :user
     u.active     = true
   end
+
+  [
+    { email: "az2924@nyu.edu", first_name: "Alisha", last_name: "Zaman" },
+    { email: "wr2256@nyu.edu", first_name: "Will",   last_name: "Roche" },
+    { email: "sw6002@nyu.edu", first_name: "Sufyan", last_name: "Waryah" }
+  ].each do |dev|
+    User.find_or_create_by!(email: dev[:email]) do |u|
+      u.first_name = dev[:first_name]
+      u.last_name  = dev[:last_name]
+      u.role       = :admin
+      u.active     = true
+    end
+  end
 end
 
 # ── Referral Sources ───────────────────────────────────────────────────────────

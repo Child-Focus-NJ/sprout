@@ -2,6 +2,7 @@ class User < ApplicationRecord
   enum :role, { admin: 0, user: 1 }
 
   before_validation :normalize_email
+  before_save :clear_google_uid_if_email_changed
 
   has_many :notes, dependent: :destroy
   has_many :communications, foreign_key: :sent_by_user_id, dependent: :nullify
@@ -47,5 +48,9 @@ class User < ApplicationRecord
 
   def normalize_email
     self.email = self.class.normalize_email(email)
+  end
+
+  def clear_google_uid_if_email_changed
+    self.google_uid = nil if persisted? && email_changed?
   end
 end
