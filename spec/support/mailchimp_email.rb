@@ -2,11 +2,22 @@
 
 RSpec.shared_context "Mailchimp email enabled" do
   around do |example|
-    keys = %w[SPROUT_EMAIL_MAILCHIMP_ENABLED MANDRILL_API_KEY MANDRILL_FROM_EMAIL MAILCHIMP_API_KEY MAILCHIMP_EMAIL_FROM]
+    keys = %w[
+      SPROUT_EMAIL_MAILCHIMP_ENABLED
+      MANDRILL_API_KEY
+      MANDRILL_FROM_EMAIL
+      MAILCHIMP_API_KEY
+      MAILCHIMP_EMAIL_FROM
+      API_GATEWAY_URL
+      API_GATEWAY_URL_FILE
+    ]
     previous = keys.to_h { |key| [ key, ENV[key] ] }
     ENV["SPROUT_EMAIL_MAILCHIMP_ENABLED"] = "true"
     ENV["MANDRILL_API_KEY"] = "test-mandrill-key"
     ENV["MANDRILL_FROM_EMAIL"] = "noreply@example.org"
+    ENV["MAILCHIMP_EMAIL_FROM"] = "noreply@example.org"
+    ENV["API_GATEWAY_URL"] = "http://gateway.test"
+    ENV.delete("API_GATEWAY_URL_FILE")
     example.run
   ensure
     previous.each { |key, value| ENV[key] = value }

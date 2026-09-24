@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe "Admin campaigns", type: :request do
-  let(:admin) { create(:user) }
+  let(:admin) { create(:user, role: :admin) }
 
   before { login_as(admin, scope: :user) }
 
