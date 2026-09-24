@@ -1,76 +1,67 @@
-# Mailchimp Integration
+# Mailchimp SMS integration
 
-Sprout uses Mailchimp for:
-- Transactional email (Mandrill / Mailchimp Transactional)
-- SMS messaging
-- Optional tagging / audience updates
+Manual SMS follows this path:
 
-We solve this issue by centralizing communication in one provider
+`Inquiry volunteer list / profile → Sms::MailchimpOutbound → Mailchimp::TransactionalClient → Mailchimp Transactional (Mandrill)`
 
----
+Rails calls Mandrill directly (no API Gateway / Lambda required for SMS). The client uses
+`POST https://mandrillapp.com/api/1.4/messages/send-sms` with the nested `message.sms` payload
+(recipient array, approved sender, message text, and consent type).
 
-## High-Level Architecture
+Use a **Mailchimp Transactional** API key (`MANDRILL_API_KEY`), not a Marketing API key.
+`MAILCHIMP_API_KEY` / `MAILCHIMP_SMS_FROM` are also accepted as fallbacks for local setup.
 
-Sprout does not call Mailchimp directly, but rather:
+The implementation follows [Mailchimp's official OpenAPI schema](https://github.com/mailchimp/mailchimp-client-lib-codegen/blob/main/spec/transactional.openapi.json), specifically `MessagesSendSmsRequest` and `MessagesSmsMessage`.
 
-Rails → API Gateway → AWS Lambda → Mailchimp
+## Configuration
 
-- Rails sends requests via `Aws::LambdaClient`
-- API Gateway forwards to `lambdas/mailchimp_realtime`
-- Lambda handles all Mailchimp API interactions
+| Setting | Where | Purpose |
+|---|---|---|
+| `SPROUT_SMS_MAILCHIMP_ENABLED=true` | Rails | Explicitly enables outbound SMS |
+| `MANDRILL_API_KEY` | Rails | Mailchimp Transactional credential (preferred) |
+| `MANDRILL_SMS_FROM` | Rails | Approved sending number / sender ID |
+| `MAILCHIMP_API_KEY` | Rails (fallback) | Alternate name for the Transactional key |
+| `MAILCHIMP_SMS_FROM` | Rails (fallback) | Alternate name for the sender |
 
----
+For WSL + Docker, configure the variables in your untracked `.env`:
 
-## SMS Flow (User Story 7)
+```dotenv
+SPROUT_SMS_MAILCHIMP_ENABLED=true
+MANDRILL_API_KEY=
+MANDRILL_SMS_FROM=
+```
 
-SMS is handled by `Sms::MailchimpOutbound`.
+Real sending requires an enabled Transactional account (Owner/Admin), an approved SMS program, and SMS credits. Manager-level Mailchimp users cannot open Mandrill to create keys. See [Mailchimp's prerequisites and consent documentation](https://mailchimp.com/developer/transactional/docs/transactional-sms/).
 
-1. Staff sends SMS from volunteer profile
-2. Rails calls `Sms::MailchimpOutbound.deliver!`
-3. If Mailchimp is enabled:
-   - Request goes to `Aws::LambdaClient#send_sms`
-   - Stored in `Communication` with delivery status
-4. If disabled:
-   - SMS is only stored locally (no external request)
+## Consent and send outcomes
 
----
+Staff must explicitly select the permission already provided by the volunteer: one informational message, recurring messages with a confirmation, or recurring messages whose confirmation was already sent. Sprout does not infer consent from a phone number or contact preference. The selected consent type, recipient number, message body, staff user, and attempt time are retained on the communication record. US numbers are normalized to E.164; explicit international country codes are preserved.
 
-## Environments
+| Outcome | Sprout status | Sent time |
+|---|---|---|
+| Sending disabled or input invalid | No send record; visible error | None |
+| Provider returns `sent` | `sent`, with provider message ID | Recorded |
+| Provider returns `queued` or `scheduled` | `queued`, with provider message ID | None |
+| Provider returns `rejected` or `invalid` | `failed`, with provider ID and reason | None |
+| Missing configuration or provider rejection | `failed`, with error | None |
+| Timeout or unrecognized response | `pending`, with an uncertainty warning | None |
 
-| Environment | Behavior |
-|------------|----------|
-| Dev / Test | Stores SMS locally only |
-| Production | Sends via Lambda → Mailchimp |
+Only a confirmed `sent` result creates a sent timeline note. An accepted send is not proof of delivery. This change does not implement delivery webhooks; final delivery and later queue outcomes must be checked in Mailchimp. Uncertain attempts are not retried automatically, since a retry might duplicate a message. Failed requests preserve the compose draft.
 
-Enabled by:
-- `SPROUT_SMS_MAILCHIMP_ENABLED`
-- `API_GATEWAY_URL` or `API_GATEWAY_URL_FILE`
+## Grouped communication history
 
----
+The volunteer profile shows existing email and SMS `Communication` records together, newest first, including status, message, timestamp, staff sender, and SMS provider ID where available. Timeline entries also display their communication status.
 
-## Key Files
+Mailchimp automatically logs transactional SMS alongside transactional email in Outbound Activity. Sprout retains the provider ID to cross-reference that activity. This does not import historical Mailchimp activity, marketing campaigns, or replies into Sprout, and does not implement audience-sync actions. Existing records that were marked delivered by the old local fallback are not retroactively verified or rewritten.
 
-| Area | File |
-|------|------|
-| SMS service | `app/services/sms/mailchimp_outbound.rb` |
-| Lambda client | `app/services/aws/lambda_client.rb` |
-| Controller | `app/controllers/volunteers_controller.rb` |
-| Data model | `app/models/communication.rb` |
-| Lambda handler | `lambdas/mailchimp_realtime/handler.rb` |
+## Verification without live credentials
 
----
+Run from WSL using Docker. These tests explicitly simulate provider responses at network boundaries and do not send real messages:
 
-## Debugging
-
-If something breaks, check:
-1. Rails logs (`Sms::MailchimpOutbound`)
-2. `Communication` records in DB
-3. Lambda logs (`mailchimp_realtime`)
-4. API Gateway response
-
----
-
-## External ref
-
-- Mailchimp Transactional SMS  
-  https://mailchimp.com/developer/transactional/docs/transactional-sms/
+```bash
+docker compose up -d db
+docker compose run --rm --no-deps --entrypoint bash \
+  -e RAILS_ENV=test \
+  -e DATABASE_URL=postgres://sprout:sprout@db:5432/sprout_test web -lc \
+  'bin/rails db:test:prepare && bin/rails tailwindcss:build && bundle exec rspec spec/services/sms spec/services/mailchimp'
+```
