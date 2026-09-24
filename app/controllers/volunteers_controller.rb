@@ -1,5 +1,5 @@
 class VolunteersController < ApplicationController
-  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :send_sms ]
+  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :send_sms, :email, :send_email ]
 
   def index
     @volunteers = Volunteer.order(:first_name, :last_name)
@@ -31,21 +31,23 @@ class VolunteersController < ApplicationController
 
   def sms
     @message = ""
+    @consent = ""
   end
 
   def send_sms
-    Sms::MailchimpOutbound.deliver!(
+    communication = Sms::MailchimpOutbound.deliver!(
       volunteer: @volunteer,
       body: params[:message],
-      sent_by_user: current_user
+      sent_by_user: current_user,
+      consent: params[:consent]
     )
-    redirect_to volunteer_path(@volunteer), notice: "SMS sent"
-  rescue Sms::MailchimpOutbound::BlankMessageError,
-         Sms::MailchimpOutbound::MissingPhoneError,
-         Sms::MailchimpOutbound::MessageTooLongError => e
-    redirect_to sms_volunteer_path(@volunteer), alert: e.message
+    notice = communication.queued? ? "SMS queued by Mailchimp" : "SMS sent to Mailchimp"
+    redirect_to volunteer_path(@volunteer), notice: notice
   rescue Sms::MailchimpOutbound::Error => e
-    redirect_to volunteer_path(@volunteer), alert: e.message
+    @message = params[:message].to_s
+    @consent = params[:consent].to_s
+    flash.now[:alert] = e.message
+    render :sms, status: :unprocessable_entity
   end
 
   def add_note
@@ -60,6 +62,24 @@ class VolunteersController < ApplicationController
     else
       redirect_to volunteer_path(volunteer), alert: note.errors.full_messages.to_sentence
     end
+  end
+
+  def email
+    @subject = ""
+    @message = ""
+  end
+
+  def send_email
+    communication = Email::MailchimpOutbound.deliver!(
+      volunteer: @volunteer, subject: params[:subject], body: params[:message], sent_by_user: current_user
+    )
+    notice = communication.queued? ? "Email queued by Mailchimp" : "Email sent to Mailchimp"
+    redirect_to volunteer_path(@volunteer), notice: notice
+  rescue Email::MailchimpOutbound::Error => e
+    @subject = params[:subject].to_s
+    @message = params[:message].to_s
+    flash.now[:alert] = e.message
+    render :email, status: :unprocessable_entity
   end
 
   def bulk_add_note
@@ -90,11 +110,11 @@ class VolunteersController < ApplicationController
   end
 
   def send_application
-    if @volunteer.record_application_sent!(user: current_user)
-      redirect_to volunteer_path(@volunteer), notice: "Application email queued for #{@volunteer.full_name}"
-    else
-      redirect_to volunteer_path(@volunteer), alert: "Application was already sent"
-    end
+    communication = Email::VolunteerNotifications.application!(volunteer: @volunteer, sent_by_user: current_user)
+    notice = communication.queued? ? "Application email queued by Mailchimp" : "Application email sent to Mailchimp"
+    redirect_to volunteer_path(@volunteer), notice: notice
+  rescue Email::MailchimpOutbound::Error => e
+    redirect_to volunteer_path(@volunteer), alert: e.message
   end
 
   def mark_submitted

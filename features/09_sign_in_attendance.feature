@@ -1,3 +1,4 @@
+@email_send
 @sign_in_attendance
 Feature: Sign-in & Attendance
   As a system administrator

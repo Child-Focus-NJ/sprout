@@ -110,16 +110,16 @@ class Volunteer < ApplicationRecord
     registration.save!
 
     update!(first_session_attended_at: Time.current) unless first_session_attended_at.present?
-    change_status!(:application_eligible, user: user, trigger: :event)
+    change_status!(:application_eligible, user: user, trigger: :event) unless application_sent? || applied?
   end
 
   # Staff action or automation: move to application_sent and record send time (idempotent on duplicate send).
-  def record_application_sent!(user:)
+  def record_application_sent!(user:, sent_at: Time.current)
     return false if application_sent_at.present?
 
     ActiveRecord::Base.transaction do
-      change_status!(:application_sent, user: user)
-      update!(application_sent_at: Time.current)
+      change_status!(:application_sent, user: user) unless applied? || inactive?
+      update!(application_sent_at: sent_at)
     end
     true
   end

@@ -19,6 +19,22 @@ When("I press {string}") do |button|
   click_on button
 end
 
+{
+  "first name" => [ "First name", :first_name ],
+  "last name" => [ "Last name", :last_name ],
+  "email" => [ "Email", :email ],
+  "phone number" => [ "Phone", :phone ]
+}.each do |field, (label, attribute)|
+  When("I update #{field} to {string}") do |value|
+    fill_in label, with: value
+  end
+
+  Then("I should see volunteer #{field} {string}") do |value|
+    expect(page).to have_field(label, with: value)
+    expect(@volunteer.reload.public_send(attribute)).to eq(value)
+  end
+end
+
 When("I open the status change dropdown") do
   find("#status").click
 end

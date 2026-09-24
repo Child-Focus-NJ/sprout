@@ -1,5 +1,5 @@
 import os
-from aws_cdk import Stack, Duration
+from aws_cdk import Stack, Duration, CfnParameter
 import aws_cdk.aws_lambda as _lambda
 import aws_cdk.aws_ec2 as ec2
 import aws_cdk.aws_iam as iam
@@ -78,6 +78,19 @@ class LambdaStack(Stack):
             security_groups=[self._lambda_sg],
         )
 
+        mailchimp_api_key = CfnParameter(
+            self, "MailchimpApiKey", type="String", no_echo=True, default="",
+            description="Mailchimp Transactional API key exposed to Lambda as MAILCHIMP_API_KEY",
+        )
+        mailchimp_sms_from = CfnParameter(
+            self, "MailchimpSmsFrom", type="String", default="",
+            description="Approved Mailchimp SMS sending number or sender ID",
+        )
+        mailchimp_email_from = CfnParameter(
+            self, "MailchimpEmailFrom", type="String", default="",
+            description="Email sender on a verified Mailchimp Transactional sending domain",
+        )
+
         self.mailchimp_realtime_fn = _lambda.Function(
             self,
             "MailchimpRealtimeFn",
@@ -90,7 +103,12 @@ class LambdaStack(Stack):
             layers=[shared_layer],
             timeout=Duration.seconds(30),
             memory_size=256,
-            environment=common_env,
+            environment={
+                **common_env,
+                "MAILCHIMP_API_KEY": mailchimp_api_key.value_as_string,
+                "MAILCHIMP_SMS_FROM": mailchimp_sms_from.value_as_string,
+                "MAILCHIMP_EMAIL_FROM": mailchimp_email_from.value_as_string,
+            },
             vpc=self._vpc,
             vpc_subnets=self._vpc_subnets,
             security_groups=[self._lambda_sg],

@@ -3,6 +3,7 @@ class InquiryMailer < ApplicationMailer
     mail(
       to: to_email,
       subject: "Thanks for your inquiry",
+      content_type: "text/plain",
       body: "Thanks for reaching out to Child Focus NJ. We'll be in touch soon."
     )
   end

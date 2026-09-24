@@ -53,16 +53,13 @@ class ApplicationController < ActionController::Base
     current_user.google_uid.present?
   end
 
-  def deliver_application_queued_email!(volunteer)
-    return if volunteer.email.blank?
-
-    AttendanceMailer.application_queued(volunteer.email).deliver_now
-  end
-
   def complete_info_session_check_in_success!(volunteer:, information_session:)
     volunteer.finalize_check_in_for_session!(information_session, user: current_user)
-    deliver_application_queued_email!(volunteer)
-    redirect_to volunteer_path(volunteer), notice: "Application queued for #{volunteer.full_name}"
+    communication = Email::VolunteerNotifications.application!(volunteer: volunteer, sent_by_user: current_user)
+    outcome = communication.queued? ? "queued by Mailchimp" : "sent to Mailchimp"
+    redirect_to volunteer_path(volunteer), notice: "Attendance recorded. Application email #{outcome}."
+  rescue Email::MailchimpOutbound::Error => e
+    redirect_to volunteer_path(volunteer), notice: "Attendance recorded.", alert: "Attendance recorded. #{e.message}"
   end
 
   def redirect_if_already_attended_for_session!(volunteer:, information_session:, registration: nil)

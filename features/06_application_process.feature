@@ -6,13 +6,14 @@ Feature: Application Process
   Background:
     Given I am a signed-in system administrator
 
+  @email_send
   Scenario: Application email sent after attendance is confirmed
     Given I am on the sign-in page for session "March 2025 Info Session"
     And the volunteer "Jane Doe" is registered for this session
     And the volunteer has status "inquiry"
     When I check in the volunteer "Jane Doe"
-    Then the application email should be queued for the volunteer "Jane Doe"
-    And the volunteer status should change to "Application eligible"
+    Then the application email should be sent for the volunteer "Jane Doe"
+    And the volunteer status should change to "Application sent"
     And the volunteer's first session attended date should be set
 
   Scenario: Application submission is tracked and staff is notified

@@ -22,7 +22,9 @@ services:
       - SQS_ZOOM_ATTENDANCE_URL=http://localstack:4566/000000000000/sprout-zoom-attendance
       - SQS_MAILCHIMP_BATCH_URL=http://localstack:4566/000000000000/sprout-mailchimp-batch
       - S3_REPORTS_BUCKET=sprout-reports
+      - SPROUT_SMS_MAILCHIMP_ENABLED=${SPROUT_SMS_MAILCHIMP_ENABLED:-false}
       - SOLID_QUEUE_IN_PUMA=true
+      - SPROUT_EMAIL_MAILCHIMP_ENABLED=${SPROUT_EMAIL_MAILCHIMP_ENABLED:-false}
     depends_on:
       db:
         condition: service_healthy
@@ -54,10 +56,14 @@ services:
       - "127.0.0.1:4510-4559:4510-4559"
     environment:
       - DEBUG=${DEBUG:-0}
+      - MAILCHIMP_API_KEY=${MAILCHIMP_API_KEY:-}
+      - MAILCHIMP_SMS_FROM=${MAILCHIMP_SMS_FROM:-}
+      - MAILCHIMP_EMAIL_FROM=${MAILCHIMP_EMAIL_FROM:-}
     volumes:
       - localstack_data:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock
       - ./localstack/init:/etc/localstack/init/ready.d
+      - ./lambdas/mailchimp_realtime:/opt/sprout/mailchimp_realtime:ro
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:4566/_localstack/health"]
       interval: 5s

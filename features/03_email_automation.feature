@@ -1,3 +1,4 @@
+@email_send
 Feature: Email Automation
   As a system administrator
   I want emails to be sent automatically based on triggers

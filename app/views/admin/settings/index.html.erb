@@ -1,6 +1,20 @@
-<!-- app/views/admin/settings/index.html.erb -->
 <div class="volunteer-page">
   <h1 class="page-title">Admin settings</h1>
+
+  <section id="application-email" class="card">
+    <h2 class="section-heading">Application email</h2>
+    <p class="help-text">This link is included when staff send an application or a volunteer checks in. Leave it blank until the application is ready; application emails will not be sent without it.</p>
+    <%= form_with url: admin_settings_path, method: :patch, local: true,
+                  html: { class: "admin-settings-form" } do %>
+      <div class="form-row">
+        <%= label_tag :application_url, "Application link" %>
+        <%= url_field_tag :application_url, @application_url, class: "input-large" %>
+      </div>
+      <div class="form-actions">
+        <%= submit_tag "Save application link", class: "button-primary" %>
+      </div>
+    <% end %>
+  </section>
 
   <section id="application-reminders" class="card">
     <h2 class="section-heading">Application reminders</h2>

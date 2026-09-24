@@ -131,7 +131,11 @@ class InquiryFormController < ApplicationController
       processed_at: Time.current
     )
     VmsPushInquiryJob.perform_later(volunteer.id)
-    InquiryMailer.confirmation(email).deliver_now
+    begin
+      Email::VolunteerNotifications.inquiry!(volunteer: volunteer)
+    rescue Email::MailchimpOutbound::Error => e
+      flash[:alert] = "Inquiry saved. #{e.message}"
+    end
 
     redirect_to new_inquiry_form_path, notice: "Thanks! Your inquiry has been submitted."
   end
