@@ -57,12 +57,14 @@ module Sms
     end
 
     def self.send_message!(communication)
-      result = Aws::LambdaClient.new.send_sms(
-        to: communication.sms_to, message: communication.body, consent: communication.sms_consent
+      result = Mailchimp::TransactionalClient.new.send_sms(
+        to: communication.sms_to,
+        message: communication.body,
+        consent: communication.sms_consent
       )
       unless result.is_a?(Hash) && result["to"] == communication.sms_to && result["external_id"].is_a?(String) &&
           result["external_id"].present? && %w[sent queued scheduled rejected invalid].include?(result["status"])
-        raise Aws::LambdaClient::UncertainDeliveryError, "Unrecognized SMS result"
+        raise Mailchimp::TransactionalClient::UncertainDeliveryError, "Unrecognized SMS result"
       end
 
       status = case result["status"]
@@ -78,11 +80,11 @@ module Sms
       raise Error, "Mailchimp rejected the SMS. Check the communication history for details." if communication.failed?
 
       communication
-    rescue Aws::LambdaClient::UncertainDeliveryError
+    rescue Mailchimp::TransactionalClient::UncertainDeliveryError
       message = "SMS delivery could not be confirmed. Check Mailchimp activity before resending."
       communication.update!(error_message: message)
       raise Error, message
-    rescue Aws::LambdaClient::LambdaError
+    rescue Mailchimp::TransactionalClient::Error
       message = "SMS could not be sent. Check Mailchimp configuration."
       communication.update!(status: :failed, error_message: message)
       raise Error, message

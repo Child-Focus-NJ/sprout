@@ -7,13 +7,13 @@ RSpec.describe "Volunteer SMS send", type: :request do
 
   let(:user) { create(:user) }
   let!(:volunteer) { create(:volunteer, phone: "2015550123") }
-  let(:lambda_client) { instance_double(Aws::LambdaClient) }
+  let(:client) { instance_double(Mailchimp::TransactionalClient) }
   let(:result) { { "status" => "sent", "external_id" => "spec-sms-id", "to" => "+12015550123" } }
 
   before do
     login_as(user, scope: :user)
-    allow(Aws::LambdaClient).to receive(:new).and_return(lambda_client)
-    allow(lambda_client).to receive(:send_sms).and_return(result)
+    allow(Mailchimp::TransactionalClient).to receive(:new).and_return(client)
+    allow(client).to receive(:send_sms).and_return(result)
   end
 
   def send_sms(message: "Reminder: session tomorrow", consent: "onetime")
@@ -83,13 +83,13 @@ RSpec.describe "Volunteer SMS send", type: :request do
     volunteer.update!(phone: "000")
     send_sms
     expect(response.body).to include("Enter a valid phone number")
-    expect(lambda_client).not_to have_received(:send_sms)
+    expect(client).not_to have_received(:send_sms)
   end
 
   it "requires staff sign-in" do
     logout(:user)
     expect { send_sms }.not_to change(Communication, :count)
     expect(response).to have_http_status(:redirect)
-    expect(lambda_client).not_to have_received(:send_sms)
+    expect(client).not_to have_received(:send_sms)
   end
 end
