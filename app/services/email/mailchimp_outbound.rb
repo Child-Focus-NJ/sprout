@@ -42,13 +42,13 @@ module Email
     end
 
     def self.send_message!(communication)
-      result = Aws::LambdaClient.new.send_email(
+      result = Mailchimp::TransactionalClient.new.send_email(
         to: communication.email_to, subject: communication.subject, text_body: communication.body
       )
       unless result.is_a?(Hash) && result["to"].is_a?(String) && result["to"].casecmp?(communication.email_to) &&
           result["external_id"].is_a?(String) && result["external_id"].present? &&
           %w[sent queued scheduled rejected invalid].include?(result["status"])
-        raise Aws::LambdaClient::UncertainDeliveryError, "Unrecognized email result"
+        raise Mailchimp::TransactionalClient::UncertainDeliveryError, "Unrecognized email result"
       end
 
       status = case result["status"]
@@ -70,11 +70,11 @@ module Email
       raise Error, "Mailchimp rejected the email. Check the communication history for details." if communication.failed?
 
       communication
-    rescue Aws::LambdaClient::UncertainDeliveryError
+    rescue Mailchimp::TransactionalClient::UncertainDeliveryError
       message = "Email delivery could not be confirmed. Check Mailchimp activity before resending."
       communication.update!(error_message: message)
       raise Error, message
-    rescue Aws::LambdaClient::LambdaError
+    rescue Mailchimp::TransactionalClient::Error
       message = "Email could not be sent. Check Mailchimp configuration."
       communication.update!(status: :failed, error_message: message)
       raise Error, message

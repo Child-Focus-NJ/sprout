@@ -61,13 +61,13 @@ RSpec.describe Email::MailchimpOutbound do
   end
 
   it "records a definite gateway failure" do
-    allow(email_client).to receive(:send_email).and_raise(Aws::LambdaClient::LambdaError)
+    allow(email_client).to receive(:send_email).and_raise(Mailchimp::TransactionalClient::ApiError)
     expect { deliver }.to raise_error(described_class::Error, /configuration/)
     expect(volunteer.communications.last).to have_attributes(status: "failed", sent_at: nil)
   end
 
   it "keeps timeouts pending and warns before resending" do
-    allow(email_client).to receive(:send_email).and_raise(Aws::LambdaClient::UncertainDeliveryError)
+    allow(email_client).to receive(:send_email).and_raise(Mailchimp::TransactionalClient::UncertainDeliveryError)
     expect { deliver }.to raise_error(described_class::Error, /before resending/)
     expect(volunteer.communications.last).to have_attributes(status: "pending", sent_at: nil)
     expect(volunteer.notes).to be_empty

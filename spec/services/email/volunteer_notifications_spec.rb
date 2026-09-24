@@ -41,7 +41,7 @@ RSpec.describe Email::VolunteerNotifications do
   end
 
   it "retains an uncertain attempt and blocks a second application send" do
-    allow(email_client).to receive(:send_email).and_raise(Aws::LambdaClient::UncertainDeliveryError)
+    allow(email_client).to receive(:send_email).and_raise(Mailchimp::TransactionalClient::UncertainDeliveryError)
     expect { send_application }.to raise_error(Email::MailchimpOutbound::Error, /could not be confirmed/)
     expect { send_application }.to raise_error(Email::MailchimpOutbound::DuplicateApplicationError)
     expect(volunteer.reload.application_sent_at).to be_nil

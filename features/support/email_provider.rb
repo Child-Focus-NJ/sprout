@@ -10,8 +10,8 @@ Before("@email_send") do
   SystemSetting.set("application_url", "https://example.org/apply")
   @email_provider_status = "sent"
   RSpec::Mocks.setup
-  client = instance_double(Aws::LambdaClient)
-  allow(Aws::LambdaClient).to receive(:new).and_return(client)
+  client = instance_double(Mailchimp::TransactionalClient)
+  allow(Mailchimp::TransactionalClient).to receive(:new).and_return(client)
   allow(client).to receive(:send_email) do |to:, subject:, text_body:|
     { "status" => @email_provider_status, "external_id" => "cucumber-email-id", "to" => to }
   end

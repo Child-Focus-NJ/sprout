@@ -7,12 +7,12 @@ RSpec.describe Sms::MailchimpOutbound do
 
   let(:user) { create(:user) }
   let(:volunteer) { create(:volunteer, phone: "(201) 555-0123") }
-  let(:lambda_client) { instance_double(Aws::LambdaClient) }
+  let(:client) { instance_double(Mailchimp::TransactionalClient) }
   let(:result) { { "status" => "sent", "external_id" => "spec-sms-id", "to" => "+12015550123" } }
 
   before do
-    allow(Aws::LambdaClient).to receive(:new).and_return(lambda_client)
-    allow(lambda_client).to receive(:send_sms).and_return(result)
+    allow(Mailchimp::TransactionalClient).to receive(:new).and_return(client)
+    allow(client).to receive(:send_sms).and_return(result)
   end
 
   def deliver(body: "Hello", consent: "onetime")
@@ -21,7 +21,7 @@ RSpec.describe Sms::MailchimpOutbound do
 
   it "saves the provider ID, recipient, consent, sender, and sent status without claiming delivery" do
     comm = deliver(body: " Hello ")
-    expect(lambda_client).to have_received(:send_sms).with(to: "+12015550123", message: "Hello", consent: "onetime")
+    expect(client).to have_received(:send_sms).with(to: "+12015550123", message: "Hello", consent: "onetime")
     expect(comm.reload).to have_attributes(status: "sent", external_id: "spec-sms-id", sms_to: "+12015550123",
       sms_consent: "onetime", sent_by_user: user, body: "Hello")
     expect(comm.sent_at).to be_present
@@ -41,7 +41,7 @@ RSpec.describe Sms::MailchimpOutbound do
   end
 
   %w[rejected invalid].each do |status|
-    it "records #{status} as failed, even when the gateway returns HTTP success" do
+    it "records #{status} as failed, even when the provider returns HTTP success" do
       result.merge!("status" => status, "reject_reason" => "unsub")
       expect { deliver }.to raise_error(described_class::Error, /rejected/)
       comm = volunteer.communications.last
@@ -55,18 +55,18 @@ RSpec.describe Sms::MailchimpOutbound do
     ENV["SPROUT_SMS_MAILCHIMP_ENABLED"] = "false"
     expect { deliver }.to raise_error(described_class::ConfigurationError)
     expect(volunteer.communications).to be_empty
-    expect(lambda_client).not_to have_received(:send_sms)
+    expect(client).not_to have_received(:send_sms)
   end
 
-  it "records a gateway configuration failure without a sent note" do
-    allow(lambda_client).to receive(:send_sms).and_raise(Aws::LambdaClient::LambdaError, "No gateway")
+  it "records a configuration failure without a sent note" do
+    allow(client).to receive(:send_sms).and_raise(Mailchimp::TransactionalClient::ConfigurationError, "No key")
     expect { deliver }.to raise_error(described_class::Error, /configuration/)
     expect(volunteer.communications.last).to have_attributes(status: "failed", sent_at: nil)
     expect(volunteer.notes).to be_empty
   end
 
   it "keeps an uncertain attempt pending and warns against blindly resending" do
-    allow(lambda_client).to receive(:send_sms).and_raise(Aws::LambdaClient::UncertainDeliveryError)
+    allow(client).to receive(:send_sms).and_raise(Mailchimp::TransactionalClient::UncertainDeliveryError)
     expect { deliver }.to raise_error(described_class::Error, /before resending/)
     expect(volunteer.communications.last).to have_attributes(status: "pending", sent_at: nil, external_id: nil)
     expect(volunteer.notes).to be_empty
@@ -76,7 +76,7 @@ RSpec.describe Sms::MailchimpOutbound do
     { "status" => "sent", "external_id" => "", "to" => "+12015550123" },
     { "status" => "sent", "external_id" => "spec-sms-id", "to" => "+12015550999" } ].each do |invalid_result|
     it "does not accept a stub, malformed result, or mismatched recipient: #{invalid_result.inspect}" do
-      allow(lambda_client).to receive(:send_sms).and_return(invalid_result)
+      allow(client).to receive(:send_sms).and_return(invalid_result)
       expect { deliver }.to raise_error(described_class::Error, /could not be confirmed/)
       expect(volunteer.communications.last).to have_attributes(status: "pending", sent_at: nil)
     end
@@ -92,7 +92,7 @@ RSpec.describe Sms::MailchimpOutbound do
     volunteer.phone = "000"
     expect { deliver }.to raise_error(described_class::InvalidPhoneError)
     expect(volunteer.communications).to be_empty
-    expect(lambda_client).not_to have_received(:send_sms)
+    expect(client).not_to have_received(:send_sms)
   end
 
   describe ".normalize_phone" do

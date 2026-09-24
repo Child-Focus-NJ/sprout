@@ -11,7 +11,7 @@ RSpec.describe "Automatic email failures", type: :request do
   before { login_as(user, scope: :user) }
 
   it "preserves an inquiry when its confirmation email fails" do
-    allow(email_client).to receive(:send_email).and_raise(Aws::LambdaClient::LambdaError)
+    allow(email_client).to receive(:send_email).and_raise(Mailchimp::TransactionalClient::ApiError)
     expect do
       post inquiry_form_path, params: { first_name: "Jane", last_name: "Doe", email: "jane@example.org", phone: "2015550123" }
     end.to change(InquiryFormSubmission, :count).by(1)
@@ -27,8 +27,8 @@ RSpec.describe "Automatic email failures", type: :request do
       case failure
       when "missing link" then SystemSetting.set("application_url", "")
       when "disabled sending" then ENV["SPROUT_EMAIL_MAILCHIMP_ENABLED"] = "false"
-      when "provider failure" then allow(email_client).to receive(:send_email).and_raise(Aws::LambdaClient::LambdaError)
-      when "uncertain delivery" then allow(email_client).to receive(:send_email).and_raise(Aws::LambdaClient::UncertainDeliveryError)
+      when "provider failure" then allow(email_client).to receive(:send_email).and_raise(Mailchimp::TransactionalClient::ApiError)
+      when "uncertain delivery" then allow(email_client).to receive(:send_email).and_raise(Mailchimp::TransactionalClient::UncertainDeliveryError)
       end
       post check_in_information_session_path(information_session), params: { volunteer_id: volunteer.id }
       expect(response).to redirect_to(volunteer_path(volunteer))
