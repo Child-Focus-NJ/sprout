@@ -67,13 +67,13 @@
   <div class="volunteer-active-filters" id="volunteer-count">
     <span>Showing <%= @volunteers.length %> of <%= pluralize(@total_count, "volunteer") %></span>
     <% if @filters[:status] %>
-      <span class="volunteer-filter-chip">
+      <span class="volunteer-filter-chip <%= volunteer_status_color_class(@filters[:status]) %>">
         Status: <%= VolunteersHelper::STATUS_BADGE_LABELS.fetch(@filters[:status]) %>
         <%= link_to "×", volunteers_path(@filters.except(:status)), aria: { label: "Remove status filter" } %>
       </span>
     <% end %>
     <% if filtered_county %>
-      <span class="volunteer-filter-chip">
+      <span class="volunteer-filter-chip volunteer-filter-chip--county">
         County: <%= filtered_county.name %>
         <%= link_to "×", volunteers_path(@filters.except(:county_id)), aria: { label: "Remove county filter" } %>
       </span>

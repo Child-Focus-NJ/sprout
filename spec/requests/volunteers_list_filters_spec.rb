@@ -40,6 +40,12 @@ RSpec.describe "Volunteers list search and filters", type: :request do
       expect(response.body).to include("Status: Inquiry")
     end
 
+    it "colors the status chip like that status's badge" do
+      get volunteers_path, params: { status: "application_eligible" }
+
+      expect(response.parsed_body.at_css(".volunteer-filter-chip.status-badge--application-eligible")).to be_present
+    end
+
     it "filters by county" do
       get volunteers_path, params: { county_id: essex.id }
 

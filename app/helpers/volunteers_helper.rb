@@ -14,13 +14,18 @@ module VolunteersHelper
     end
   end
 
+  # Color modifier for a stage, e.g. "status-badge--application-sent".
+  def volunteer_status_color_class(stage)
+    "status-badge--#{stage.to_s.tr('_', '-')}"
+  end
+
   def volunteer_status_badge(volunteer)
     stage = volunteer.current_funnel_stage.to_s
     label = STATUS_BADGE_LABELS.fetch(stage) { stage.humanize }
 
     tag.span(
       label,
-      class: "status-badge status-badge--#{stage.tr('_', '-')}",
+      class: "status-badge #{volunteer_status_color_class(stage)}",
       title: "Status: #{label}"
     )
   end

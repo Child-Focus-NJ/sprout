@@ -431,12 +431,17 @@
     @apply mb-3 flex flex-wrap items-center gap-2 text-sm text-gray-600;
   }
 
+  /* Status chips take their colors from the matching .status-badge--* class. */
   .volunteer-filter-chip {
-    @apply inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 py-0.5 pl-2.5 pr-1 font-medium text-sky-900;
+    @apply inline-flex items-center gap-1 rounded-full border py-0.5 pl-2.5 pr-1 font-medium;
+  }
+
+  .volunteer-filter-chip--county {
+    @apply border-gray-300 bg-white text-gray-800;
   }
 
   .volunteer-filter-chip a {
-    @apply flex h-5 w-5 items-center justify-center rounded-full text-sky-700 no-underline hover:bg-sky-100;
+    @apply flex h-5 w-5 items-center justify-center rounded-full text-current no-underline opacity-70 hover:bg-black/5 hover:opacity-100;
   }
 
   .volunteer-active-filters__clear,

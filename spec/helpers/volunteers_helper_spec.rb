@@ -23,6 +23,12 @@ RSpec.describe VolunteersHelper, type: :helper do
     end
   end
 
+  describe "#volunteer_status_color_class" do
+    it "returns the badge color modifier for a stage" do
+      expect(helper.volunteer_status_color_class("application_sent")).to eq("status-badge--application-sent")
+    end
+  end
+
   describe "#volunteer_status_options" do
     it "lists every funnel stage with the same wording as the badges" do
       expect(helper.volunteer_status_options).to eq([
