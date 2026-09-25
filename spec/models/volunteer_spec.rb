@@ -40,23 +40,6 @@ RSpec.describe Volunteer, type: :model do
     end
   end
 
-  describe "#profile_status_label" do
-    it "returns a clear label for applied" do
-      v = build(:volunteer, current_funnel_stage: :applied)
-      expect(v.profile_status_label).to eq("Application submitted")
-    end
-
-    it "returns a clear label for application_sent" do
-      v = build(:volunteer, current_funnel_stage: :application_sent)
-      expect(v.profile_status_label).to eq("Application sent")
-    end
-
-    it "humanizes other funnel stages" do
-      v = build(:volunteer, current_funnel_stage: :application_eligible)
-      expect(v.profile_status_label).to eq("Application eligible")
-    end
-  end
-
   describe "#change_status!" do
     it "updates the funnel stage and records a status change" do
       user = create(:user)

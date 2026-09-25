@@ -33,6 +33,17 @@ Given("the volunteer {string} has notes, emails, and SMS in the timeline") do |n
   Communication.create!(volunteer: @volunteer, communication_type: :sms, body: "SMS")
 end
 
+When("I type a note that is {int} lines long") do |line_count|
+  @note_box_start_height = find("#note").evaluate_script("this.offsetHeight")
+  fill_in "note", with: (1..line_count).map { |i| "Line #{i}" }.join("\n")
+end
+
+Then("the note box should grow to fit the note without scrolling") do
+  note_box = find("#note")
+  expect(note_box.evaluate_script("this.offsetHeight")).to be > @note_box_start_height
+  expect(note_box.evaluate_script("this.scrollHeight <= this.clientHeight")).to be(true)
+end
+
 When("I enter {string}") do |text|
   # Profile note form + bulk note form both use the same textarea id.
   fill_in "note", with: text

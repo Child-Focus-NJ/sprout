@@ -7,6 +7,11 @@ module VolunteersHelper
     "inactive" => "Inactive"
   }.freeze
 
+  # Heading for a profile timeline entry (e.g. :sms -> "SMS", :status_change -> "Status change").
+  def timeline_entry_label(kind)
+    kind == :sms ? "SMS" : kind.to_s.humanize
+  end
+
   def volunteer_status_badge(volunteer)
     stage = volunteer.current_funnel_stage.to_s
     label = STATUS_BADGE_LABELS.fetch(stage) { stage.humanize }

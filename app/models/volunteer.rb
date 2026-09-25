@@ -75,17 +75,6 @@ class Volunteer < ApplicationRecord
     notes.create!(content: content.to_s, user: user, note_type: note_type)
   end
 
-  # Single label for the profile "Current status" block (matches user-facing copy elsewhere).
-  def profile_status_label
-    if applied?
-      "Application submitted"
-    elsif application_sent?
-      "Application sent"
-    else
-      current_funnel_stage.to_s.humanize
-    end
-  end
-
   def change_status!(new_stage, user: nil, trigger: :manual)
     old_stage = current_funnel_stage
     new_stage_key = new_stage.to_s
