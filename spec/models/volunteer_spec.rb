@@ -93,6 +93,35 @@ RSpec.describe Volunteer, type: :model do
     end
   end
 
+  describe ".name_matching" do
+    let!(:harry) { create(:volunteer, first_name: "Harry", last_name: "Kane") }
+    let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura") }
+    let!(:sofia) { create(:volunteer, first_name: "Sofia", last_name: "Reyes") }
+
+    it "matches first or last name, ignoring case" do
+      expect(described_class.name_matching("KANE")).to contain_exactly(harry)
+      expect(described_class.name_matching("sofia")).to contain_exactly(sofia)
+    end
+
+    it "matches partial names" do
+      expect(described_class.name_matching("ha")).to contain_exactly(harry, hana)
+    end
+
+    it "requires every word to match, so a full name narrows the results" do
+      expect(described_class.name_matching("harry kane")).to contain_exactly(harry)
+      expect(described_class.name_matching("harry reyes")).to be_empty
+    end
+
+    it "returns everyone for a blank query" do
+      expect(described_class.name_matching("  ")).to contain_exactly(harry, hana, sofia)
+    end
+
+    it "treats SQL wildcards as literal characters" do
+      expect(described_class.name_matching("%")).to be_empty
+      expect(described_class.name_matching("_")).to be_empty
+    end
+  end
+
   describe "#record_application_sent!" do
     it "sets stage, sent time, and returns true" do
       user = create(:user)

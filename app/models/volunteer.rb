@@ -30,6 +30,14 @@ class Volunteer < ApplicationRecord
   scope :awaiting_application_submission, lambda {
     where(current_funnel_stage: :application_sent).order(application_sent_at: :asc)
   }
+  # Case-insensitive name search; every word typed must match the first or last name,
+  # so "harry kane" and "kane" both find Harry Kane.
+  scope :name_matching, lambda { |query|
+    query.to_s.split.reduce(all) do |relation, term|
+      relation.where("volunteers.first_name ILIKE :term OR volunteers.last_name ILIKE :term",
+                     term: "%#{sanitize_sql_like(term)}%")
+    end
+  }
 
   after_save :cancel_pending_reminders_if_applied
 
