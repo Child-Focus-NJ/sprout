@@ -15,6 +15,11 @@ Feature: Notes and Communication Tracking
     And the note should display a timestamp
     And the note should display who created it
 
+  Scenario: Note box grows with the note instead of scrolling
+    Given I am on the volunteer "William P" profile page
+    When I type a note that is 10 lines long
+    Then the note box should grow to fit the note without scrolling
+
   Scenario: All communications consolidated into single chronological timeline
     Given the volunteer "William P" has notes, reminders, and info session entries
     When I view the volunteer "William P" profile
