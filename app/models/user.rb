@@ -51,4 +51,10 @@ class User < ApplicationRecord
   def self.allowed_email?(email)
     email&.end_with?("@passaiccountycasa.org", "@nyu.edu") || false
   end
+
+  # Defaults to true so omitting this var changes nothing for anyone. Set to
+  # false to test stricter whitelist-only access.
+  def self.allow_all_domains?
+    ActiveModel::Type::Boolean.new.cast(ENV.fetch("ALLOW_ALL_DOMAINS", "true"))
+  end
 end

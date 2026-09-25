@@ -10,6 +10,20 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe '.allow_all_domains?' do
+    after { ENV.delete("ALLOW_ALL_DOMAINS") }
+
+    it 'defaults to true when ALLOW_ALL_DOMAINS is unset' do
+      expect(User.allow_all_domains?).to be true
+    end
+
+    it 'is false when ALLOW_ALL_DOMAINS is set to "false"' do
+      ENV["ALLOW_ALL_DOMAINS"] = "false"
+
+      expect(User.allow_all_domains?).to be false
+    end
+  end
+
   describe '.allowed_email?' do
     it 'returns true for passaiccountycasa.org emails' do
       expect(User.allowed_email?("admin@passaiccountycasa.org")).to be true
