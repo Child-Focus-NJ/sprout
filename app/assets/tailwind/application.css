@@ -35,8 +35,9 @@
 }
 
 @layer components {
+  /* Shared page container; matches the navbar width so content lines up with it. */
   .volunteer-page {
-    @apply max-w-4xl mx-auto p-4 text-base text-gray-900;
+    @apply max-w-7xl mx-auto p-4 text-base text-gray-900;
   }
 
   .page-title {
@@ -350,6 +351,101 @@
 
   .bulk-note-editor {
     @apply mt-3;
+  }
+
+  /* Volunteers list: title on the left; name search + funnel filter popup on the right. */
+  .volunteer-list-header {
+    @apply mb-3 flex flex-wrap items-center justify-between gap-3;
+  }
+
+  .volunteer-list-header .page-title {
+    @apply mb-0;
+  }
+
+  .volunteer-search {
+    @apply flex w-full items-center gap-2 sm:w-auto;
+  }
+
+  .volunteer-search__field {
+    @apply relative min-w-0 flex-1 sm:w-72 sm:flex-none;
+  }
+
+  .volunteer-search__field .input-large {
+    @apply w-full max-w-none pl-9;
+  }
+
+  .volunteer-search__icon {
+    @apply pointer-events-none absolute left-2.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500;
+  }
+
+  .volunteer-filter-menu {
+    @apply relative;
+  }
+
+  .volunteer-filter-menu__toggle {
+    @apply relative flex h-[42px] w-[42px] cursor-pointer list-none items-center justify-center rounded-md border border-gray-400 bg-white text-gray-700 hover:bg-gray-50 [&::-webkit-details-marker]:hidden;
+  }
+
+  .volunteer-filter-menu[open] .volunteer-filter-menu__toggle {
+    @apply border-sky-500 bg-sky-50 text-sky-800 ring-2 ring-sky-200;
+  }
+
+  .volunteer-filter-menu__toggle svg {
+    @apply h-5 w-5;
+  }
+
+  .volunteer-filter-menu__badge {
+    @apply absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-600 px-1 text-xs font-semibold text-white;
+  }
+
+  .volunteer-filter-menu__panel {
+    @apply absolute right-0 top-full z-30 mt-2 grid w-[min(28rem,calc(100vw-2rem))] gap-4 rounded-lg border border-gray-300 bg-white p-4 shadow-lg sm:grid-cols-2;
+  }
+
+  .volunteer-filter-menu__panel fieldset {
+    @apply m-0 min-w-0 border-0 p-0;
+  }
+
+  .volunteer-filter-menu__panel legend {
+    @apply mb-2 text-sm font-semibold text-gray-800;
+  }
+
+  .volunteer-filter-options {
+    @apply grid gap-0.5;
+  }
+
+  .volunteer-filter-options--scroll {
+    @apply max-h-56 overflow-y-auto pr-1;
+  }
+
+  .volunteer-filter-option {
+    @apply flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm text-gray-800 hover:bg-gray-100;
+  }
+
+  .volunteer-filter-menu__actions {
+    @apply flex justify-end gap-2 border-t border-gray-200 pt-3 sm:col-span-2;
+  }
+
+  /* Summary of what's filtered, shown under the header only when something is. */
+  .volunteer-active-filters {
+    @apply mb-3 flex flex-wrap items-center gap-2 text-sm text-gray-600;
+  }
+
+  .volunteer-filter-chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 py-0.5 pl-2.5 pr-1 font-medium text-sky-900;
+  }
+
+  .volunteer-filter-chip a {
+    @apply flex h-5 w-5 items-center justify-center rounded-full text-sky-700 no-underline hover:bg-sky-100;
+  }
+
+  .volunteer-active-filters__clear,
+  .volunteer-list-empty a {
+    @apply font-medium text-sky-700 underline underline-offset-2 hover:text-sky-900;
+  }
+
+  .volunteer-list-empty {
+    @apply m-0 py-6 text-center text-gray-600;
   }
 
   /* Information sessions & inquiry (legacy class names) */
