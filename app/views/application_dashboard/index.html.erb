@@ -1,5 +1,56 @@
 <main class="volunteer-page">
-  <h1 class="page-title">Application dashboard</h1>
+  <h1 class="page-title">Dashboard</h1>
+
+  <section class="dashboard-stats" aria-label="Key numbers">
+    <div class="stat-tile" id="stat-volunteers">
+      <p class="stat-tile__label">Volunteers</p>
+      <p class="stat-tile__value"><%= number_with_delimiter(@metrics.total_volunteers) %></p>
+      <p class="stat-tile__context">
+        <%= number_with_delimiter(@metrics.active_volunteers) %> active · <%= number_with_delimiter(@metrics.inactive_volunteers) %> inactive
+      </p>
+    </div>
+
+    <div class="stat-tile" id="stat-new-inquiries">
+      <p class="stat-tile__label">New inquiries</p>
+      <p class="stat-tile__value"><%= number_with_delimiter(@metrics.new_inquiries_this_month) %></p>
+      <p class="stat-tile__context">This month, since <%= @metrics.month_start.strftime("%b %-d") %></p>
+    </div>
+
+    <div class="stat-tile" id="stat-awaiting-submission">
+      <p class="stat-tile__label">Awaiting submission</p>
+      <p class="stat-tile__value"><%= number_with_delimiter(@metrics.awaiting_submission_count) %></p>
+      <p class="stat-tile__context">
+        <% wait_days = @metrics.longest_submission_wait_days %>
+        <%= wait_days ? "Longest wait: #{pluralize(wait_days, 'day')}" : "Nobody waiting" %>
+      </p>
+    </div>
+
+    <div class="stat-tile" id="stat-upcoming-sessions">
+      <p class="stat-tile__label">Upcoming info sessions</p>
+      <p class="stat-tile__value"><%= number_with_delimiter(@metrics.upcoming_sessions_count) %></p>
+      <p class="stat-tile__context">
+        <% next_session = @metrics.next_session %>
+        <%= next_session ? "Next: #{next_session.scheduled_at.strftime('%b %-d, %-l:%M %p')}" : "None scheduled" %>
+      </p>
+    </div>
+  </section>
+
+  <div class="dashboard-charts">
+    <section id="inquiries-by-month" class="card status-panel">
+      <% inquiries_by_month = @metrics.inquiries_by_month %>
+      <h2 class="section-heading">Inquiries per month</h2>
+      <p class="subtle dashboard-chart__caption">Past year, <%= month_range_label(inquiries_by_month) %></p>
+      <%= column_chart month_chart_data(inquiries_by_month), id: "inquiries-by-month-chart",
+                       **dashboard_chart_options(category_labels: month_axis_labels(inquiries_by_month)) %>
+    </section>
+
+    <section id="volunteers-by-stage" class="card status-panel">
+      <h2 class="section-heading">Volunteers by stage</h2>
+      <p class="subtle dashboard-chart__caption">Where everyone is right now</p>
+      <%= bar_chart stage_chart_data(@metrics.volunteers_by_stage), id: "volunteers-by-stage-chart",
+                    **dashboard_chart_options(horizontal: true) %>
+    </section>
+  </div>
 
   <section id="awaiting-submission" class="card status-panel">
     <h2 class="section-heading">Awaiting submission</h2>
@@ -23,5 +74,8 @@
         </li>
       <% end %>
     </ul>
+    <% if @awaiting_submission.empty? %>
+      <p class="subtle">Nobody is waiting on an application right now.</p>
+    <% end %>
   </section>
 </main>

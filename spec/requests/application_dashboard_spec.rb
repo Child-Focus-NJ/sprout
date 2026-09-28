@@ -38,6 +38,32 @@ RSpec.describe "Application dashboard", type: :request do
         expect(body.index(older.full_name)).to be < body.index(newer.full_name)
       end
 
+      it "shows the headline numbers" do
+        create_list(:volunteer, 2, current_funnel_stage: :inquiry, inquiry_date: Time.current)
+        create(:volunteer, current_funnel_stage: :application_sent, application_sent_at: 5.days.ago)
+        create(:volunteer, current_funnel_stage: :inactive, inquiry_date: 2.years.ago)
+        create(:information_session, scheduled_at: 3.days.from_now)
+
+        get application_dashboard_path
+
+        tile_text = ->(id) { response.parsed_body.at_css("##{id}").text.squish }
+        expect(tile_text.call("stat-volunteers")).to include("Volunteers 4", "3 active · 1 inactive")
+        expect(tile_text.call("stat-awaiting-submission")).to include("Awaiting submission 1", "Longest wait: 5 days")
+        expect(tile_text.call("stat-upcoming-sessions")).to include("Upcoming info sessions 1")
+        # 2 with an inquiry date this month + 1 without one, counted by when it was added
+        expect(tile_text.call("stat-new-inquiries")).to include("New inquiries 3")
+      end
+
+      it "renders the inquiries and stage charts with their data" do
+        create(:volunteer, current_funnel_stage: :applied)
+
+        get application_dashboard_path
+
+        expect(response.parsed_body.at_css("#inquiries-by-month-chart")).to be_present
+        expect(response.parsed_body.at_css("#volunteers-by-stage-chart")).to be_present
+        expect(response.body).to include("Applied (1)", "Inquiry (0)")
+      end
+
       it "lists Dashboard before Volunteers in the main navigation" do
         get volunteers_path
 
