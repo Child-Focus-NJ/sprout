@@ -22,4 +22,12 @@ RSpec.describe VolunteersHelper, type: :helper do
       end
     end
   end
+
+  describe "#timeline_entry_label" do
+    it "spells SMS in capitals and humanizes other kinds" do
+      expect(helper.timeline_entry_label(:sms)).to eq("SMS")
+      expect(helper.timeline_entry_label(:status_change)).to eq("Status change")
+      expect(helper.timeline_entry_label(:info_session)).to eq("Info session")
+    end
+  end
 end
