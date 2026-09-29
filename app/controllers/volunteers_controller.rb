@@ -2,7 +2,15 @@ class VolunteersController < ApplicationController
   before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :send_sms ]
 
   def index
-    @volunteers = Volunteer.order(:first_name, :last_name)
+    @filters = list_filter_params
+    @counties = NjCounty.alphabetical
+    @total_count = Volunteer.count
+
+    volunteers = Volunteer.includes(:nj_county).order(:first_name, :last_name)
+    volunteers = volunteers.name_matching(@filters[:q]) if @filters[:q]
+    volunteers = volunteers.where(current_funnel_stage: @filters[:status]) if @filters[:status]
+    volunteers = volunteers.where(nj_county_id: @filters[:county_id]) if @filters[:county_id]
+    @volunteers = volunteers
   end
 
   def show
@@ -67,13 +75,16 @@ class VolunteersController < ApplicationController
     note_content = params[:note].to_s
     volunteers = Volunteer.where(id: ids)
 
+    # Return to the same filtered list the note was sent from.
+    list_path = volunteers_path(list_filter_params)
+
     if note_content.blank?
-      redirect_to volunteers_path, alert: "Content can't be blank"
+      redirect_to list_path, alert: "Content can't be blank"
       return
     end
 
     if note_content.length > Note::MAX_CONTENT_LENGTH
-      redirect_to volunteers_path, alert: "Content is too long (maximum is #{Note::MAX_CONTENT_LENGTH} characters)"
+      redirect_to list_path, alert: "Content is too long (maximum is #{Note::MAX_CONTENT_LENGTH} characters)"
       return
     end
 
@@ -81,7 +92,7 @@ class VolunteersController < ApplicationController
       volunteer.add_staff_note(content: note_content, user: current_user, note_type: :general)
     end
 
-    redirect_to volunteers_path, notice: "Note added to #{volunteers.count} volunteers"
+    redirect_to list_path, notice: "Note added to #{volunteers.count} volunteers"
   end
 
   def update_status
@@ -106,6 +117,19 @@ class VolunteersController < ApplicationController
 
   def set_volunteer
     @volunteer = Volunteer.find(params[:id])
+  end
+
+  # Search/filter values for the volunteers list. Unknown statuses and counties are
+  # dropped so a stale or hand-edited URL shows the full list instead of nothing.
+  def list_filter_params
+    county_param = params[:county_id].to_s.presence
+    county_id = county_param && NjCounty.where(id: county_param).pick(:id)
+
+    {
+      q: params[:q].to_s.strip.presence,
+      status: params[:status].presence_in(Volunteer.current_funnel_stages.keys),
+      county_id: county_id
+    }.compact
   end
 
   def volunteer_params
