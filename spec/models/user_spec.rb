@@ -10,7 +10,6 @@ RSpec.describe User, type: :model do
     end
   end
 
-<<<<<<< HEAD
   describe '.allow_all_domains?' do
     after { ENV.delete("ALLOW_ALL_DOMAINS") }
 
@@ -25,14 +24,27 @@ RSpec.describe User, type: :model do
     end
   end
 
-  describe '.allowed_email?' do
+  describe '.domain_allowed?' do
     it 'returns true for passaiccountycasa.org emails' do
-      expect(User.allowed_email?("admin@passaiccountycasa.org")).to be true
-=======
+      expect(User.domain_allowed?("admin@passaiccountycasa.org")).to be true
+    end
+
+    it 'returns true for nyu.edu emails' do
+      expect(User.domain_allowed?("izzy@nyu.edu")).to be true
+    end
+
+    it 'returns false for gmail.com emails' do
+      expect(User.domain_allowed?("someone@gmail.com")).to be false
+    end
+
+    it 'returns false for nil' do
+      expect(User.domain_allowed?(nil)).to be false
+    end
+  end
+
   describe '.normalize_email' do
     it 'strips whitespace and downcases' do
       expect(User.normalize_email(" Admin@PassaicCountyCASA.org ")).to eq("admin@passaiccountycasa.org")
->>>>>>> 7ac2793 (Seed sprout-only admin account and build the access whitelist)
     end
 
     it 'returns nil for blank input' do
@@ -55,12 +67,36 @@ RSpec.describe User, type: :model do
       })
     end
 
-    context 'when no whitelisted user matches the email' do
-      it 'does not create a user' do
-        expect { User.from_omniauth(auth) }.not_to change(User, :count)
-      end
+    context 'with ALLOW_ALL_DOMAINS at its default (true)' do
+      context 'when no user exists yet' do
+        it 'creates a new user on an allowed domain' do
+          expect { User.from_omniauth(auth) }.to change(User, :count).by(1)
+        end
 
-      it 'returns nil' do
+        it 'signs the new user up with the non-admin "user" role by default' do
+          user = User.from_omniauth(auth)
+          expect(user).not_to be_admin
+          expect(user.role).to eq("user")
+        end
+
+        it 'does not create a user on a non-allowed domain' do
+          non_domain_auth = OmniAuth::AuthHash.new({
+            uid: "google-uid-999",
+            info: { email: "someone@gmail.com", first_name: "Jane", last_name: "Doe", name: "Jane Doe" }
+          })
+
+          expect { User.from_omniauth(non_domain_auth) }.not_to change(User, :count)
+          expect(User.from_omniauth(non_domain_auth)).to be_nil
+        end
+      end
+    end
+
+    context 'with ALLOW_ALL_DOMAINS set to false' do
+      before { ENV["ALLOW_ALL_DOMAINS"] = "false" }
+      after { ENV.delete("ALLOW_ALL_DOMAINS") }
+
+      it 'does not auto-create a user, even on an allowed domain' do
+        expect { User.from_omniauth(auth) }.not_to change(User, :count)
         expect(User.from_omniauth(auth)).to be_nil
       end
     end
@@ -182,6 +218,51 @@ RSpec.describe User, type: :model do
         expect(user.first_name).to eq("Jane")
         expect(user.last_name).to eq("Doe")
       end
+    end
+  end
+
+  describe 'clearing google_uid when email changes' do
+    it 'clears google_uid when the email is edited' do
+      user = User.create!(email: "old@passaiccountycasa.org", google_uid: "google-uid-123")
+
+      user.update!(email: "new@passaiccountycasa.org")
+
+      expect(user.google_uid).to be_nil
+    end
+
+    it 'leaves google_uid alone when other attributes change' do
+      user = User.create!(email: "admin@passaiccountycasa.org", google_uid: "google-uid-123")
+
+      user.update!(first_name: "Jane")
+
+      expect(user.google_uid).to eq("google-uid-123")
+    end
+
+    it 'no longer signs in with the old Google account after the email changes, under a strict whitelist' do
+      ENV["ALLOW_ALL_DOMAINS"] = "false"
+      user = User.create!(email: "old@passaiccountycasa.org", google_uid: "google-uid-123")
+      user.update!(email: "new@passaiccountycasa.org")
+
+      auth = OmniAuth::AuthHash.new({
+        uid: "google-uid-123",
+        info: { email: "old@passaiccountycasa.org", first_name: "Jane", last_name: "Doe", name: "Jane Doe" }
+      })
+
+      expect(User.from_omniauth(auth)).to be_nil
+    ensure
+      ENV.delete("ALLOW_ALL_DOMAINS")
+    end
+
+    it 'auto-provisions a fresh account for the old domain-matching email when domains are allowed' do
+      user = User.create!(email: "old@passaiccountycasa.org", google_uid: "google-uid-123")
+      user.update!(email: "new@passaiccountycasa.org")
+
+      auth = OmniAuth::AuthHash.new({
+        uid: "google-uid-123",
+        info: { email: "old@passaiccountycasa.org", first_name: "Jane", last_name: "Doe", name: "Jane Doe" }
+      })
+
+      expect { User.from_omniauth(auth) }.to change(User, :count).by(1)
     end
   end
 end
