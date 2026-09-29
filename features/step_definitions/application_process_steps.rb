@@ -24,7 +24,7 @@ Then("staff should be notified of the submission") do
 end
 
 Then("the volunteer should appear in the applied section") do
-  expect(page).to have_css("#applied-section")
+  expect(page).to have_css("#application-dates", text: "Application submitted")
 end
 
 Given("there are volunteers with status {string}") do |status|

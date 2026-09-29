@@ -40,6 +40,16 @@ Then("the status change should include a timestamp") do
   expect(page).to have_css("[data-timestamp]")
 end
 
+When("I filter the timeline to show only status changes") do
+  select "Status changes", from: "Filter"
+  expect(page).to have_select("Filter", selected: "Status changes")
+end
+
+Then("the timeline should only show status changes") do
+  expect(page).to have_css(".timeline .status-change-entry")
+  expect(page).to have_no_css(".timeline .entry:not(.status-change-entry)")
+end
+
 Then("I should see status option {string}") do |status|
   expect(page).to have_content(status)
 end

@@ -17,6 +17,9 @@ module VolunteersHelper
   # Color modifier for a stage, e.g. "status-badge--application-sent".
   def volunteer_status_color_class(stage)
     "status-badge--#{stage.to_s.tr('_', '-')}"
+  # Heading for a profile timeline entry (e.g. :sms -> "SMS", :status_change -> "Status change").
+  def timeline_entry_label(kind)
+    kind == :sms ? "SMS" : kind.to_s.humanize
   end
 
   def volunteer_status_badge(volunteer)

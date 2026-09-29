@@ -37,7 +37,7 @@ RSpec.describe VolunteerTimeline do
       expect(kinds).to include(:note, :sms, :info_session)
 
       texts = entries.map { |e| e[:text] }
-      expect(texts).to include("Called volunteer", "See you Saturday", "Info session: Spring Orientation")
+      expect(texts).to include("Called volunteer", "See you Saturday", "Spring Orientation")
     end
 
     it "includes scheduled reminders with reminder copy in the feed" do
@@ -105,6 +105,27 @@ RSpec.describe VolunteerTimeline do
       entries = described_class.entries_for(volunteer.reload, filter: VolunteerTimeline::FILTER_NOTES)
       expect(entries.map { |e| e[:kind] }).to eq([ :note ])
       expect(entries.first[:text]).to eq("Manual note")
+    end
+
+    it "includes status changes with who made them" do
+      travel_to(Time.zone.parse("2024-05-01 09:00")) do
+        volunteer.change_status!(:application_eligible, user: user)
+      end
+
+      entry = described_class.entries_for(volunteer.reload, filter: VolunteerTimeline::FILTER_ALL)
+                             .find { |e| e[:kind] == :status_change }
+      expect(entry[:text]).to eq("Inquiry → Application eligible")
+      expect(entry[:byline]).to eq("Pat Admin")
+      expect(entry[:time]).to eq(Time.zone.parse("2024-05-01 09:00"))
+    end
+
+    it "when filter is status_changes, returns only status changes" do
+      volunteer.add_staff_note!(content: "Manual note", user: user, note_type: :general)
+      volunteer.change_status!(:application_eligible, user: user)
+      volunteer.change_status!(:application_sent, user: user)
+
+      entries = described_class.entries_for(volunteer.reload, filter: VolunteerTimeline::FILTER_STATUS_CHANGES)
+      expect(entries.map { |e| e[:kind] }).to eq([ :status_change, :status_change ])
     end
 
     it "treats blank filter like all activity" do
