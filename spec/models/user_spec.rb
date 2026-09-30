@@ -10,6 +10,65 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe 'deactivation' do
+    it 'can be deactivated while another admin is still active' do
+      create(:user, role: :admin)
+      sole_target = create(:user, role: :admin)
+
+      expect(sole_target.update(active: false)).to be true
+      expect(sole_target.reload).not_to be_active
+    end
+
+    it 'is unaffected by deactivating a regular user' do
+      user = create(:user)
+
+      expect(user.update(active: false)).to be true
+    end
+  end
+
+  describe 'preventing the last admin from being removed' do
+    it 'blocks deactivating the only active admin' do
+      admin = create(:user, role: :admin)
+
+      expect(admin.update(active: false)).to be false
+      expect(admin.errors[:base]).to include("Cannot remove the last admin.")
+      expect(admin.reload).to be_active
+    end
+
+    it 'blocks demoting the only active admin to user' do
+      admin = create(:user, role: :admin)
+
+      expect(admin.update(role: :user)).to be false
+      expect(admin.reload).to be_admin
+    end
+
+    it 'allows deactivating an admin when another active admin remains' do
+      create(:user, role: :admin)
+      admin = create(:user, role: :admin)
+
+      expect(admin.update(active: false)).to be true
+    end
+
+    it 'allows demoting an admin when another active admin remains' do
+      create(:user, role: :admin)
+      admin = create(:user, role: :admin)
+
+      expect(admin.update(role: :user)).to be true
+    end
+
+    it 'is not tripped by an already-inactive admin being edited' do
+      inactive_admin = create(:user, role: :admin, active: false)
+
+      expect(inactive_admin.update(first_name: "Renamed")).to be true
+    end
+
+    it 'does not block unrelated changes to the only active admin' do
+      admin = create(:user, role: :admin)
+
+      expect(admin.update(first_name: "Renamed")).to be true
+    end
+  end
+
   describe '.allow_all_domains?' do
     after { ENV.delete("ALLOW_ALL_DOMAINS") }
 
