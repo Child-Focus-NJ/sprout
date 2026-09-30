@@ -17,6 +17,7 @@ class SessionsController < ApplicationController
 
     reset_session
     session[:user_id] = user.id
+    SignInLog.create!(user: user, ip_address: request.remote_ip)
     redirect_to application_dashboard_path
   end
 
