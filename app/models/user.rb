@@ -14,6 +14,7 @@ class User < ApplicationRecord
     dependent: :nullify
 
   validates :email, presence: true, uniqueness: true
+  validate :must_leave_at_least_one_active_admin
 
   scope :active, -> { where(active: true) }
 
@@ -61,5 +62,13 @@ class User < ApplicationRecord
 
   def clear_google_uid_if_email_changed
     self.google_uid = nil if persisted? && email_changed?
+  end
+
+  def must_leave_at_least_one_active_admin
+    return unless persisted?
+    return unless role_was == "admin" && active_was
+    return if admin? && active?
+
+    errors.add(:base, "Cannot remove the last admin.") unless User.admin.active.where.not(id: id).exists?
   end
 end
