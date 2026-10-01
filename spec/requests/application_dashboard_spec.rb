@@ -36,6 +36,10 @@ RSpec.describe "Application dashboard", type: :request do
         expect(body).to include(older.email)
         expect(body).to include("View profile")
         expect(body.index(older.full_name)).to be < body.index(newer.full_name)
+
+        panel = response.parsed_body.at_css("details#awaiting-submission")
+        expect(panel["open"]).to be_nil
+        expect(panel.at_css("summary").text.squish).to eq("Awaiting submission 2")
       end
 
       it "shows the headline numbers" do
@@ -62,6 +66,36 @@ RSpec.describe "Application dashboard", type: :request do
         expect(response.parsed_body.at_css("#inquiries-by-month-chart")).to be_present
         expect(response.parsed_body.at_css("#volunteers-by-stage-chart")).to be_present
         expect(response.body).to include("Applied (1)", "Inquiry (0)")
+      end
+
+      it "shows the conversion funnel and info session attendance" do
+        create(:volunteer, inquiry_date: 2.days.ago)
+        create(:volunteer, inquiry_date: 2.days.ago, current_funnel_stage: :applied, application_submitted_at: 1.day.ago)
+        session = build(:information_session, scheduled_at: 3.days.ago, location: "Zoom",
+                                              zoom_link: "https://zoom.us/j/1", session_type: :virtual)
+        session.save!(validate: false)
+        # Registrants who inquired long ago, so they stay out of the past year's funnel
+        %i[attended registered registered registered].each do |status|
+          create(:session_registration, information_session: session, status: status,
+                                        volunteer: create(:volunteer, inquiry_date: 2.years.ago))
+        end
+
+        get application_dashboard_path
+
+        section_text = ->(id) { response.parsed_body.at_css("##{id}").text.squish }
+        expect(section_text.call("conversion-funnel")).to include("50% of inquiries applied")
+        expect(section_text.call("funnel-step-inquired")).to include("Inquired 2")
+        expect(section_text.call("funnel-step-applied")).to include("Applied 1 · 100% of previous step")
+        expect(section_text.call("session-attendance")).to include(
+          "25% of registrants attended", "1 of 4 checked in", "#{3.days.ago.strftime('%b %-d')} · Virtual 1 of 4 · 25%"
+        )
+      end
+
+      it "explains when there's nothing to show yet" do
+        get application_dashboard_path
+
+        expect(response.body).to include("No inquiries in the past year yet.",
+                                         "No registrations for sessions in the past 90 days.")
       end
 
       it "lists Dashboard before Volunteers in the main navigation" do

@@ -29,3 +29,32 @@ end
 Then("the volunteers by stage chart should be drawn") do
   expect(page).to have_css("#volunteers-by-stage-chart canvas")
 end
+
+Given("an info session last week had {int} registrants and {int} checked in") do |registrants, checked_in|
+  session = build(:information_session, scheduled_at: 1.week.ago)
+  session.save!(validate: false)
+  registrants.times do |index|
+    create(:session_registration, information_session: session, status: index < checked_in ? :attended : :registered)
+  end
+end
+
+Then("the conversion card should show {string}") do |text|
+  expect(find("#conversion-funnel")).to have_text(text, normalize_ws: true)
+end
+
+Then("the attendance card should show {string}") do |text|
+  expect(find("#session-attendance")).to have_text(text, normalize_ws: true)
+end
+
+Then("the awaiting submission list should be collapsed") do
+  expect(find("#awaiting-submission summary")).to have_text("Awaiting submission 1", normalize_ws: true)
+  expect(page).to have_no_css("#awaiting-submission .volunteer-list")
+end
+
+When("I open the awaiting submission dropdown") do
+  open_awaiting_submission
+end
+
+Then("{string} should be in the awaiting submission list") do |name|
+  expect(find("#awaiting-submission .volunteer-list")).to have_text(name)
+end

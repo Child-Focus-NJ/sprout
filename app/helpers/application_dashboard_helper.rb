@@ -40,6 +40,27 @@ module ApplicationDashboardHelper
     "#{first.strftime('%b %Y')} – #{last.strftime('%b %Y')}"
   end
 
+  FUNNEL_STEP_LABELS = {
+    inquired: "Inquired",
+    attended: "Attended an info session",
+    application_sent: "Application sent",
+    applied: "Applied"
+  }.freeze
+
+  # A 0–1 rate as a whole percent, or a dash when there's nothing to divide by
+  def dashboard_percent(rate)
+    rate ? number_to_percentage(rate * 100, precision: 0) : "—"
+  end
+
+  # Width for a meter's filled bar
+  def meter_fill_style(rate)
+    "width: #{((rate || 0) * 100).round(1)}%"
+  end
+
+  def session_attendance_label(session)
+    "#{session.scheduled_at.strftime('%b %-d')} · #{session.virtual? ? 'Virtual' : 'In person'}"
+  end
+
   def stage_chart_data(counts_by_stage)
     counts_by_stage.to_h do |stage, count|
       [ "#{VolunteersHelper::STATUS_BADGE_LABELS.fetch(stage)} (#{number_with_delimiter(count)})", count ]

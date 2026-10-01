@@ -20,3 +20,15 @@ Feature: Dashboard
     When I visit the dashboard
     Then the inquiries per month chart should be drawn
     And the volunteers by stage chart should be drawn
+
+  Scenario: Conversion and info session attendance
+    Given an info session last week had 3 registrants and 2 checked in
+    When I visit the dashboard
+    Then the conversion card should show "0% of inquiries applied"
+    And the attendance card should show "67% of registrants attended"
+
+  Scenario: Awaiting submission list opens from a dropdown
+    When I visit the dashboard
+    Then the awaiting submission list should be collapsed
+    When I open the awaiting submission dropdown
+    Then "Sofia Reyes" should be in the awaiting submission list

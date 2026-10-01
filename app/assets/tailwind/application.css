@@ -914,7 +914,91 @@
     @apply mb-0;
   }
 
+  /* Cards side by side always match height, whichever has more content. */
+  .dashboard-charts--matched {
+    @apply items-stretch;
+  }
+
   .dashboard-chart__caption {
     @apply -mt-1.5 mb-3;
+  }
+
+  /* One big rate at the top of a dashboard card. */
+  .dashboard-figure {
+    @apply m-0 mb-3 flex items-baseline gap-2;
+  }
+
+  .dashboard-figure__value {
+    @apply text-3xl font-semibold text-gray-900;
+  }
+
+  .dashboard-figure__label {
+    @apply text-sm text-gray-600;
+  }
+
+  /* Labelled bars for rates: the fill is the chart blue, the track a light step of the same blue. */
+  .meter-list {
+    @apply m-0 grid list-none gap-3 p-0;
+  }
+
+  .meter-row__header {
+    @apply mb-1 flex items-baseline justify-between gap-3 text-sm;
+  }
+
+  .meter-row__label {
+    @apply font-medium text-gray-900;
+  }
+
+  .meter-row__value {
+    @apply whitespace-nowrap text-right text-gray-600 tabular-nums;
+  }
+
+  .meter-row__value strong {
+    @apply font-semibold text-gray-900;
+  }
+
+  .meter-track {
+    @apply h-2.5 overflow-hidden rounded bg-[#d9e7f8];
+  }
+
+  .meter-track--large {
+    @apply h-3;
+  }
+
+  .meter-fill {
+    @apply h-full rounded-r bg-[#2a78d6];
+  }
+
+  .meter-note {
+    @apply mb-4 text-sm;
+  }
+
+  /* A card that collapses to its heading; click the heading to show the rest. */
+  .dropdown-panel__summary {
+    @apply flex cursor-pointer list-none items-center gap-2 rounded-md select-none;
+  }
+
+  .dropdown-panel__summary::-webkit-details-marker {
+    @apply hidden;
+  }
+
+  .dropdown-panel__summary .section-heading {
+    @apply m-0;
+  }
+
+  .dropdown-panel__count {
+    @apply rounded-full bg-gray-100 px-2.5 py-0.5 text-sm font-semibold text-gray-700;
+  }
+
+  .dropdown-panel__chevron {
+    @apply ml-auto h-5 w-5 shrink-0 text-gray-500 transition-transform;
+  }
+
+  .dropdown-panel[open] .dropdown-panel__chevron {
+    @apply rotate-180;
+  }
+
+  .dropdown-panel[open] .dropdown-panel__summary {
+    @apply mb-2.5;
   }
 }
