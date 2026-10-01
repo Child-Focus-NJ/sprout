@@ -2,167 +2,164 @@
 <nav class="page-nav page-nav--back" aria-label="Back">
   <%= back_nav_link volunteers_path, "Back to volunteers" %>
 </nav>
-<div class="volunteer-profile-header">
-  <h1 class="page-title"><%= @volunteer.full_name %></h1>
-  <%= volunteer_status_badge(@volunteer) %>
-</div>
-
-<section id="contact-info" class="card status-panel">
-  <h2 class="section-heading">Contact</h2>
-  <%= form_with model: @volunteer, local: true, html: { class: "note-form", id: "edit-volunteer-form" } do |form| %>
-    <div>
-      <%= form.label :first_name, "First name" %>
-      <%= form.text_field :first_name, required: true %>
-    </div>
-    <br>
-    <div>
-      <%= form.label :last_name, "Last name" %>
-      <%= form.text_field :last_name, required: true %>
-    </div>
-    <br>
-    <div>
-      <%= form.label :email, "Email" %>
-      <%= form.email_field :email, required: true %>
-    </div>
-    <br>
-    <div>
-      <%= form.label :phone, "Phone" %>
-      <%= form.telephone_field :phone, required: true %>
-    </div>
-    <br>
-    <div>
-      <%= form.label :nj_county_id, "County" %>
-      <%= form.collection_select :nj_county_id, NjCounty.alphabetical, :id, :name,
-                                 { include_blank: "Select..." }, { class: "input-large" } %>
-    </div>
-    <br>
-    <div>
-      <%= form.label :referral_source_id, "How did you hear?" %>
-      <%= form.collection_select :referral_source_id, ReferralSource.active.alphabetical, :id, :name,
-                                 { include_blank: "Select..." }, { class: "input-large" } %>
-    </div>
-    <br>
-    <% normalized_phone = @volunteer.phone.to_s.gsub(/\D/, "") %>
-    <% phone_invalid = @volunteer.phone.present? && normalized_phone.length < 10 %>
-    <% if phone_invalid %>
-      <p class="bad-phone phone-invalid">Phone number may be invalid or unreachable</p>
-    <% end %>
-    <div class="mt-2">
-      <button type="submit">Save contact details</button>
-    </div>
-  <% end %>
-</section>
-
-<%= render "status_management" %>
-
-<section id="actions" class="card status-panel">
-  <h2 class="section-heading">Actions</h2>
-  <div class="action-toolbar">
-    <%= link_to "Send SMS", sms_volunteer_path(@volunteer), class: "button-link" %>
-    <%= form_with url: send_application_volunteer_path(@volunteer), method: :post, html: { class: "inline-action-form" } do %>
-      <button type="submit">Send Application</button>
-    <% end %>
-    <% if @volunteer.application_sent? %>
-      <%= form_with url: mark_submitted_volunteer_path(@volunteer), method: :patch, html: { class: "inline-action-form" } do %>
-        <button type="submit">Mark as Submitted</button>
+<header class="volunteer-profile-header">
+  <div class="volunteer-profile-header__title">
+    <h1 class="page-title"><%= @volunteer.full_name %></h1>
+    <%= volunteer_status_badge(@volunteer) %>
+  </div>
+  <% if @volunteer.application_sent_at.present? || @volunteer.application_submitted_at.present? %>
+    <p class="volunteer-profile-header__dates" id="application-dates">
+      <% if @volunteer.application_sent_at.present? %>
+        <span>Application sent <%= @volunteer.application_sent_at.strftime("%Y-%m-%d") %></span>
       <% end %>
-    <% end %>
-    <div class="delete-action">
-      <% if params[:confirm_delete].present? %>
-        <div class="delete-confirm-inline" role="group" aria-label="Confirm volunteer deletion">
-          <span class="delete-confirm-inline__message">
-            Delete <strong><%= @volunteer.full_name %></strong>?
-          </span>
-          <%= button_to "Yes, delete", volunteer_path(@volunteer), method: :delete, class: "btn-delete" %>
-          <%= link_to "Cancel", volunteer_path(@volunteer), class: "button-link" %>
+      <% if @volunteer.application_submitted_at.present? %>
+        <span>Application submitted <%= @volunteer.application_submitted_at.strftime("%Y-%m-%d") %></span>
+      <% end %>
+    </p>
+  <% end %>
+</header>
+
+<div class="volunteer-profile-layout">
+  <div class="volunteer-profile-layout__side">
+    <section id="contact-info" class="card status-panel">
+      <h2 class="section-heading">Contact</h2>
+      <%= form_with model: @volunteer, local: true, html: { class: "note-form", id: "edit-volunteer-form" } do |form| %>
+        <div>
+          <%= form.label :first_name, "First name" %>
+          <%= form.text_field :first_name, required: true %>
         </div>
-      <% else %>
-        <%= link_to "Delete", volunteer_path(@volunteer, confirm_delete: 1), class: "btn-delete" %>
+        <div>
+          <%= form.label :last_name, "Last name" %>
+          <%= form.text_field :last_name, required: true %>
+        </div>
+        <div>
+          <%= form.label :email, "Email" %>
+          <%= form.email_field :email, required: true %>
+        </div>
+        <div>
+          <%= form.label :phone, "Phone" %>
+          <%= form.telephone_field :phone, required: true %>
+        </div>
+        <div>
+          <%= form.label :nj_county_id, "County" %>
+          <%= form.collection_select :nj_county_id, NjCounty.alphabetical, :id, :name,
+                                     { include_blank: "Select..." }, { class: "input-large" } %>
+        </div>
+        <div>
+          <%= form.label :referral_source_id, "How did you hear?" %>
+          <%= form.collection_select :referral_source_id, ReferralSource.active.alphabetical, :id, :name,
+                                     { include_blank: "Select..." }, { class: "input-large" } %>
+        </div>
+        <% normalized_phone = @volunteer.phone.to_s.gsub(/\D/, "") %>
+        <% phone_invalid = @volunteer.phone.present? && normalized_phone.length < 10 %>
+        <% if phone_invalid %>
+          <p class="bad-phone phone-invalid">Phone number may be invalid or unreachable</p>
+        <% end %>
+        <div class="mt-2">
+          <button type="submit">Save contact details</button>
+        </div>
       <% end %>
-    </div>
+    </section>
+
+    <section id="actions" class="card status-panel">
+      <h2 class="section-heading">Actions</h2>
+
+      <%= form_with url: update_status_volunteer_path(@volunteer), method: :patch,
+                    html: { class: "profile-status-form", id: "status-management" } do %>
+        <label for="status">Status</label>
+        <select name="status" id="status" class="input-large">
+          <% Volunteer.current_funnel_stages.keys.each do |stage| %>
+            <option value="<%= stage %>" <%= "selected" if @volunteer.current_funnel_stage == stage %>>
+              <%= stage.to_s.humanize %>
+            </option>
+          <% end %>
+        </select>
+        <button type="submit" class="button-primary">Update status</button>
+      <% end %>
+
+      <div class="action-toolbar">
+        <%= link_to "Send SMS", sms_volunteer_path(@volunteer), class: "button-link" %>
+        <%= form_with url: send_application_volunteer_path(@volunteer), method: :post, html: { class: "inline-action-form" } do %>
+          <button type="submit">Send Application</button>
+        <% end %>
+        <% if @volunteer.application_sent? %>
+          <%= form_with url: mark_submitted_volunteer_path(@volunteer), method: :patch, html: { class: "inline-action-form" } do %>
+            <button type="submit">Mark as Submitted</button>
+          <% end %>
+        <% end %>
+        <div class="delete-action">
+          <% if params[:confirm_delete].present? %>
+            <div class="delete-confirm-inline" role="group" aria-label="Confirm volunteer deletion">
+              <span class="delete-confirm-inline__message">
+                Delete <strong><%= @volunteer.full_name %></strong>?
+              </span>
+              <%= button_to "Yes, delete", volunteer_path(@volunteer), method: :delete, class: "btn-delete" %>
+              <%= link_to "Cancel", volunteer_path(@volunteer), class: "button-link" %>
+            </div>
+          <% else %>
+            <%= link_to "Delete", volunteer_path(@volunteer, confirm_delete: 1), class: "btn-delete" %>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="note-entry-panel">
+        <h3 class="subsection-heading">Add a note</h3>
+        <%= form_with url: add_note_volunteer_path(@volunteer), method: :post, html: { class: "note-form", id: "add-note-form" } do %>
+          <label for="note" class="sr-only">Note text</label>
+          <textarea id="note" name="note" rows="3" maxlength="1000" data-autogrow placeholder="Type your note here, then press Add Note."></textarea>
+          <div class="note-form__footer">
+            <p class="subtle">Maximum 1000 characters.</p>
+            <button type="submit" class="btn-note">Add Note</button>
+          </div>
+        <% end %>
+      </div>
+    </section>
   </div>
 
-  <div class="note-entry-panel">
-    <h3 class="subsection-heading">Add a note</h3>
-    <%= form_with url: add_note_volunteer_path(@volunteer), method: :post, html: { class: "note-form", id: "add-note-form" } do %>
-      <label for="note" class="sr-only">Note text</label>
-      <textarea id="note" name="note" rows="4" maxlength="1000" placeholder="Type your note here, then press Add Note."></textarea>
-      <p class="subtle">Maximum 1000 characters.</p>
-      <div class="mt-2">
-        <button type="submit" class="btn-note">Add Note</button>
-      </div>
+  <section class="timeline card status-panel" data-timeline="true">
+    <div class="timeline__header">
+      <h2 class="section-heading">Timeline</h2>
+      <%= form_with url: volunteer_path(@volunteer), method: :get, local: true, html: { class: "timeline-filter-form" } do %>
+        <label for="filter">Filter</label>
+        <select id="filter" name="filter" class="input-large" onchange="this.form.submit()">
+          <option value="all" <%= "selected" if @timeline_filter == "all" %>>All activity</option>
+          <option value="notes" <%= "selected" if @timeline_filter == "notes" %>>Notes</option>
+          <option value="status_changes" <%= "selected" if @timeline_filter == "status_changes" %>>Status changes</option>
+        </select>
+      <% end %>
+    </div>
+    <p class="help-text">Notes, messages, info sessions, reminders, and status changes, newest first.</p>
+
+    <% @timeline_entries.each do |entry| %>
+      <% css_class = case entry[:kind]
+      when :note then "entry note-entry"
+      when :email then "entry communication-email email-entry"
+      when :sms then "entry communication-sms sms-entry"
+      when :info_session then "entry info-session-entry"
+      when :scheduled_reminder then "entry scheduled-reminder-entry"
+      when :status_change then "entry status-change-entry"
+      else "entry"
+      end %>
+      <%= tag.div class: css_class, data: { timestamp: entry[:time]&.iso8601 } do %>
+        <div class="entry__meta">
+          <strong><%= timeline_entry_label(entry[:kind]) %></strong>
+          <% if entry[:status].present? %>
+            <span class="delivery-status"><%= entry[:status] %></span>
+          <% end %>
+          <% if entry[:time].present? %>
+            <time datetime="<%= entry[:time].iso8601 %>"><%= entry[:time].strftime("%m/%d/%Y %H:%M") %></time>
+          <% end %>
+        </div>
+        <div class="content"><%= entry[:text] %></div>
+        <% if entry[:byline].present? %>
+          <div class="entry__byline">By <%= entry[:byline] %></div>
+        <% end %>
+      <% end %>
     <% end %>
-  </div>
-</section>
 
-<section id="communications" class="card status-panel">
-  <h2 class="section-heading">SMS communication history</h2>
-  <% @volunteer.communications.sms.recent.each do |comm| %>
-    <div class="communication-entry">
-      <div>
-        <strong>SMS</strong>
-        <span class="delivery-status"><%= comm.status %></span>
-      </div>
-      <% if comm.sent_at.present? %>
-        <time datetime="<%= comm.sent_at.iso8601 %>"><%= comm.sent_at.strftime("%Y-%m-%d %H:%M") %></time>
-      <% end %>
-      <div class="content"><%= comm.body.to_s %></div>
-    </div>
-  <% end %>
-  <% if @volunteer.communications.sms.recent.empty? %>
-    <p class="subtle">No SMS messages yet.</p>
-  <% end %>
-</section>
-
-<section class="timeline card status-panel" data-timeline="true">
-  <h2 class="section-heading">Timeline</h2>
-  <p class="help-text">Reminders, info sessions, and notes in one place. Use the Filter control and choose Notes to show only manual notes.</p>
-
-  <%= form_with url: volunteer_path(@volunteer), method: :get, local: true, html: { class: "timeline-filter-form" } do %>
-    <label for="filter">Filter</label>
-    <select id="filter" name="filter" class="input-large" onchange="this.form.submit()">
-      <option value="all" <%= "selected" if @timeline_filter == "all" %>>All activity</option>
-      <option value="notes" <%= "selected" if @timeline_filter == "notes" %>>Notes</option>
-    </select>
-  <% end %>
-
-  <% @timeline_entries.each do |entry| %>
-    <% css_class = case entry[:kind]
-    when :note then "entry note-entry"
-    when :email then "entry communication-email email-entry"
-    when :sms then "entry communication-sms sms-entry"
-    when :info_session then "entry info-session-entry"
-    when :scheduled_reminder then "entry scheduled-reminder-entry"
-    else "entry"
-    end %>
-    <div class="<%= css_class %>">
-      <strong><%= entry[:kind].to_s.humanize %></strong>
-      <div><%= entry[:text] %></div>
-      <% if entry[:byline].present? %>
-        <div>By <%= entry[:byline] %></div>
-      <% end %>
-      <% if entry[:time].present? %>
-        <time datetime="<%= entry[:time].iso8601 %>"><%= entry[:time].strftime("%m/%d/%Y %H:%M") %></time>
-      <% end %>
-    </div>
-  <% end %>
-</section>
-
-<script>
-  (function () {
-    const filter = document.getElementById("filter");
-    if (!filter) return;
-
-    const applyFilter = () => {
-      const notesOnly = filter.value === "notes";
-      document.querySelectorAll(".timeline .entry").forEach((entry) => {
-        const isNote = entry.classList.contains("note-entry");
-        entry.style.display = notesOnly && !isNote ? "none" : "";
-      });
-    };
-
-    filter.addEventListener("change", applyFilter);
-    applyFilter();
-  })();
-</script>
+    <% if @timeline_entries.empty? %>
+      <p class="subtle">Nothing to show yet.</p>
+    <% end %>
+  </section>
+</div>
 </main>

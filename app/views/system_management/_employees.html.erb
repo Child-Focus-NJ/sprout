@@ -1,4 +1,5 @@
 <h2 class="section-heading">Employees</h2>
+<p class="help-text mb-2">Adding someone here is what grants them access. They'll be able to sign in with that email through Google once added and won't be able to sign in otherwise.</p>
 
 <ul id="employee-list" class="volunteer-list mb-3">
   <% @users.each do |user| %>
@@ -30,20 +31,28 @@
       <% else %>
         <div class="volunteer-meta">
           <span class="volunteer-name"><%= user.full_name %></span>
-          <span class="help-text"><%= user.role.to_s.humanize %></span>
+          <div class="volunteer-subtext">
+            <span><%= user.role.to_s.humanize %> (<%= user.active? ? "Active" : "Deactivated" %>)</span>
+          </div>
         </div>
         <div class="volunteer-actions">
-          <% if params[:confirm_remove_user_id] == user.id.to_s %>
+          <% if params[:confirm_deactivate_user_id] == user.id.to_s %>
             <div class="delete-confirm-inline">
-              <span class="delete-confirm-inline__message">Are you sure you want to remove this user?</span>
-              <%= button_to "Yes, remove", user_path(user), method: :delete, class: "btn-delete" %>
+              <span class="delete-confirm-inline__message">Are you sure you want to deactivate this user? They'll lose access immediately.</span>
+              <%= button_to "Yes, deactivate", user_path(user), method: :patch,
+                    params: employee_active_toggle_params(user, active: false), class: "btn-delete" %>
               <%= link_to "Cancel", system_management_path(tab: "employees"), class: "button-link" %>
             </div>
           <% else %>
             <%= link_to "Edit", system_management_path(tab: "employees", edit_user_id: user.id),
                   class: "button-link" %>
-            <%= link_to "Remove", system_management_path(tab: "employees", confirm_remove_user_id: user.id),
-                  class: "btn-delete" %>
+            <% if user.active? %>
+              <%= link_to "Deactivate", system_management_path(tab: "employees", confirm_deactivate_user_id: user.id),
+                    class: "btn-delete" %>
+            <% else %>
+              <%= button_to "Reactivate", user_path(user), method: :patch,
+                    params: employee_active_toggle_params(user, active: true), class: "button-link" %>
+            <% end %>
           <% end %>
         </div>
       <% end %>

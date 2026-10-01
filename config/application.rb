@@ -10,6 +10,7 @@ module Sprout
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
+    config.x.app_version = File.read(root.join("VERSION")).strip
     config.time_zone = "Eastern Time (US & Canada)"
     config.active_record.default_timezone = :utc # can leave as :utc; displaying will still be in ET
 

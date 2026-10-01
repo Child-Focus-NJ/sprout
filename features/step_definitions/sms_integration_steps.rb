@@ -61,11 +61,11 @@ Then("I should see the SMS communication history") do
 end
 
 Then("each entry should show the date and time sent") do
-  expect(page).to have_css(".communication-entry time")
+  expect(page).to have_css(".timeline .sms-entry time")
 end
 
 Then("each entry should show the message content or preview") do
-  expect(page).to have_css(".communication-entry .content")
+  expect(page).to have_css(".timeline .sms-entry .content")
 end
 
 When("I view the communication history for {string}") do |name|

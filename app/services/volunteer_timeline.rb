@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
-# Builds the consolidated volunteer profile timeline (notes, communications, info sessions)
-# used on the volunteer show page. Extracted from VolunteersController for clarity and testing.
+# Builds the consolidated volunteer profile timeline (notes, communications, info sessions,
+# status changes) used on the volunteer show page. Extracted from VolunteersController for
+# clarity and testing.
 class VolunteerTimeline
   FILTER_ALL = "all"
   FILTER_NOTES = "notes"
+  FILTER_STATUS_CHANGES = "status_changes"
 
   def self.entries_for(volunteer, filter:)
     new(volunteer, filter: filter).entries
@@ -19,6 +21,8 @@ class VolunteerTimeline
     filtered = case @filter
     when FILTER_NOTES
       raw_entries.select { |entry| entry[:kind] == :note }
+    when FILTER_STATUS_CHANGES
+      raw_entries.select { |entry| entry[:kind] == :status_change }
     else
       raw_entries
     end
@@ -50,13 +54,22 @@ class VolunteerTimeline
       }
     end
 
+    @volunteer.status_changes.includes(:user).each do |change|
+      entries << {
+        kind: :status_change,
+        time: change.created_at,
+        text: "#{change.from_funnel_stage} → #{change.to_funnel_stage}",
+        byline: change.user&.full_name.to_s
+      }
+    end
+
     @volunteer.session_registrations.includes(:information_session).each do |registration|
       next unless registration.information_session
 
       entries << {
         kind: :info_session,
         time: registration.created_at,
-        text: "Info session: #{registration.information_session.name}"
+        text: registration.information_session.name
       }
     end
 
