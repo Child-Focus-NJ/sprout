@@ -96,3 +96,7 @@ docker compose exec web bin/rails "tailwindcss:watch[always]"
 Note: AWS integrations (Zoom, Mailchimp, VMS) won't work without LocalStack or real AWS credentials.
 
 For more implementation details, see [docs/](https://github.com/Child-Focus-NJ/sprout/tree/main/docs).
+
+### App version
+
+The page footer displays Sprout's version from the root `VERSION` file. Update this file when releasing a new version, then restart the app to load the change.
