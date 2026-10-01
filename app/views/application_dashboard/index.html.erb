@@ -1,8 +1,139 @@
 <main class="volunteer-page">
-  <h1 class="page-title">Application dashboard</h1>
+  <h1 class="page-title">Dashboard</h1>
 
-  <section id="awaiting-submission" class="card status-panel">
-    <h2 class="section-heading">Awaiting submission</h2>
+  <section class="dashboard-stats" aria-label="Key numbers">
+    <div class="stat-tile" id="stat-volunteers">
+      <p class="stat-tile__label">Volunteers</p>
+      <p class="stat-tile__value"><%= number_with_delimiter(@metrics.total_volunteers) %></p>
+      <p class="stat-tile__context">
+        <%= number_with_delimiter(@metrics.active_volunteers) %> active · <%= number_with_delimiter(@metrics.inactive_volunteers) %> inactive
+      </p>
+    </div>
+
+    <div class="stat-tile" id="stat-new-inquiries">
+      <p class="stat-tile__label">New inquiries</p>
+      <p class="stat-tile__value"><%= number_with_delimiter(@metrics.new_inquiries_this_month) %></p>
+      <p class="stat-tile__context">This month, since <%= @metrics.month_start.strftime("%b %-d") %></p>
+    </div>
+
+    <div class="stat-tile" id="stat-awaiting-submission">
+      <p class="stat-tile__label">Awaiting submission</p>
+      <p class="stat-tile__value"><%= number_with_delimiter(@metrics.awaiting_submission_count) %></p>
+      <p class="stat-tile__context">
+        <% wait_days = @metrics.longest_submission_wait_days %>
+        <%= wait_days ? "Longest wait: #{pluralize(wait_days, 'day')}" : "Nobody waiting" %>
+      </p>
+    </div>
+
+    <div class="stat-tile" id="stat-upcoming-sessions">
+      <p class="stat-tile__label">Upcoming info sessions</p>
+      <p class="stat-tile__value"><%= number_with_delimiter(@metrics.upcoming_sessions_count) %></p>
+      <p class="stat-tile__context">
+        <% next_session = @metrics.next_session %>
+        <%= next_session ? "Next: #{next_session.scheduled_at.strftime('%b %-d, %-l:%M %p')}" : "None scheduled" %>
+      </p>
+    </div>
+  </section>
+
+  <div class="dashboard-charts">
+    <section id="inquiries-by-month" class="card status-panel">
+      <% inquiries_by_month = @metrics.inquiries_by_month %>
+      <h2 class="section-heading">Inquiries per month</h2>
+      <p class="subtle dashboard-chart__caption">Past year, <%= month_range_label(inquiries_by_month) %></p>
+      <%= column_chart month_chart_data(inquiries_by_month), id: "inquiries-by-month-chart",
+                       **dashboard_chart_options(category_labels: month_axis_labels(inquiries_by_month)) %>
+    </section>
+
+    <section id="volunteers-by-stage" class="card status-panel">
+      <h2 class="section-heading">Volunteers by stage</h2>
+      <p class="subtle dashboard-chart__caption">Where everyone is right now</p>
+      <%= bar_chart stage_chart_data(@metrics.volunteers_by_stage), id: "volunteers-by-stage-chart",
+                    **dashboard_chart_options(horizontal: true) %>
+    </section>
+  </div>
+
+  <div class="dashboard-charts dashboard-charts--matched">
+    <section id="conversion-funnel" class="card status-panel">
+      <% funnel = @metrics.conversion_funnel %>
+      <h2 class="section-heading">Conversion</h2>
+      <p class="subtle dashboard-chart__caption">Everyone who inquired in the past year, by the furthest step they've reached</p>
+      <% if funnel.first.count.zero? %>
+        <p class="subtle">No inquiries in the past year yet.</p>
+      <% else %>
+        <p class="dashboard-figure">
+          <span class="dashboard-figure__value"><%= dashboard_percent(@metrics.conversion_rate) %></span>
+          <span class="dashboard-figure__label">of inquiries applied</span>
+        </p>
+        <ol class="meter-list">
+          <% funnel.each do |step| %>
+            <li class="meter-row" id="funnel-step-<%= step.key.to_s.dasherize %>">
+              <div class="meter-row__header">
+                <span class="meter-row__label"><%= ApplicationDashboardHelper::FUNNEL_STEP_LABELS.fetch(step.key) %></span>
+                <span class="meter-row__value">
+                  <strong><%= number_with_delimiter(step.count) %></strong>
+                  <% if step.step_rate %> · <%= dashboard_percent(step.step_rate) %> of previous step<% end %>
+                </span>
+              </div>
+              <div class="meter-track" aria-hidden="true" title="<%= dashboard_percent(step.share) %> of everyone who inquired">
+                <div class="meter-fill" style="<%= meter_fill_style(step.share) %>"></div>
+              </div>
+            </li>
+          <% end %>
+        </ol>
+      <% end %>
+    </section>
+
+    <section id="session-attendance" class="card status-panel">
+      <% attendance = @metrics.session_attendance %>
+      <h2 class="section-heading">Info session attendance</h2>
+      <p class="subtle dashboard-chart__caption">Sessions held since <%= @metrics.attendance_window_start.strftime("%b %-d") %> (past 90 days)</p>
+      <% if attendance.expected.zero? %>
+        <p class="subtle">No registrations for sessions in the past 90 days.</p>
+      <% else %>
+        <p class="dashboard-figure">
+          <span class="dashboard-figure__value"><%= dashboard_percent(attendance.rate) %></span>
+          <span class="dashboard-figure__label">of registrants attended</span>
+        </p>
+        <div class="meter-track meter-track--large" aria-hidden="true">
+          <div class="meter-fill" style="<%= meter_fill_style(attendance.rate) %>"></div>
+        </div>
+        <p class="subtle meter-note">
+          <%= number_with_delimiter(attendance.attended) %> of <%= number_with_delimiter(attendance.expected) %> checked in.
+          Registrants who weren't checked in count as missed.
+        </p>
+
+        <h3 class="subsection-heading">Recent sessions</h3>
+        <ul class="meter-list">
+          <% @metrics.recent_session_attendance.each do |session, session_attendance| %>
+            <li class="meter-row">
+              <div class="meter-row__header">
+                <span class="meter-row__label"><%= session_attendance_label(session) %></span>
+                <span class="meter-row__value">
+                  <% if session_attendance.expected.zero? %>
+                    No registrations
+                  <% else %>
+                    <strong><%= session_attendance.attended %> of <%= session_attendance.expected %></strong> · <%= dashboard_percent(session_attendance.rate) %>
+                  <% end %>
+                </span>
+              </div>
+              <div class="meter-track" aria-hidden="true">
+                <div class="meter-fill" style="<%= meter_fill_style(session_attendance.rate) %>"></div>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </section>
+  </div>
+
+  <details id="awaiting-submission" class="card status-panel dropdown-panel">
+    <summary class="dropdown-panel__summary">
+      <h2 class="section-heading">Awaiting submission</h2>
+      <span class="dropdown-panel__count"><%= number_with_delimiter(@awaiting_submission.size) %></span>
+      <svg class="dropdown-panel__chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clip-rule="evenodd" />
+      </svg>
+    </summary>
     <p class="help-text">Volunteers who have been sent application materials but have not yet submitted.</p>
     <ul class="volunteer-list">
       <% @awaiting_submission.each do |volunteer| %>
@@ -23,5 +154,8 @@
         </li>
       <% end %>
     </ul>
-  </section>
+    <% if @awaiting_submission.empty? %>
+      <p class="subtle">Nobody is waiting on an application right now.</p>
+    <% end %>
+  </details>
 </main>

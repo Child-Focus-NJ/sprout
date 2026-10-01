@@ -25,6 +25,11 @@ gem "omniauth-google-oauth2"
 # Allows for .env file
 gem "dotenv-rails"
 
+# Dashboard charts (Chart.js, loaded through importmap) [https://chartkick.com]
+gem "chartkick"
+# Group counts by day/week/month in the app's time zone, for chart series [https://github.com/ankane/groupdate]
+gem "groupdate"
+
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
 
