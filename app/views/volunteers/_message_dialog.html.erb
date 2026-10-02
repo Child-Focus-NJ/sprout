@@ -25,7 +25,7 @@
       <textarea id="dialog-note" name="note" rows="4" maxlength="<%= Note::MAX_CONTENT_LENGTH %>" required data-autogrow
                 placeholder="Type your note here."></textarea>
       <div class="note-form__footer">
-        <p class="subtle">Maximum <%= number_with_delimiter(Note::MAX_CONTENT_LENGTH) %> characters.</p>
+        <p class="subtle"><span data-message-dialog-count>0</span> / <%= number_with_delimiter(Note::MAX_CONTENT_LENGTH) %> characters</p>
         <button type="submit" class="btn-note">Save Note</button>
       </div>
     <% end %>
@@ -52,7 +52,6 @@
 
     const title = dialog.querySelector("[data-message-dialog-title]");
     const noPhone = dialog.querySelector("[data-message-dialog-no-phone]");
-    const count = dialog.querySelector("[data-message-dialog-count]");
     const tabs = dialog.querySelectorAll("[data-message-dialog-tab]");
     const smsTab = dialog.querySelector("[data-message-dialog-tab='sms']");
     const panels = {
@@ -65,7 +64,7 @@
       tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.messageDialogTab === name)));
       Object.entries(panels).forEach(([key, panel]) => { panel.hidden = key !== name; });
 
-      // Fire input so the box sizes itself and the SMS count is current.
+      // Fire input so the box sizes itself and the character count is current.
       const box = panels[name].querySelector("textarea");
       box.dispatchEvent(new Event("input", { bubbles: true }));
       box.focus();
@@ -99,7 +98,11 @@
     // A click on the dimmed area outside the popup closes it, like Escape does.
     dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
 
-    const smsBox = panels.sms.querySelector("textarea");
-    smsBox.addEventListener("input", () => { count.textContent = smsBox.value.length; });
+    // Live character count under each box
+    Object.values(panels).forEach((panel) => {
+      const box = panel.querySelector("textarea");
+      const count = panel.querySelector("[data-message-dialog-count]");
+      box.addEventListener("input", () => { count.textContent = box.value.length.toLocaleString("en-US"); });
+    });
   })();
 </script>
