@@ -103,7 +103,8 @@
         </div>
         <div class="volunteer-actions">
           <%= link_to "View profile", volunteer_path(volunteer), class: "button-link profile-link" %>
-          <%= link_to "Send SMS", sms_volunteer_path(volunteer), class: "button-link" %>
+          <%= message_dialog_button(volunteer, :note) %>
+          <%= message_dialog_button(volunteer, :sms) %>
         </div>
       </div>
     <% end %>
@@ -129,6 +130,8 @@
     <button type="submit" class="button-primary">Add Note to Selected</button>
   <% end %>
 <% end %>
+
+<%= render "message_dialog" %>
 
 <script>
   (function () {

@@ -19,6 +19,7 @@ Feature: SMS Integration
 
   Scenario: SMS content can be customized
     Given I am on the volunteer "Jane Doe" profile page
+    And the volunteer has a phone number
     When I click "Send SMS"
     Then I should see a message composition field
     And I should see a character count
@@ -43,3 +44,18 @@ Feature: SMS Integration
     When I view the volunteer profile
     Then the system should flag the phone number as bad
     And I should see an indication that the phone number may be invalid
+
+  Scenario: SMS is greyed out for volunteers with no phone number
+    Given I am on the volunteer "Jane Doe" profile page
+    Then the "Send SMS" button should be disabled
+    When I click "Add Note"
+    Then the SMS tab in the popup should be disabled
+
+  Scenario: SMS can be sent from the volunteers list
+    Given the volunteer "Jane Doe" has a phone number
+    And I am on the volunteers list page
+    When I click "Send SMS" for "Jane Doe" on the list
+    And I enter the message "See you Thursday!"
+    And I press "Send"
+    Then I should be on the volunteers list page
+    And I should see "SMS sent to Jane Doe"

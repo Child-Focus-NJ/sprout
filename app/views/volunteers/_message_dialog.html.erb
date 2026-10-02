@@ -1,0 +1,105 @@
+<%# One popup for adding a note or sending an SMS. Buttons made with message_dialog_button
+    fill in which volunteer it's for and open it on the right tab. %>
+<dialog id="message-dialog" class="message-dialog" aria-labelledby="message-dialog-title">
+  <div class="message-dialog__body">
+    <div class="message-dialog__header">
+      <h2 id="message-dialog-title" class="section-heading" data-message-dialog-title>Message</h2>
+      <button type="button" class="message-dialog__close" data-message-dialog-close aria-label="Close">×</button>
+    </div>
+
+    <div class="message-dialog__tabs" role="tablist">
+      <button type="button" role="tab" class="message-dialog__tab" id="message-dialog-tab-note"
+              aria-controls="message-dialog-note" data-message-dialog-tab="note"><%= message_icon(:note) %>Note</button>
+      <button type="button" role="tab" class="message-dialog__tab" id="message-dialog-tab-sms"
+              aria-controls="message-dialog-sms" data-message-dialog-tab="sms"><%= message_icon(:sms) %>SMS</button>
+    </div>
+    <p class="subtle message-dialog__no-phone" data-message-dialog-no-phone hidden>
+      No phone number on file, so SMS is turned off. Add one under Contact to send texts.
+    </p>
+
+    <%= form_with url: "", method: :post,
+                  html: { id: "message-dialog-note", class: "message-dialog__panel note-form", role: "tabpanel",
+                          aria: { labelledby: "message-dialog-tab-note" }, data: { message_dialog_panel: "note" } } do %>
+      <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
+      <label for="dialog-note">Note</label>
+      <textarea id="dialog-note" name="note" rows="4" maxlength="<%= Note::MAX_CONTENT_LENGTH %>" required data-autogrow
+                placeholder="Type your note here."></textarea>
+      <div class="note-form__footer">
+        <p class="subtle">Maximum <%= number_with_delimiter(Note::MAX_CONTENT_LENGTH) %> characters.</p>
+        <button type="submit" class="btn-note">Save Note</button>
+      </div>
+    <% end %>
+
+    <%= form_with url: "", method: :post,
+                  html: { id: "message-dialog-sms", class: "message-dialog__panel note-form", role: "tabpanel", hidden: true,
+                          aria: { labelledby: "message-dialog-tab-sms" }, data: { message_dialog_panel: "sms" } } do %>
+      <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
+      <label for="dialog-sms">Message</label>
+      <textarea id="dialog-sms" name="message" rows="4" maxlength="<%= Sms::MailchimpOutbound::MAX_MESSAGE_LENGTH %>" required
+                data-autogrow placeholder="Type your text message here."></textarea>
+      <div class="note-form__footer">
+        <p class="subtle"><span data-message-dialog-count>0</span> / <%= Sms::MailchimpOutbound::MAX_MESSAGE_LENGTH %> characters</p>
+        <button type="submit" class="button-primary">Send</button>
+      </div>
+    <% end %>
+  </div>
+</dialog>
+
+<script>
+  (function () {
+    const dialog = document.getElementById("message-dialog");
+    if (!dialog) return;
+
+    const title = dialog.querySelector("[data-message-dialog-title]");
+    const noPhone = dialog.querySelector("[data-message-dialog-no-phone]");
+    const count = dialog.querySelector("[data-message-dialog-count]");
+    const tabs = dialog.querySelectorAll("[data-message-dialog-tab]");
+    const smsTab = dialog.querySelector("[data-message-dialog-tab='sms']");
+    const panels = {
+      note: dialog.querySelector("[data-message-dialog-panel='note']"),
+      sms: dialog.querySelector("[data-message-dialog-panel='sms']")
+    };
+    let openFor = null;
+
+    function showTab(name) {
+      tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.messageDialogTab === name)));
+      Object.entries(panels).forEach(([key, panel]) => { panel.hidden = key !== name; });
+
+      // Fire input so the box sizes itself and the SMS count is current.
+      const box = panels[name].querySelector("textarea");
+      box.dispatchEvent(new Event("input", { bubbles: true }));
+      box.focus();
+    }
+
+    document.addEventListener("click", (event) => {
+      const opener = event.target.closest("[data-message-dialog-open]");
+      if (!opener) return;
+
+      const { volunteerName, noteUrl, smsUrl, hasPhone, messageDialogOpen } = opener.dataset;
+      // Start fresh for a different volunteer so a draft never goes to the wrong person.
+      if (openFor !== noteUrl) {
+        dialog.querySelectorAll("textarea").forEach((box) => { box.value = ""; });
+        openFor = noteUrl;
+      }
+
+      const canText = hasPhone === "true";
+      title.textContent = `Message ${volunteerName}`;
+      panels.note.action = noteUrl;
+      panels.sms.action = smsUrl;
+      smsTab.disabled = !canText;
+      smsTab.title = canText ? "" : "No phone number on file";
+      noPhone.hidden = canText;
+
+      dialog.showModal();
+      showTab(messageDialogOpen === "sms" && canText ? "sms" : "note");
+    });
+
+    tabs.forEach((tab) => tab.addEventListener("click", () => showTab(tab.dataset.messageDialogTab)));
+    dialog.querySelector("[data-message-dialog-close]").addEventListener("click", () => dialog.close());
+    // A click on the dimmed area outside the popup closes it, like Escape does.
+    dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+
+    const smsBox = panels.sms.querySelector("textarea");
+    smsBox.addEventListener("input", () => { count.textContent = smsBox.value.length; });
+  })();
+</script>

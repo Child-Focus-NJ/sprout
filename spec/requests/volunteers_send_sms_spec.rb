@@ -16,30 +16,46 @@ RSpec.describe "Volunteer SMS send", type: :request do
 
       expect(response).to redirect_to(volunteer_path(volunteer))
       follow_redirect!
-      expect(response.body).to include("SMS sent")
+      expect(response.body).to include("SMS sent to #{volunteer.full_name}")
     end
 
-    it "redirects to compose with alert when message is blank" do
+    it "redirects back with alert when message is blank" do
       post send_sms_volunteer_path(volunteer), params: { message: "  " }
 
-      expect(response).to redirect_to(sms_volunteer_path(volunteer))
+      expect(response).to redirect_to(volunteer_path(volunteer))
       expect(flash[:alert]).to match(/blank/i)
     end
 
-    it "redirects to compose with alert when phone is missing" do
+    it "redirects back with alert when phone is missing" do
       volunteer.update!(phone: nil)
 
       post send_sms_volunteer_path(volunteer), params: { message: "Hello" }
 
-      expect(response).to redirect_to(sms_volunteer_path(volunteer))
+      expect(response).to redirect_to(volunteer_path(volunteer))
       expect(flash[:alert]).to match(/phone/i)
     end
 
-    it "redirects to compose with alert when message is too long" do
+    it "redirects back with alert when message is too long" do
       post send_sms_volunteer_path(volunteer), params: { message: ("x" * 321) }
 
-      expect(response).to redirect_to(sms_volunteer_path(volunteer))
+      expect(response).to redirect_to(volunteer_path(volunteer))
       expect(flash[:alert]).to match(/too long/i)
     end
+
+    it "returns to the page the popup was opened from" do
+      post send_sms_volunteer_path(volunteer), params: { message: "Hello", return_to: "/volunteers?status=inquiry" }
+
+      expect(response).to redirect_to("/volunteers?status=inquiry")
+    end
+
+    it "ignores a return address on another site" do
+      post send_sms_volunteer_path(volunteer), params: { message: "Hello", return_to: "https://evil.example.com/" }
+
+      expect(response).to redirect_to(volunteer_path(volunteer))
+    end
+  end
+
+  it "no longer has a separate SMS page" do
+    expect(Rails.application.routes.url_helpers).not_to respond_to(:sms_volunteer_path)
   end
 end

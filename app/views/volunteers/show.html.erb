@@ -38,7 +38,7 @@
         </div>
         <div>
           <%= form.label :phone, "Phone" %>
-          <%= form.telephone_field :phone, required: true %>
+          <%= form.telephone_field :phone %>
         </div>
         <div>
           <%= form.label :nj_county_id, "County" %>
@@ -78,7 +78,8 @@
       <% end %>
 
       <div class="action-toolbar">
-        <%= link_to "Send SMS", sms_volunteer_path(@volunteer), class: "button-link" %>
+        <%= message_dialog_button(@volunteer, :note, css_class: "btn-note") %>
+        <%= message_dialog_button(@volunteer, :sms) %>
         <%= form_with url: send_application_volunteer_path(@volunteer), method: :post, html: { class: "inline-action-form" } do %>
           <button type="submit">Send Application</button>
         <% end %>
@@ -100,18 +101,6 @@
             <%= link_to "Delete", volunteer_path(@volunteer, confirm_delete: 1), class: "btn-delete" %>
           <% end %>
         </div>
-      </div>
-
-      <div class="note-entry-panel">
-        <h3 class="subsection-heading">Add a note</h3>
-        <%= form_with url: add_note_volunteer_path(@volunteer), method: :post, html: { class: "note-form", id: "add-note-form" } do %>
-          <label for="note" class="sr-only">Note text</label>
-          <textarea id="note" name="note" rows="3" maxlength="1000" data-autogrow placeholder="Type your note here, then press Add Note."></textarea>
-          <div class="note-form__footer">
-            <p class="subtle">Maximum 1000 characters.</p>
-            <button type="submit" class="btn-note">Add Note</button>
-          </div>
-        <% end %>
       </div>
     </section>
   </div>
@@ -162,4 +151,6 @@
     <% end %>
   </section>
 </div>
+
+<%= render "message_dialog" %>
 </main>

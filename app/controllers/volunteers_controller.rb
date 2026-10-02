@@ -1,5 +1,5 @@
 class VolunteersController < ApplicationController
-  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :send_sms ]
+  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :send_sms ]
 
   def index
     @filters = list_filter_params
@@ -37,23 +37,15 @@ class VolunteersController < ApplicationController
     redirect_to volunteers_path, notice: "#{name} was deleted."
   end
 
-  def sms
-    @message = ""
-  end
-
   def send_sms
     Sms::MailchimpOutbound.deliver!(
       volunteer: @volunteer,
       body: params[:message],
       sent_by_user: current_user
     )
-    redirect_to volunteer_path(@volunteer), notice: "SMS sent"
-  rescue Sms::MailchimpOutbound::BlankMessageError,
-         Sms::MailchimpOutbound::MissingPhoneError,
-         Sms::MailchimpOutbound::MessageTooLongError => e
-    redirect_to sms_volunteer_path(@volunteer), alert: e.message
+    redirect_to return_path_for(@volunteer), notice: "SMS sent to #{@volunteer.full_name}"
   rescue Sms::MailchimpOutbound::Error => e
-    redirect_to volunteer_path(@volunteer), alert: e.message
+    redirect_to return_path_for(@volunteer), alert: e.message
   end
 
   def add_note
@@ -64,9 +56,9 @@ class VolunteersController < ApplicationController
       note_type: :general
     )
     if note.persisted?
-      redirect_to volunteer_path(volunteer), notice: "Note saved"
+      redirect_to return_path_for(volunteer), notice: "Note saved for #{volunteer.full_name}"
     else
-      redirect_to volunteer_path(volunteer), alert: note.errors.full_messages.to_sentence
+      redirect_to return_path_for(volunteer), alert: note.errors.full_messages.to_sentence
     end
   end
 
@@ -117,6 +109,12 @@ class VolunteersController < ApplicationController
 
   def set_volunteer
     @volunteer = Volunteer.find(params[:id])
+  end
+
+  # The note/SMS popup sends the page it was opened from, so staff land back on the
+  # profile or the same filtered list
+  def return_path_for(volunteer)
+    url_from(params[:return_to]) || volunteer_path(volunteer)
   end
 
   # Search/filter values for the volunteers list. Unknown statuses and counties are
