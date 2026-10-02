@@ -21,7 +21,7 @@ RSpec.describe "Volunteer profile page", type: :request do
 
     get volunteer_path(volunteer)
 
-    headings = page_html.css("h2").map { |h| h.text.strip }
+    headings = page_html.css(".volunteer-profile-layout h2").map { |h| h.text.strip }
     expect(headings).to eq([ "Contact", "Actions", "Timeline" ])
     %w[#volunteer-status #application-info #applied-section #status-history #communications].each do |selector|
       expect(page_html.at_css(selector)).to be_nil, "expected #{selector} to be gone"

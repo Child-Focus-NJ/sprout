@@ -34,7 +34,6 @@ Rails.application.routes.draw do
       patch :update_status
       post :send_application
       patch :mark_submitted
-      get :sms
       post :send_sms
       post :add_note
     end

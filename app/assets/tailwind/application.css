@@ -135,21 +135,68 @@
     @apply mt-3;
   }
 
-  /* SMS compose: visible field, bounded height (no endless vertical resize). */
-  .sms-compose-form {
-    @apply grid gap-3;
+  /* Note / SMS popup */
+  .message-dialog {
+    @apply m-auto w-[calc(100%-2rem)] max-w-lg rounded-lg border border-gray-300 bg-white p-0 text-gray-900 shadow-xl;
   }
 
-  .sms-compose-form textarea {
-    @apply w-full max-w-full box-border min-h-[7.5rem] max-h-[13rem] resize-none overflow-y-auto border border-gray-400 rounded-md p-2.5 text-base bg-white text-gray-900;
+  .message-dialog::backdrop {
+    @apply bg-gray-900/40;
   }
 
-  .sms-compose-form label {
-    @apply font-semibold text-gray-800;
+  .message-dialog__body {
+    @apply grid gap-3 p-4;
   }
 
-  .sms-compose-form #sms-character-count {
-    @apply text-sm text-gray-600;
+  .message-dialog__header {
+    @apply flex items-center justify-between gap-3;
+  }
+
+  .message-dialog__header .section-heading {
+    @apply m-0 text-lg;
+  }
+
+  .message-dialog__close {
+    @apply h-9 w-9 border-transparent bg-transparent px-0 text-2xl font-normal leading-none text-gray-500 hover:bg-gray-100 hover:text-gray-900;
+  }
+
+  /* Tabs look like the main navbar links */
+  .message-dialog__tabs {
+    @apply flex gap-1;
+  }
+
+  .message-dialog__tab {
+    @apply inline-flex h-auto items-center gap-1.5 rounded-lg border-0 bg-transparent px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  .message-icon {
+    @apply h-5 w-5 shrink-0;
+  }
+
+  .message-dialog__tab .message-icon {
+    @apply h-4 w-4;
+  }
+
+  /* Square buttons that show only the note or phone icon; the title gives the words on hover. */
+  button.icon-button {
+    @apply w-11 px-0;
+  }
+
+  .message-dialog__tab[aria-selected="true"] {
+    @apply bg-sky-100 text-sky-950 shadow-sm hover:bg-sky-100 hover:text-sky-950;
+  }
+
+  .message-dialog__tab:disabled,
+  button[data-message-dialog-open]:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  .message-dialog__no-phone {
+    @apply m-0 text-sm;
+  }
+
+  .message-dialog__panel {
+    @apply m-0 grid gap-1.5;
   }
 
   .page-nav {
@@ -262,20 +309,12 @@
     @apply m-0 inline;
   }
 
-  .note-entry-panel {
-    @apply mt-4;
-  }
-
   .note-form__footer {
     @apply mt-2 flex items-center justify-between gap-2;
   }
 
   .note-form__footer .subtle {
     @apply m-0;
-  }
-
-  .note-entry-panel h3 {
-    @apply m-0 mb-2 text-base font-semibold;
   }
 
   .section-heading {

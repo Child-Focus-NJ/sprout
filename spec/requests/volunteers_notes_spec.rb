@@ -19,6 +19,22 @@ RSpec.describe "Volunteer notes (US8)", type: :request do
       expect(response.body).to include("Send 4 week follow up email")
       expect(volunteer.notes.last.user).to eq(user)
     end
+
+    it "returns to the filtered list when the popup was opened there" do
+      post add_note_volunteer_path(volunteer), params: { note: "Left a voicemail", return_to: "/volunteers?q=notes" }
+
+      expect(response).to redirect_to("/volunteers?q=notes")
+      expect(flash[:notice]).to eq("Note saved for #{volunteer.full_name}")
+    end
+
+    it "redirects back with the error when the note is blank" do
+      expect do
+        post add_note_volunteer_path(volunteer), params: { note: "" }
+      end.not_to(change { volunteer.reload.notes.count })
+
+      expect(response).to redirect_to(volunteer_path(volunteer))
+      expect(flash[:alert]).to match(/blank/i)
+    end
   end
 
   describe "POST /volunteers/bulk_add_note" do

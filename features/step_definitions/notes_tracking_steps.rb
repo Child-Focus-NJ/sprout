@@ -34,19 +34,23 @@ Given("the volunteer {string} has notes, emails, and SMS in the timeline") do |n
 end
 
 When("I type a note that is {int} lines long") do |line_count|
-  @note_box_start_height = find("#note").evaluate_script("this.offsetHeight")
-  fill_in "note", with: (1..line_count).map { |i| "Line #{i}" }.join("\n")
+  @note_box_start_height = find("#dialog-note").evaluate_script("this.offsetHeight")
+  fill_in "dialog-note", with: (1..line_count).map { |i| "Line #{i}" }.join("\n")
 end
 
 Then("the note box should grow to fit the note without scrolling") do
-  note_box = find("#note")
+  note_box = find("#dialog-note")
   expect(note_box.evaluate_script("this.offsetHeight")).to be > @note_box_start_height
   expect(note_box.evaluate_script("this.scrollHeight <= this.clientHeight")).to be(true)
 end
 
 When("I enter {string}") do |text|
-  # Profile note form + bulk note form both use the same textarea id.
-  fill_in "note", with: text
+  # Type into the note popup when it's open, otherwise into the list's bulk note box.
+  if page.has_css?("#message-dialog[open]", wait: 0)
+    within("#message-dialog") { fill_in "note", with: text }
+  else
+    fill_in "note", with: text
+  end
 end
 
 Then("I should see the note {string}") do |note_text|
@@ -156,4 +160,13 @@ end
 
 Then("the note should be added to both volunteers") do
   expect(page).to have_content("added to 2 volunteers")
+end
+
+Given("the volunteer {string} is on the list") do |name|
+  find_or_create_volunteer_by_name(name)
+  visit volunteers_path
+end
+
+Then("{string} should have the note {string}") do |name, content|
+  expect(find_or_create_volunteer_by_name(name).notes.pluck(:content)).to include(content)
 end
