@@ -53,6 +53,11 @@ RSpec.describe "SystemManagement", type: :request do
       expect(response.body).to include("Referral Sources")
     end
 
+    it "links to the usage report" do
+      get system_management_path
+      expect(response.body).to include("View Usage Report")
+    end
+
     it "shows recent sync notifications" do
       volunteer = create(:volunteer)
       ExternalSyncLog.create!(
