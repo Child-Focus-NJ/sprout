@@ -18,6 +18,10 @@ class UsageMetrics
     SignInLog.recent.includes(:user).limit(limit)
   end
 
+  def unique_sign_in_users
+    SignInLog.distinct.count(:user_id)
+  end
+
   def total_volunteers
     Volunteer.count
   end
@@ -38,6 +42,21 @@ class UsageMetrics
     @communications_by_type ||= begin
       counts = Communication.group(:communication_type).count
       Communication.communication_types.keys.index_with { |type| counts.fetch(type, 0) }
+    end
+  end
+
+  def recent_communications(limit: 10)
+    Communication.recent.includes(:volunteer).limit(limit)
+  end
+
+  def total_active_employees
+    employees_by_role.values.sum
+  end
+
+  def employees_by_role
+    @employees_by_role ||= begin
+      counts = User.active.group(:role).count
+      User.roles.keys.index_with { |role| counts.fetch(role, 0) }
     end
   end
 

@@ -29,6 +29,16 @@ RSpec.describe UsageMetrics do
       expect(recent).to eq([ newer ])
       expect(recent).not_to include(older)
     end
+
+    it "counts the distinct users who have signed in, not the number of sign-ins" do
+      frequent_user = create(:user)
+      occasional_user = create(:user)
+      SignInLog.create!(user: frequent_user)
+      SignInLog.create!(user: frequent_user)
+      SignInLog.create!(user: occasional_user)
+
+      expect(metrics.unique_sign_in_users).to eq(2)
+    end
   end
 
   describe "data volume" do
@@ -60,6 +70,35 @@ RSpec.describe UsageMetrics do
       volunteer.communications.create!(communication_type: :email, body: "Hi", sent_at: Time.current)
 
       expect(metrics.communications_by_type).to eq("email" => 1, "sms" => 0)
+    end
+
+    it "lists the most recent communications first, up to the limit" do
+      volunteer = create(:volunteer)
+      older = volunteer.communications.create!(communication_type: :email, body: "Old", sent_at: 2.days.ago, created_at: 2.days.ago)
+      newer = volunteer.communications.create!(communication_type: :sms, body: "New", sent_at: 1.day.ago, created_at: 1.day.ago)
+
+      recent = metrics.recent_communications(limit: 1)
+
+      expect(recent).to eq([ newer ])
+      expect(recent).not_to include(older)
+    end
+  end
+
+  describe "employees" do
+    it "counts active employees and breaks them down by role" do
+      create(:user, role: :admin)
+      create(:user, role: :user)
+      create(:user, role: :user)
+      create(:user, :inactive, role: :admin)
+
+      expect(metrics.total_active_employees).to eq(3)
+      expect(metrics.employees_by_role).to eq("admin" => 1, "user" => 2)
+    end
+
+    it "includes a role with no active employees" do
+      create(:user, role: :user)
+
+      expect(metrics.employees_by_role).to eq("admin" => 0, "user" => 1)
     end
   end
 end
