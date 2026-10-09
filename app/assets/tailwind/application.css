@@ -456,8 +456,33 @@
     @apply list-none p-0 m-0;
   }
 
-  .bulk-note-editor {
-    @apply mt-3;
+  .volunteer-select-all {
+    @apply flex items-center border-b border-gray-200 pb-2;
+  }
+
+  .volunteer-select-all label {
+    @apply flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700;
+  }
+
+  /* Bulk actions bar: sticks to the bottom of the screen so it's reachable from anywhere in the list. */
+  .bulk-toolbar {
+    @apply sticky bottom-4 z-30 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-2.5 shadow-lg;
+  }
+
+  .bulk-toolbar__count {
+    @apply text-sm text-sky-950;
+  }
+
+  .bulk-toolbar__actions {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .bulk-toolbar__button {
+    @apply gap-1.5 bg-white;
+  }
+
+  .bulk-toolbar__clear {
+    @apply h-auto rounded-lg border-0 bg-transparent px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-sky-100 hover:text-sky-950;
   }
 
   /* Volunteers list: title on the left; name search + funnel filter popup on the right. */

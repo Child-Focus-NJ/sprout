@@ -74,24 +74,69 @@
       const opener = event.target.closest("[data-message-dialog-open]");
       if (!opener) return;
 
-      const { volunteerName, noteUrl, smsUrl, hasPhone, messageDialogOpen } = opener.dataset;
-      // Start fresh for a different volunteer so a draft never goes to the wrong person.
-      if (openFor !== noteUrl) {
+      const { noteUrl, smsUrl, messageDialogOpen } = opener.dataset;
+      const target = "messageDialogBulk" in opener.dataset ? selectedVolunteers() : oneVolunteer(opener);
+
+      // Start fresh for different recipients so a draft never goes to the wrong person.
+      if (openFor !== target.key) {
         dialog.querySelectorAll("textarea").forEach((box) => { box.value = ""; });
-        openFor = noteUrl;
+        openFor = target.key;
       }
 
-      const canText = hasPhone === "true";
-      title.textContent = `Message ${volunteerName}`;
+      title.textContent = `Message ${target.name}`;
       panels.note.action = noteUrl;
       panels.sms.action = smsUrl;
-      smsTab.disabled = !canText;
-      smsTab.title = canText ? "" : "No phone number on file";
-      noPhone.hidden = canText;
+      setVolunteerIds(target.ids);
+      smsTab.disabled = !target.canText;
+      smsTab.title = target.canText ? "" : "No phone number on file";
+      noPhone.textContent = target.phoneNote;
+      noPhone.hidden = !target.phoneNote;
 
       dialog.showModal();
-      showTab(messageDialogOpen === "sms" && canText ? "sms" : "note");
+      showTab(messageDialogOpen === "sms" && target.canText ? "sms" : "note");
     });
+
+    function oneVolunteer(opener) {
+      const canText = opener.dataset.hasPhone === "true";
+      return {
+        key: opener.dataset.noteUrl,
+        name: opener.dataset.volunteerName,
+        ids: [],
+        canText,
+        phoneNote: canText ? "" : "No phone number on file, so SMS is turned off. Add one under Contact to send texts."
+      };
+    }
+
+    // Everyone ticked on the Volunteers list; anyone without a phone gets skipped for SMS
+    function selectedVolunteers() {
+      const boxes = [...document.querySelectorAll("[data-bulk-select]:checked")];
+      const ids = boxes.map((box) => box.value);
+      const missing = boxes.filter((box) => box.dataset.hasPhone !== "true").length;
+      const canText = missing < boxes.length;
+      let phoneNote = "";
+      if (!canText) phoneNote = "None of the selected volunteers have a phone number, so SMS is turned off.";
+      else if (missing) phoneNote = `${missing} of the ${boxes.length} selected have no phone number and will be skipped for SMS.`;
+
+      return {
+        key: `bulk:${ids.join(",")}`,
+        name: `${boxes.length} volunteer${boxes.length === 1 ? "" : "s"}`,
+        ids,
+        canText,
+        phoneNote
+      };
+    }
+
+    // Bulk sends post every selected volunteer's id; a single volunteer's id is already in the URL
+    function setVolunteerIds(ids) {
+      Object.values(panels).forEach((panel) => {
+        panel.querySelectorAll("[data-volunteer-id]").forEach((input) => input.remove());
+        ids.forEach((id) => {
+          const input = Object.assign(document.createElement("input"), { type: "hidden", name: "volunteer_ids[]", value: id });
+          input.dataset.volunteerId = "";
+          panel.append(input);
+        });
+      });
+    }
 
     tabs.forEach((tab) => tab.addEventListener("click", () => showTab(tab.dataset.messageDialogTab)));
     dialog.querySelector("[data-message-dialog-close]").addEventListener("click", () => dialog.close());

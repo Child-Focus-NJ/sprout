@@ -82,15 +82,27 @@
   </div>
 <% end %>
 
-<%= form_with url: bulk_add_note_volunteers_path, method: :post, html: { class: "card note-form" } do %>
+<%# Row checkboxes post straight to Send Application; Add Note and Send SMS copy the selection into the popup. %>
+<%= form_with url: bulk_send_application_volunteers_path, method: :post, html: { class: "card note-form", id: "volunteer-bulk-form" } do %>
   <% @filters.each do |key, value| %>
     <%= hidden_field_tag key, value, id: nil %>
+  <% end %>
+  <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
+
+  <% if @volunteers.any? %>
+    <div class="volunteer-select-all">
+      <label>
+        <input type="checkbox" id="select-all-volunteers" data-bulk-select-all>
+        Select all <%= @volunteers.size %>
+      </label>
+    </div>
   <% end %>
 
   <section id="volunteer-list" class="volunteer-list">
     <% @volunteers.each do |volunteer| %>
       <div class="volunteer-row">
-        <input type="checkbox" id="volunteer_<%= volunteer.id %>" name="volunteer_ids[]" value="<%= volunteer.id %>">
+        <input type="checkbox" id="volunteer_<%= volunteer.id %>" name="volunteer_ids[]" value="<%= volunteer.id %>"
+               data-bulk-select data-has-phone="<%= volunteer.phone.present? %>">
         <div class="volunteer-meta">
           <label for="volunteer_<%= volunteer.id %>" class="volunteer-name"><%= volunteer.full_name %></label>
           <div class="volunteer-subtext">
@@ -120,18 +132,61 @@
     <% end %>
   </section>
 
-  <% if @volunteers.any? %>
-    <div class="bulk-note-editor">
-      <label for="note">Note</label>
-      <textarea id="note" name="note" rows="3" maxlength="1000"></textarea>
-      <p class="subtle">Maximum 1000 characters.</p>
+  <%# Sticks to the bottom of the screen while scrolling, and only shows once something is selected %>
+  <div id="bulk-toolbar" class="bulk-toolbar" role="region" aria-label="Bulk actions" data-bulk-toolbar hidden>
+    <span class="bulk-toolbar__count"><strong data-bulk-count>0</strong> selected</span>
+    <div class="bulk-toolbar__actions">
+      <%= bulk_message_button(:note) %>
+      <%= bulk_message_button(:sms) %>
+      <button type="submit" class="button-link bulk-toolbar__button">Send Application</button>
+      <button type="button" class="bulk-toolbar__clear" data-bulk-clear>Clear</button>
     </div>
-
-    <button type="submit" class="button-primary">Add Note to Selected</button>
-  <% end %>
+  </div>
 <% end %>
 
 <%= render "message_dialog" %>
+
+<script>
+  (function () {
+    const toolbar = document.querySelector("[data-bulk-toolbar]");
+    const selectAll = document.querySelector("[data-bulk-select-all]");
+    if (!toolbar || !selectAll) return;
+
+    const boxes = [...document.querySelectorAll("[data-bulk-select]")];
+    const count = toolbar.querySelector("[data-bulk-count]");
+    const checkedCount = () => boxes.filter((box) => box.checked).length;
+
+    // Show the toolbar only while something is selected, and keep Select all in step with the rows
+    function refresh() {
+      const checked = checkedCount();
+      count.textContent = checked;
+      toolbar.hidden = checked === 0;
+      selectAll.checked = checked === boxes.length;
+      selectAll.indeterminate = checked > 0 && checked < boxes.length;
+    }
+
+    function selectEvery(checked) {
+      boxes.forEach((box) => { box.checked = checked; });
+      refresh();
+    }
+
+    boxes.forEach((box) => box.addEventListener("change", refresh));
+    selectAll.addEventListener("change", () => selectEvery(selectAll.checked));
+    toolbar.querySelector("[data-bulk-clear]").addEventListener("click", () => selectEvery(false));
+
+    // Sending the application moves people to "Application sent", so double-check first
+    document.getElementById("volunteer-bulk-form").addEventListener("submit", (event) => {
+      const checked = checkedCount();
+      if (!confirm(`Send the application to ${checked} selected volunteer${checked === 1 ? "" : "s"}?`)) {
+        event.preventDefault();
+      }
+    });
+
+    // The browser can restore ticked boxes on Back, so sync the toolbar on every page show
+    window.addEventListener("pageshow", refresh);
+    refresh();
+  })();
+</script>
 
 <script>
   (function () {
