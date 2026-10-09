@@ -63,12 +63,11 @@ class VolunteersController < ApplicationController
   end
 
   def bulk_add_note
-    ids = Array(params[:volunteer_ids]).reject(&:blank?)
+    volunteers = selected_volunteers
     note_content = params[:note].to_s
-    volunteers = Volunteer.where(id: ids)
+    list_path = bulk_return_path
 
-    # Return to the same filtered list the note was sent from.
-    list_path = volunteers_path(list_filter_params)
+    return redirect_to(list_path, alert: "Select at least one volunteer") if volunteers.empty?
 
     if note_content.blank?
       redirect_to list_path, alert: "Content can't be blank"
@@ -84,7 +83,48 @@ class VolunteersController < ApplicationController
       volunteer.add_staff_note(content: note_content, user: current_user, note_type: :general)
     end
 
-    redirect_to list_path, notice: "Note added to #{volunteers.count} volunteers"
+    redirect_to list_path, notice: "Note added to #{helpers.pluralize(volunteers.size, 'volunteer')}"
+  end
+
+  # Texts every selected volunteer who has a phone number; the rest are skipped and counted.
+  def bulk_send_sms
+    volunteers = selected_volunteers
+    list_path = bulk_return_path
+    return redirect_to(list_path, alert: "Select at least one volunteer") if volunteers.empty?
+
+    textable, no_phone = volunteers.partition { |volunteer| volunteer.phone.present? }
+    sent = failed = 0
+    textable.each do |volunteer|
+      Sms::MailchimpOutbound.deliver!(volunteer: volunteer, body: params[:message], sent_by_user: current_user)
+      sent += 1
+    rescue Sms::MailchimpOutbound::BlankMessageError, Sms::MailchimpOutbound::MessageTooLongError => e
+      # Same message for everyone, so stop at the first one
+      return redirect_to(list_path, alert: e.message)
+    rescue Sms::MailchimpOutbound::Error
+      failed += 1
+    end
+
+    summary = [ sent.zero? ? "No SMS sent." : "SMS sent to #{helpers.pluralize(sent, 'volunteer')}." ]
+    summary << "Skipped #{no_phone.size} with no phone number." if no_phone.any?
+    summary << "#{failed} couldn't be sent." if failed.positive?
+    redirect_to list_path, (sent.zero? ? :alert : :notice) => summary.join(" ")
+  end
+
+  # Sends the application to selected volunteers who are still at inquiry or eligible and haven't
+  # had one yet. Anyone else is skipped so a bulk send never moves someone back a step.
+  def bulk_send_application
+    volunteers = selected_volunteers
+    list_path = bulk_return_path
+    return redirect_to(list_path, alert: "Select at least one volunteer") if volunteers.empty?
+
+    ready, skipped = volunteers.partition do |volunteer|
+      volunteer.application_sent_at.nil? && (volunteer.inquiry? || volunteer.application_eligible?)
+    end
+    ready.each { |volunteer| volunteer.record_application_sent!(user: current_user) }
+
+    summary = [ ready.empty? ? "No applications sent." : "Application sent to #{helpers.pluralize(ready.size, 'volunteer')}." ]
+    summary << "Skipped #{skipped.size} who already had one, applied, or are inactive." if skipped.any?
+    redirect_to list_path, (ready.empty? ? :alert : :notice) => summary.join(" ")
   end
 
   def update_status
@@ -115,6 +155,15 @@ class VolunteersController < ApplicationController
   # profile or the same filtered list
   def return_path_for(volunteer)
     url_from(params[:return_to]) || volunteer_path(volunteer)
+  end
+
+  def selected_volunteers
+    Volunteer.where(id: Array(params[:volunteer_ids]).reject(&:blank?)).to_a
+  end
+
+  # Bulk actions go back to the same filtered list they were sent from
+  def bulk_return_path
+    url_from(params[:return_to]) || volunteers_path(list_filter_params)
   end
 
   # Search/filter values for the volunteers list. Unknown statuses and counties are
