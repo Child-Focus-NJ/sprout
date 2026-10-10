@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :require_admin!
+  restrict_to_feature :users
 
   def create
     @user = User.new(employee_attributes)

@@ -10,10 +10,14 @@ class ApplicationController < ActionController::Base
 
   helper_method :current_user
 
+  def self.restrict_to_feature(key)
+    before_action { require_feature_access!(key) }
+  end
 
   private
 
-  def require_admin!
+  def require_feature_access!(key)
+    return unless Feature.admin_only?(key)
     return if current_user&.admin?
 
     redirect_to root_path, alert: "You are not authorized to view that page."
