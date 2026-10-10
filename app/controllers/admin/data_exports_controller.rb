@@ -1,6 +1,6 @@
 module Admin
   class DataExportsController < ApplicationController
-    before_action :require_admin!
+    restrict_to_feature :admin_data_exports
 
     def create
       log = DataExportLog.create!(
