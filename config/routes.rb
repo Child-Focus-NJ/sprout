@@ -29,6 +29,8 @@ Rails.application.routes.draw do
   resources :volunteers do
     collection do
       post :bulk_add_note
+      post :bulk_send_sms
+      post :bulk_send_application
     end
 
     member do

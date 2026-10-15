@@ -65,6 +65,21 @@ module VolunteersHelper
     )
   end
 
+  # Bulk toolbar button that opens the same note/SMS popup for every selected volunteer on the list
+  def bulk_message_button(tab)
+    tag.button(
+      safe_join([ message_icon(tab), MESSAGE_DIALOG_LABELS.fetch(tab) ]),
+      type: "button",
+      class: "button-link bulk-toolbar__button",
+      data: {
+        message_dialog_open: tab,
+        message_dialog_bulk: true,
+        note_url: bulk_add_note_volunteers_path,
+        sms_url: bulk_send_sms_volunteers_path
+      }
+    )
+  end
+
   def volunteer_status_badge(volunteer)
     stage = volunteer.current_funnel_stage.to_s
     label = STATUS_BADGE_LABELS.fetch(stage) { stage.humanize }
