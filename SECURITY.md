@@ -64,7 +64,7 @@ We ask that you give us a reasonable opportunity to fix an issue before any
 public disclosure. We follow coordinated disclosure:
 
 - We will work with you to understand and resolve the issue.
-- We ask that you wait [TODO: 90] days from your report, or until a fix is
+- We ask that you wait 90 days from your report, or until a fix is
   deployed (whichever is first), before disclosing publicly.
 - Once resolved, we may publish a GitHub Security Advisory and will credit you
   unless you prefer to remain anonymous.
