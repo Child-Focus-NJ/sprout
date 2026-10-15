@@ -86,15 +86,16 @@ class VolunteersController < ApplicationController
     redirect_to list_path, notice: "Note added to #{helpers.pluralize(volunteers.size, 'volunteer')}"
   end
 
-  # Texts every selected volunteer who has a phone number; the rest are skipped and counted.
+  # Texts every selected volunteer who has a phone number; the rest are skipped and named (a few of
+  # them, plus a count) so staff know who didn't get it.
   def bulk_send_sms
     volunteers = selected_volunteers
     list_path = bulk_return_path
     return redirect_to(list_path, alert: "Select at least one volunteer") if volunteers.empty?
 
-    textable, no_phone = volunteers.partition { |volunteer| volunteer.phone.present? }
+    no_phone = volunteers.where("COALESCE(TRIM(volunteers.phone), '') = ''")
     sent = failed = 0
-    textable.each do |volunteer|
+    volunteers.where("COALESCE(TRIM(volunteers.phone), '') <> ''").find_each do |volunteer|
       Sms::MailchimpOutbound.deliver!(volunteer: volunteer, body: params[:message], sent_by_user: current_user)
       sent += 1
     rescue Sms::MailchimpOutbound::BlankMessageError, Sms::MailchimpOutbound::MessageTooLongError => e
@@ -105,7 +106,8 @@ class VolunteersController < ApplicationController
     end
 
     summary = [ sent.zero? ? "No SMS sent." : "SMS sent to #{helpers.pluralize(sent, 'volunteer')}." ]
-    summary << "Skipped #{no_phone.size} with no phone number." if no_phone.any?
+    skipped = no_phone.count
+    summary << "Skipped #{skipped} with no phone number: #{some_names(no_phone, skipped)}." if skipped.positive?
     summary << "#{failed} couldn't be sent." if failed.positive?
     redirect_to list_path, (sent.zero? ? :alert : :notice) => summary.join(" ")
   end
@@ -158,7 +160,15 @@ class VolunteersController < ApplicationController
   end
 
   def selected_volunteers
-    Volunteer.where(id: Array(params[:volunteer_ids]).reject(&:blank?)).to_a
+    Volunteer.where(id: Array(params[:volunteer_ids]).reject(&:blank?))
+  end
+
+  # The first few names plus a count of the rest, so the message stays short (and fits in the
+  # session cookie the flash lives in) no matter how many volunteers are in the list
+  def some_names(scope, total, shown: 3)
+    names = scope.order(:first_name, :last_name).limit(shown).pluck(:first_name, :last_name).map { |name| name.join(" ") }
+    rest = total - names.size
+    (rest.positive? ? names + [ "#{helpers.number_with_delimiter(rest)} more" ] : names).to_sentence
   end
 
   # Bulk actions go back to the same filtered list they were sent from

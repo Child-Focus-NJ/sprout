@@ -46,14 +46,22 @@ RSpec.describe "Bulk actions on the volunteer list", type: :request do
       end.to change(Communication.sms, :count).by(2)
 
       expect(response).to redirect_to(volunteers_path)
-      expect(flash[:notice]).to eq("SMS sent to 2 volunteers. Skipped 1 with no phone number.")
+      expect(flash[:notice]).to eq("SMS sent to 2 volunteers. Skipped 1 with no phone number: Nora Nophone.")
       expect(nora.communications).to be_empty
     end
 
     it "sends nothing when nobody selected has a phone number" do
       post bulk_send_sms_volunteers_path, params: { volunteer_ids: [ nora.id ], message: "Hi" }
 
-      expect(flash[:alert]).to eq("No SMS sent. Skipped 1 with no phone number.")
+      expect(flash[:alert]).to eq("No SMS sent. Skipped 1 with no phone number: Nora Nophone.")
+    end
+
+    it "names the first few skipped volunteers and counts the rest, so the message stays short" do
+      no_phones = %w[Amy Bob Cal Dee Eve].map { |first| create(:volunteer, first_name: first, last_name: "None", phone: nil) }
+
+      post bulk_send_sms_volunteers_path, params: { volunteer_ids: [ harry.id, *no_phones.map(&:id) ], message: "Hi" }
+
+      expect(flash[:notice]).to eq("SMS sent to 1 volunteer. Skipped 5 with no phone number: Amy None, Bob None, Cal None, and 2 more.")
     end
 
     it "stops on a blank message instead of trying each volunteer" do
