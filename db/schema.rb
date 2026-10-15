@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_29_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_09_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,6 +81,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_000000) do
     t.index ["started_at"], name: "index_external_sync_logs_on_started_at"
     t.index ["status"], name: "index_external_sync_logs_on_status"
     t.index ["volunteer_id"], name: "index_external_sync_logs_on_volunteer_id"
+  end
+
+  create_table "features", force: :cascade do |t|
+    t.boolean "admin_only", default: true, null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_features_on_key", unique: true
   end
 
   create_table "information_sessions", force: :cascade do |t|
