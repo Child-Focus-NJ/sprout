@@ -1,6 +1,6 @@
 <main class="volunteer-page">
-<% active_filter_count = @filters.slice(:status, :county_id).size %>
-<% filtered_county = @counties.detect { |county| county.id == @filters[:county_id] } %>
+<% active_filter_count = @filters.slice(:status, :vicinage_id).size %>
+<% filtered_vicinage = @vicinages.detect { |vicinage| vicinage.id == @filters[:vicinage_id] } %>
 
 <header class="volunteer-list-header">
   <h1 class="page-title">Volunteers</h1>
@@ -41,14 +41,14 @@
         </fieldset>
 
         <fieldset>
-          <legend>County</legend>
+          <legend>Vicinage</legend>
           <div class="volunteer-filter-options volunteer-filter-options--scroll">
             <label class="volunteer-filter-option">
-              <%= radio_button_tag :county_id, "", filtered_county.nil?, id: "county_id_all" %> All counties
+              <%= radio_button_tag :vicinage_id, "", filtered_vicinage.nil?, id: "vicinage_id_all" %> All counties
             </label>
-            <% @counties.each do |county| %>
+            <% @vicinages.each do |vicinage| %>
               <label class="volunteer-filter-option">
-                <%= radio_button_tag :county_id, county.id, county == filtered_county %> <%= county.name %>
+                <%= radio_button_tag :vicinage_id, vicinage.id, vicinage == filtered_vicinage %> <%= vicinage.name %>
               </label>
             <% end %>
           </div>
@@ -72,10 +72,10 @@
         <%= link_to "×", volunteers_path(@filters.except(:status)), aria: { label: "Remove status filter" } %>
       </span>
     <% end %>
-    <% if filtered_county %>
-      <span class="volunteer-filter-chip volunteer-filter-chip--county">
-        County: <%= filtered_county.name %>
-        <%= link_to "×", volunteers_path(@filters.except(:county_id)), aria: { label: "Remove county filter" } %>
+    <% if filtered_vicinage %>
+      <span class="volunteer-filter-chip volunteer-filter-chip--vicinage">
+        Vicinage: <%= filtered_vicinage.name %>
+        <%= link_to "×", volunteers_path(@filters.except(:vicinage_id)), aria: { label: "Remove vicinage filter" } %>
       </span>
     <% end %>
     <%= link_to "Clear all", volunteers_path, class: "volunteer-active-filters__clear" %>
@@ -107,8 +107,8 @@
           <label for="volunteer_<%= volunteer.id %>" class="volunteer-name"><%= volunteer.full_name %></label>
           <div class="volunteer-subtext">
             <span>Contact: <%= volunteer.phone.presence || volunteer.email %></span>
-            <% if volunteer.nj_county %>
-              <span><%= volunteer.nj_county_name %> County</span>
+            <% if volunteer.vicinage %>
+              <span>Vicinage: <%= volunteer.vicinage.name %></span>
             <% end %>
             <%= volunteer_status_badge(volunteer) %>
           </div>
@@ -193,10 +193,10 @@
     const menu = document.getElementById("volunteer-filter-menu");
     if (!menu) return;
 
-    // Bring the chosen county into view; the county list scrolls inside the popup.
+    // Bring the chosen vicinage into view; the vicinage list scrolls inside the popup.
     menu.addEventListener("toggle", () => {
       if (!menu.open) return;
-      menu.querySelector("input[name='county_id']:checked")?.scrollIntoView({ block: "nearest" });
+      menu.querySelector("input[name='vicinage_id']:checked")?.scrollIntoView({ block: "nearest" });
     });
 
     // Close the filter popup on an outside click or Escape, like a normal menu.

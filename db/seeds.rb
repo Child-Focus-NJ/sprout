@@ -51,13 +51,10 @@ end
   VolunteerTag.find_or_create_by!(title: title)
 end
 
-# ── NJ Counties ─────────────────────────────────────────────────────────────
+# ── NJ Vicinages ─────────────────────────────────────────────────────────────
 # Also created by db/migrate — see note above the referral sources block.
-counties = [
-  'Atlantic', 'Bergen', 'Burlington', 'Camden', 'Cape May', 'Cumberland', 'Essex', 'Gloucester', 'Hudson', 'Hunterdon',
-  'Mercer', 'Middlesex', 'Monmouth', 'Morris', 'Ocean', 'Passaic', 'Salem', 'Somerset', 'Sussex', 'Union', 'Warren'
-].map do |countyname|
-  NjCounty.find_or_create_by!(name: countyname)
+vicinages = ['Passaic', 'Union', 'Either', 'Unknown'].map do |vicinagename|
+  Vicinage.find_or_create_by!(name: vicinagename)
 end
 
 # ── Reminder Frequencies ───────────────────────────────────────────────────────
@@ -145,7 +142,7 @@ volunteers = volunteer_data.map do |attrs|
   v.became_inactive_at        = attrs[:became_inactive_at]
   v.inactive_reason           = attrs[:inactive_reason]
   v.referral_source           = sources.sample
-  v.nj_county                 = counties.sample
+  v.vicinage                  = vicinages.sample
   v.preferred_contact_method  = [ :email, :sms, :both ].sample
 
   v.save!
