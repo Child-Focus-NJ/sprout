@@ -1,4 +1,11 @@
+# Reload the profile too, since the Send SMS button is greyed out until there's a phone number
 Given("the volunteer has a phone number") do
+  @volunteer.update!(phone: "5551234567")
+  visit volunteer_path(@volunteer)
+end
+
+Given("the volunteer {string} has a phone number") do |name|
+  @volunteer = find_or_create_volunteer_by_name(name)
   @volunteer.update!(phone: "5551234567")
 end
 
@@ -68,11 +75,11 @@ Then("I should see the SMS communication history") do
 end
 
 Then("each entry should show the date and time sent") do
-  expect(page).to have_css(".communication-entry time")
+  expect(page).to have_css(".timeline .sms-entry time")
 end
 
 Then("each entry should show the message content or preview") do
-  expect(page).to have_css(".communication-entry .content")
+  expect(page).to have_css(".timeline .sms-entry .content")
 end
 
 When("I view the communication history for {string}") do |name|
@@ -95,4 +102,24 @@ end
 
 Then("I should see an indication that the phone number may be invalid") do
   expect(page).to have_content(/invalid|unreachable|bad/i)
+end
+
+Then("the {string} button should be disabled") do |label|
+  expect(page).to have_button(label, disabled: true)
+end
+
+Then("the SMS tab in the popup should be disabled") do
+  within("#message-dialog") do
+    expect(page).to have_button("SMS", disabled: true)
+    expect(page).to have_content("No phone number on file")
+  end
+end
+
+When("I click {string} for {string} on the list") do |label, name|
+  volunteer = find_or_create_volunteer_by_name(name)
+  within(find(".volunteer-row", text: volunteer.full_name)) { click_on label }
+end
+
+Then("I should be on the volunteers list page") do
+  expect(page).to have_current_path(volunteers_path)
 end

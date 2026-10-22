@@ -53,6 +53,11 @@ RSpec.describe "SystemManagement", type: :request do
       expect(response.body).to include("Referral Sources")
     end
 
+    it "links to the usage report" do
+      get system_management_path
+      expect(response.body).to include("View Usage Report")
+    end
+
     it "shows recent sync notifications" do
       volunteer = create(:volunteer)
       ExternalSyncLog.create!(
@@ -256,6 +261,57 @@ RSpec.describe "System management item updates", type: :request do
     }
     expect(other.reload.first_name).to eq("Joseph")
     expect(response).to redirect_to(system_management_path(tab: "employees"))
+  end
+
+  it "deactivates an employee instead of deleting them, preserving their record" do
+    other = create(:user, first_name: "Joel", last_name: "Savitz", role: :user)
+
+    expect {
+      patch user_path(other), params: {
+        first_name: other.first_name, last_name: other.last_name, email: other.email, role: other.role, active: "0"
+      }
+    }.not_to change(User, :count)
+
+    expect(other.reload).not_to be_active
+    expect(response).to redirect_to(system_management_path(tab: "employees"))
+  end
+
+  it "reactivates a deactivated employee" do
+    other = create(:user, :inactive, first_name: "Joel", last_name: "Savitz", role: :user)
+
+    patch user_path(other), params: {
+      first_name: other.first_name, last_name: other.last_name, email: other.email, role: other.role, active: "1"
+    }
+
+    expect(other.reload).to be_active
+  end
+
+  it "refuses to deactivate the last admin" do
+    expect {
+      patch user_path(admin), params: {
+        first_name: admin.first_name, last_name: admin.last_name, email: admin.email, role: admin.role, active: "0"
+      }
+    }.not_to change { admin.reload.active }
+
+    expect(response).to redirect_to(system_management_path(tab: "employees", edit_user_id: admin.id))
+  end
+
+  it "refuses to demote the last admin to user" do
+    expect {
+      patch user_path(admin), params: {
+        first_name: admin.first_name, last_name: admin.last_name, email: admin.email, role: "user"
+      }
+    }.not_to change { admin.reload.role }
+  end
+
+  it "no longer exposes a way to delete an employee outright" do
+    other = create(:user, role: :user)
+
+    expect {
+      delete "/users/#{other.id}"
+    }.not_to change(User, :count)
+
+    expect(response).to have_http_status(:not_found)
   end
 
   it "creates, updates, and removes a referral source" do

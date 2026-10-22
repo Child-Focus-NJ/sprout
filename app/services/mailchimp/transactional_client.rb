@@ -9,6 +9,7 @@ module Mailchimp
     include HTTParty
     base_uri "https://mandrillapp.com/api/1.4"
 
+    # Keep the independently deployed Lambda SmsClient consent values in sync.
     CONSENT_TYPES = %w[onetime recurring recurring-no-confirm].freeze
     STATUSES = %w[sent queued scheduled rejected invalid].freeze
 
@@ -56,12 +57,17 @@ module Mailchimp
 
     def parse_sms_response!(response, expected_to:)
       unless response.success?
+        if response.code.to_i >= 500
+          raise UncertainDeliveryError, "Mailchimp SMS delivery could not be confirmed (HTTP #{response.code})"
+        end
         raise ApiError, "Mailchimp did not accept the SMS request (HTTP #{response.code})"
       end
 
       results = JSON.parse(response.body)
       result = results.first if results.is_a?(Array) && results.length == 1
-      unless result.is_a?(Hash) && result["to"] == expected_to &&
+      # Compare the complete E.164 number; harmless spacing must not hide a successful send.
+      recipient = result["to"].delete(" \t\r\n") if result.is_a?(Hash) && result["to"].is_a?(String)
+      unless result.is_a?(Hash) && recipient == expected_to &&
           STATUSES.include?(result["status"]) && result["_id"].is_a?(String) && result["_id"].present?
         raise UncertainDeliveryError, "Mailchimp returned an unrecognized SMS result"
       end
@@ -69,7 +75,7 @@ module Mailchimp
       {
         "status" => result["status"],
         "external_id" => result["_id"],
-        "to" => result["to"],
+        "to" => recipient,
         "reject_reason" => result["reject_reason"]
       }
     end

@@ -7,7 +7,7 @@ gem "rails", "~> 8.1.2", ">= 8.1.3.1"
 gem "propshaft"
 gem "tailwindcss-rails", "~> 4.0"
 # Use PostgreSQL as the database for Active Record
-gem "pg", "~> 1.5"
+gem "pg", "~> 1.7"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
@@ -24,6 +24,11 @@ gem "omniauth-google-oauth2"
 
 # Allows for .env file
 gem "dotenv-rails"
+
+# Dashboard charts (Chart.js, loaded through importmap) [https://chartkick.com]
+gem "chartkick"
+# Group counts by day/week/month in the app's time zone, for chart series [https://github.com/ankane/groupdate]
+gem "groupdate"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
@@ -53,7 +58,7 @@ gem "httparty"
 
 # AWS SDK (SQS for async Lambda triggers, S3 for report storage)
 gem "aws-sdk-sqs", "~> 1.0"
-gem "aws-sdk-s3", "~> 1.0"
+gem "aws-sdk-s3", "~> 1.233"
 
 # Excel generation for data exports (admin full-data export, reporting)
 gem "caxlsx"
@@ -66,7 +71,7 @@ group :development, :test do
   gem "bundler-audit", require: false
 
   # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
-  gem "brakeman", "~> 8.0.6", require: false
+  gem "brakeman", "~> 8.1.0", require: false
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false

@@ -24,7 +24,7 @@ Then("staff should be notified of the submission") do
 end
 
 Then("the volunteer should appear in the applied section") do
-  expect(page).to have_css("#applied-section")
+  expect(page).to have_css("#application-dates", text: "Application submitted")
 end
 
 Given("there are volunteers with status {string}") do |status|
@@ -47,10 +47,12 @@ Then("I should see volunteers with {string} status") do |status|
 end
 
 Then("I should see volunteers with application_sent status") do
-  expect(page).to have_content("Application sent")
+  open_awaiting_submission
+  expect(find("#awaiting-submission")).to have_content("Application sent")
 end
 
 Then("the list should be sorted by days waiting") do
+  open_awaiting_submission
   expect(page).to have_css(".volunteer-list")
 end
 

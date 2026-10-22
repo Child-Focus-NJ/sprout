@@ -73,12 +73,13 @@ Feature: Integration & Administration
             And I upload an Excel sheet containing "Colin Smith"
             Then "Colin Smith" should appear on the volunteers page
 
-        Scenario: Removing an Employee
+        Scenario: Deactivating an Employee
             Given I click the "Employees" tab
-            Given I have clicked the "Remove" button for "Joel Savitz"
-            Then I should get a confirmation box that says "Are you sure you want to remove this user?"
-            And I click "Yes, remove"
-            Then I should not see "Joel Savitz" on the page
+            Given I have clicked the "Deactivate" button for "Joel Savitz"
+            Then I should get a confirmation box that says "Are you sure you want to deactivate this user?"
+            And I click "Yes, deactivate"
+            Then "Joel Savitz" should appear on the page
+            And "Deactivated" should appear on the page
 
         Scenario: Adding an Employee
             Given I click the "Employees" tab

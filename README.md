@@ -66,6 +66,15 @@ To reset everything (database, LocalStack state):
 bin/dev-docker --reset
 ```
 
+**Styles missing after pulling a branch?** The container builds Tailwind CSS once at startup and doesn't watch for changes, so new classes won't show until you rebuild. With the containers running:
+```sh
+docker compose exec web bin/rails tailwindcss:build
+```
+Then refresh the page. To rebuild automatically while you work, keep this running in a second terminal instead:
+```sh
+docker compose exec web bin/rails "tailwindcss:watch[always]"
+```
+
 ### Option B: Local Ruby (without AWS services)
 
 1. **Install dependencies**
@@ -78,11 +87,16 @@ bin/dev-docker --reset
    bin/rails db:prepare
    ```
 
-3. **Run the server**
+3. **Run the app**
    ```sh
-   bin/rails server
+   bin/dev
    ```
+   This starts the Rails server along with a Tailwind CSS watcher and the background job worker. Running `bin/rails server` on its own skips the CSS build, so new styles won't show up.
 
 Note: AWS integrations (Zoom, Mailchimp, VMS) won't work without LocalStack or real AWS credentials.
 
 For more implementation details, see [docs/](https://github.com/Child-Focus-NJ/sprout/tree/main/docs).
+
+### App version
+
+The page footer displays Sprout's version from the root `VERSION` file. Update this file when releasing a new version, then restart the app to load the change.

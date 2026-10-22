@@ -8,12 +8,18 @@ Feature: Notes and Communication Tracking
 
   Scenario: Add note to volunteer profile with timestamp and creator
     Given I am on the volunteer "William P" profile page
-    When I view the action buttons
+    When I click "Add Note"
     And I enter "Called to confirm session attendance"
-    And I press "Add Note"
+    And I press "Save Note"
     Then I should see the note "Called to confirm session attendance"
     And the note should display a timestamp
     And the note should display who created it
+
+  Scenario: Note box grows with the note instead of scrolling
+    Given I am on the volunteer "William P" profile page
+    When I click "Add Note"
+    And I type a note that is 10 lines long
+    Then the note box should grow to fit the note without scrolling
 
   Scenario: All communications consolidated into single chronological timeline
     Given the volunteer "William P" has notes, reminders, and info session entries
@@ -48,7 +54,18 @@ Feature: Notes and Communication Tracking
   Scenario: Add note to multiple volunteers from list view
     Given I am on the volunteers list page
     When I select the volunteers "William P" and "Harry Kane"
+    And I click "Add Note" in the bulk toolbar
     And I enter "Send 4 week follow-up email"
-    And I press "Add Note to Selected"
+    And I press "Save Note"
     Then the note should be added to both volunteers
     And I should see a confirmation message
+
+  Scenario: Add note to one volunteer from the list
+    Given I am on the volunteers list page
+    And the volunteer "Harry Kane" is on the list
+    When I click "Add Note" for "Harry Kane" on the list
+    And I enter "Asked about weekend sessions"
+    And I press "Save Note"
+    Then I should be on the volunteers list page
+    And I should see "Note saved for Harry Kane"
+    And "Harry Kane" should have the note "Asked about weekend sessions"

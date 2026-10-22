@@ -20,10 +20,9 @@ RSpec.describe "Volunteer SMS send", type: :request do
     post send_sms_volunteer_path(volunteer), params: { message: message, consent: consent }
   end
 
-  it "provides a working compose link from the Inquiry list" do
+  it "provides SMS consent in the volunteer list dialog" do
     get volunteers_path
-    expect(response.body).to include(sms_volunteer_path(volunteer))
-    get sms_volunteer_path(volunteer)
+    expect(response.body).to include(send_sms_volunteer_path(volunteer))
     expect(response.body).to include('name="message"', 'name="consent"', "Select consent")
   end
 
@@ -32,9 +31,9 @@ RSpec.describe "Volunteer SMS send", type: :request do
     expect { send_sms }.to change { volunteer.communications.sms.count }.by(1)
     expect(response).to redirect_to(volunteer_path(volunteer))
     follow_redirect!
-    history = Nokogiri::HTML(response.body).at_css("#communications").text
+    history = Nokogiri::HTML(response.body).at_css(".timeline").text
     expect(response.body).to include("SMS sent to Mailchimp")
-    expect(history).to include("EMAIL", "Session details", "Email content", "SMS", "Reminder: session tomorrow", "spec-sms-id", user.full_name)
+    expect(history).to include("Email", "Session details", "Email content", "SMS", "Reminder: session tomorrow", "spec-sms-id", user.full_name)
     expect(history).not_to include("delivered")
   end
 
@@ -91,5 +90,18 @@ RSpec.describe "Volunteer SMS send", type: :request do
     expect { send_sms }.not_to change(Communication, :count)
     expect(response).to have_http_status(:redirect)
     expect(client).not_to have_received(:send_sms)
+  end
+  it "returns to the filtered list after a successful send" do
+    post send_sms_volunteer_path(volunteer), params: { message: "Hello", consent: "onetime", return_to: "/volunteers?status=inquiry" }
+    expect(response).to redirect_to("/volunteers?status=inquiry")
+  end
+
+  it "ignores a return address on another site" do
+    post send_sms_volunteer_path(volunteer), params: { message: "Hello", consent: "onetime", return_to: "https://evil.example.com/" }
+    expect(response).to redirect_to(volunteer_path(volunteer))
+  end
+
+  it "opens new SMS drafts in the dialog instead of a separate GET page" do
+    expect(Rails.application.routes.url_helpers).not_to respond_to(:sms_volunteer_path)
   end
 end

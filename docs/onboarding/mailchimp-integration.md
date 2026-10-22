@@ -2,7 +2,7 @@
 
 Manual SMS follows this path:
 
-`Inquiry volunteer list / profile → Sms::MailchimpOutbound → Mailchimp::TransactionalClient → Mailchimp Transactional (Mandrill)`
+`Volunteer list / profile message dialog → Sms::MailchimpOutbound → Mailchimp::TransactionalClient → Mailchimp Transactional (Mandrill)`
 
 Rails calls Mandrill directly (no API Gateway / Lambda required for SMS). The client uses
 `POST https://mandrillapp.com/api/1.4/messages/send-sms` with the nested `message.sms` payload
@@ -44,13 +44,15 @@ Staff must explicitly select the permission already provided by the volunteer: o
 | Provider returns `queued` or `scheduled` | `queued`, with provider message ID | None |
 | Provider returns `rejected` or `invalid` | `failed`, with provider ID and reason | None |
 | Missing configuration or provider rejection | `failed`, with error | None |
-| Timeout or unrecognized response | `pending`, with an uncertainty warning | None |
+| Timeout, provider HTTP 5xx, or unrecognized response | `pending`, with an uncertainty warning | None |
 
-Only a confirmed `sent` result creates a sent timeline note. An accepted send is not proof of delivery. This change does not implement delivery webhooks; final delivery and later queue outcomes must be checked in Mailchimp. Uncertain attempts are not retried automatically, since a retry might duplicate a message. Failed requests preserve the compose draft.
+Only a confirmed `sent` result creates a sent timeline note. An accepted send is not proof of delivery. This change does not implement delivery webhooks; final delivery and later queue outcomes must be checked in Mailchimp. Uncertain attempts are not retried automatically, since a retry might duplicate a message. Failed individual sends preserve the message and consent on an error page. Successful sends return to the profile or filtered list that opened the dialog.
+
+The list's bulk SMS action requires consent for every recipient. Its result separately counts sent, queued, uncertain, rejected, and skipped recipients. Review individual timeline records before resending a group with partial success.
 
 ## Grouped communication history
 
-The volunteer profile shows existing email and SMS `Communication` records together, newest first, including status, message, timestamp, staff sender, and SMS provider ID where available. Timeline entries also display their communication status.
+The volunteer profile's consolidated timeline shows existing email and SMS `Communication` records together, newest first, including status, message, timestamp, staff sender, recipient, provider ID, and failure details where available.
 
 Mailchimp automatically logs transactional SMS alongside transactional email in Outbound Activity. Sprout retains the provider ID to cross-reference that activity. This does not import historical Mailchimp activity, marketing campaigns, or replies into Sprout, and does not implement audience-sync actions. Existing records that were marked delivered by the old local fallback are not retroactively verified or rewritten.
 

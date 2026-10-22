@@ -3,9 +3,10 @@
 module Sms
   class MailchimpOutbound
     MAX_MESSAGE_LENGTH = 320
-    CONSENT_TYPES = %w[onetime recurring recurring-no-confirm].freeze
+    CONSENT_TYPES = Mailchimp::TransactionalClient::CONSENT_TYPES
 
     class Error < StandardError; end
+    class UncertainDeliveryError < Error; end
     class MissingPhoneError < Error; end
     class InvalidPhoneError < Error; end
     class BlankMessageError < Error; end
@@ -83,7 +84,7 @@ module Sms
     rescue Mailchimp::TransactionalClient::UncertainDeliveryError
       message = "SMS delivery could not be confirmed. Check Mailchimp activity before resending."
       communication.update!(error_message: message)
-      raise Error, message
+      raise UncertainDeliveryError, message
     rescue Mailchimp::TransactionalClient::Error
       message = "SMS could not be sent. Check Mailchimp configuration."
       communication.update!(status: :failed, error_message: message)

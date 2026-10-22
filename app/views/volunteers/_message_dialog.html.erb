@@ -1,0 +1,176 @@
+<%# One popup for adding a note or sending an SMS. Buttons made with message_dialog_button
+    fill in which volunteer it's for and open it on the right tab. %>
+<dialog id="message-dialog" class="message-dialog" aria-labelledby="message-dialog-title">
+  <div class="message-dialog__body">
+    <div class="message-dialog__header">
+      <h2 id="message-dialog-title" class="section-heading" data-message-dialog-title>Message</h2>
+      <button type="button" class="message-dialog__close" data-message-dialog-close aria-label="Close">×</button>
+    </div>
+
+    <div class="message-dialog__tabs" role="tablist">
+      <button type="button" role="tab" class="message-dialog__tab" id="message-dialog-tab-note"
+              aria-controls="message-dialog-note" data-message-dialog-tab="note"><%= message_icon(:note) %>Note</button>
+      <button type="button" role="tab" class="message-dialog__tab" id="message-dialog-tab-sms"
+              aria-controls="message-dialog-sms" data-message-dialog-tab="sms"><%= message_icon(:sms) %>SMS</button>
+    </div>
+    <p class="subtle message-dialog__no-phone" data-message-dialog-no-phone hidden>
+      No phone number on file, so SMS is turned off. Add one under Contact to send texts.
+    </p>
+
+    <%= form_with url: "", method: :post,
+                  html: { id: "message-dialog-note", class: "message-dialog__panel note-form", role: "tabpanel",
+                          aria: { labelledby: "message-dialog-tab-note" }, data: { message_dialog_panel: "note" } } do %>
+      <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
+      <label for="dialog-note">Note</label>
+      <textarea id="dialog-note" name="note" rows="4" maxlength="<%= Note::MAX_CONTENT_LENGTH %>" required data-autogrow
+                placeholder="Type your note here."></textarea>
+      <div class="note-form__footer">
+        <p class="subtle"><span data-message-dialog-count>0</span> / <%= number_with_delimiter(Note::MAX_CONTENT_LENGTH) %> characters</p>
+        <button type="submit" class="btn-note">Save Note</button>
+      </div>
+    <% end %>
+
+    <%= form_with url: "", method: :post,
+                  html: { id: "message-dialog-sms", class: "message-dialog__panel note-form", role: "tabpanel", hidden: true,
+                          aria: { labelledby: "message-dialog-tab-sms" }, data: { message_dialog_panel: "sms" } } do %>
+      <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
+      <label for="dialog-sms">Message</label>
+      <textarea id="dialog-sms" name="message" rows="4" maxlength="<%= Sms::MailchimpOutbound::MAX_MESSAGE_LENGTH %>" required
+                data-autogrow placeholder="Type your text message here."></textarea>
+      <label for="dialog-sms-consent">SMS consent provided by the volunteer</label>
+      <%= select_tag :consent, options_for_select([
+        ["One informational message", "onetime"],
+        ["Recurring informational messages (send confirmation)", "recurring"],
+        ["Recurring informational messages (confirmation already sent)", "recurring-no-confirm"]
+      ]), id: "dialog-sms-consent", prompt: "Select consent", required: true,
+          aria: { describedby: "dialog-sms-consent-help" } %>
+      <p id="dialog-sms-consent-help" class="subtle">Select the permission already given for this sending number. For a group, every recipient must have given the selected permission.</p>
+      <div class="note-form__footer">
+        <p class="subtle"><span data-message-dialog-count>0</span> / <%= Sms::MailchimpOutbound::MAX_MESSAGE_LENGTH %> characters</p>
+        <button type="submit" class="button-primary">Send</button>
+      </div>
+    <% end %>
+  </div>
+</dialog>
+
+<script>
+  (function () {
+    const dialog = document.getElementById("message-dialog");
+    if (!dialog) return;
+
+    const title = dialog.querySelector("[data-message-dialog-title]");
+    const noPhone = dialog.querySelector("[data-message-dialog-no-phone]");
+    const tabs = dialog.querySelectorAll("[data-message-dialog-tab]");
+    const smsTab = dialog.querySelector("[data-message-dialog-tab='sms']");
+    const panels = {
+      note: dialog.querySelector("[data-message-dialog-panel='note']"),
+      sms: dialog.querySelector("[data-message-dialog-panel='sms']")
+    };
+    let openFor = null;
+
+    function showTab(name) {
+      tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.messageDialogTab === name)));
+      Object.entries(panels).forEach(([key, panel]) => { panel.hidden = key !== name; });
+
+      // Fire input so the box sizes itself and the character count is current.
+      const box = panels[name].querySelector("textarea");
+      box.dispatchEvent(new Event("input", { bubbles: true }));
+      box.focus();
+    }
+
+    document.addEventListener("click", (event) => {
+      const opener = event.target.closest("[data-message-dialog-open]");
+      if (!opener) return;
+
+      const { noteUrl, smsUrl, messageDialogOpen } = opener.dataset;
+      const target = "messageDialogBulk" in opener.dataset ? selectedVolunteers() : oneVolunteer(opener);
+
+      // Start fresh for different recipients so a draft never goes to the wrong person.
+      if (openFor !== target.key) {
+        dialog.querySelectorAll("textarea").forEach((box) => { box.value = ""; });
+        dialog.querySelector("[name='consent']").value = "";
+        openFor = target.key;
+      }
+
+      title.textContent = `Message ${target.name}`;
+      panels.note.action = noteUrl;
+      panels.sms.action = smsUrl;
+      setVolunteerIds(target.ids);
+      smsTab.disabled = !target.canText;
+      smsTab.title = target.canText ? "" : "No phone number on file";
+      noPhone.textContent = target.phoneNote;
+      noPhone.hidden = !target.phoneNote;
+
+      dialog.showModal();
+      showTab(messageDialogOpen === "sms" && target.canText ? "sms" : "note");
+    });
+
+    function oneVolunteer(opener) {
+      const canText = opener.dataset.hasPhone === "true";
+      return {
+        key: opener.dataset.noteUrl,
+        name: opener.dataset.volunteerName,
+        ids: [],
+        canText,
+        phoneNote: canText ? "" : "No phone number on file, so SMS is turned off. Add one under Contact to send texts."
+      };
+    }
+
+    // Everyone ticked on the Volunteers list; anyone without a phone gets skipped for SMS
+    function selectedVolunteers() {
+      const boxes = [...document.querySelectorAll("[data-bulk-select]:checked")];
+      const ids = boxes.map((box) => box.value);
+      const missing = boxes.filter((box) => box.dataset.hasPhone !== "true");
+      const canText = missing.length < boxes.length;
+      let phoneNote = "";
+      if (!canText) phoneNote = "None of the selected volunteers have a phone number, so SMS is turned off.";
+      else if (missing.length) {
+        phoneNote = `${count(missing.length)} of the ${count(boxes.length)} selected have no phone number and will be ` +
+                    `skipped for SMS: ${someNames(missing)}.`;
+      }
+
+      return {
+        key: `bulk:${ids.join(",")}`,
+        name: `${boxes.length} volunteer${boxes.length === 1 ? "" : "s"}`,
+        ids,
+        canText,
+        phoneNote
+      };
+    }
+
+    const count = (n) => n.toLocaleString("en-US");
+
+    // The first few names plus "and N more", so the note stays one line however many are skipped
+    function someNames(boxes, shown = 3) {
+      const names = boxes.slice(0, shown).map((box) => box.dataset.name);
+      const rest = boxes.length - names.length;
+      if (rest > 0) names.push(`${count(rest)} more`);
+      if (names.length === 1) return names[0];
+      return `${names.slice(0, -1).join(", ")}${names.length > 2 ? "," : ""} and ${names[names.length - 1]}`;
+    }
+
+    // Bulk sends post every selected volunteer's id; a single volunteer's id is already in the URL
+    function setVolunteerIds(ids) {
+      Object.values(panels).forEach((panel) => {
+        panel.querySelectorAll("[data-volunteer-id]").forEach((input) => input.remove());
+        ids.forEach((id) => {
+          const input = Object.assign(document.createElement("input"), { type: "hidden", name: "volunteer_ids[]", value: id });
+          input.dataset.volunteerId = "";
+          panel.append(input);
+        });
+      });
+    }
+
+    tabs.forEach((tab) => tab.addEventListener("click", () => showTab(tab.dataset.messageDialogTab)));
+    dialog.querySelector("[data-message-dialog-close]").addEventListener("click", () => dialog.close());
+    // A click on the dimmed area outside the popup closes it, like Escape does.
+    dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+
+    // Live character count under each box
+    Object.values(panels).forEach((panel) => {
+      const box = panel.querySelector("textarea");
+      const count = panel.querySelector("[data-message-dialog-count]");
+      box.addEventListener("input", () => { count.textContent = box.value.length.toLocaleString("en-US"); });
+    });
+  })();
+</script>

@@ -22,4 +22,30 @@ RSpec.describe VolunteersHelper, type: :helper do
       end
     end
   end
+
+  describe "#volunteer_status_color_class" do
+    it "returns the badge color modifier for a stage" do
+      expect(helper.volunteer_status_color_class("application_sent")).to eq("status-badge--application-sent")
+    end
+  end
+
+  describe "#volunteer_status_options" do
+    it "lists every funnel stage with the same wording as the badges" do
+      expect(helper.volunteer_status_options).to eq([
+        [ "Inquiry", "inquiry" ],
+        [ "Application eligible", "application_eligible" ],
+        [ "Application sent", "application_sent" ],
+        [ "Applied", "applied" ],
+        [ "Inactive", "inactive" ]
+      ])
+    end
+  end
+
+  describe "#timeline_entry_label" do
+    it "spells SMS in capitals and humanizes other kinds" do
+      expect(helper.timeline_entry_label(:sms)).to eq("SMS")
+      expect(helper.timeline_entry_label(:status_change)).to eq("Status change")
+      expect(helper.timeline_entry_label(:info_session)).to eq("Info session")
+    end
+  end
 end

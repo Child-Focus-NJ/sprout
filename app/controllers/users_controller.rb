@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :require_admin!
+  restrict_to_feature :users
 
   def create
     @user = User.new(employee_attributes)
@@ -20,12 +20,6 @@ class UsersController < ApplicationController
     end
   end
 
-  def destroy
-    @user = User.find(params[:id])
-    @user.destroy
-    redirect_to system_management_path(tab: "employees"), notice: "User removed."
-  end
-
   private
 
   def employee_attributes
@@ -35,6 +29,7 @@ class UsersController < ApplicationController
       email: params[:email]
     }
     attrs[:role] = params[:role] if User.roles.key?(params[:role])
+    attrs[:active] = ActiveModel::Type::Boolean.new.cast(params[:active]) if params.key?(:active)
     attrs
   end
 end

@@ -1,5 +1,5 @@
 class ReferralSourcesController < ApplicationController
-  before_action :require_admin!
+  restrict_to_feature :referral_sources
 
   def create
     ReferralSource.create!(name: params[:name], active: active_from_params(default: true))

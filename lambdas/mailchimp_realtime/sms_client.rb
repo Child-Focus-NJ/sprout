@@ -6,6 +6,7 @@ require "net/http"
 module MailchimpRealtime
   class SmsClient
     ENDPOINT = URI("https://mandrillapp.com/api/1.4/messages/send-sms")
+    # Keep these values in sync with the Rails Mailchimp::TransactionalClient.
     CONSENT_TYPES = %w[onetime recurring recurring-no-confirm].freeze
     STATUSES = %w[sent queued scheduled rejected invalid].freeze
 

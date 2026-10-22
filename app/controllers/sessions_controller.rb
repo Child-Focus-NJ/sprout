@@ -9,14 +9,15 @@ class SessionsController < ApplicationController
       return redirect_to login_path
     end
 
-    unless User.allowed_email?(auth.info.email)
-      flash[:alert] = "Must use a Child Focus NJ associated email"
+    user = User.from_omniauth(auth)
+    unless user
+      flash[:alert] = "Your account has not been granted access to Sprout. Contact an administrator to be added."
       return redirect_to login_path
     end
 
-    user = User.from_omniauth(auth)
     reset_session
     session[:user_id] = user.id
+    SignInLog.create!(user: user, ip_address: request.remote_ip)
     redirect_to application_dashboard_path
   end
 

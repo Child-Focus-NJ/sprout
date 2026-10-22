@@ -30,6 +30,14 @@ class Volunteer < ApplicationRecord
   scope :awaiting_application_submission, lambda {
     where(current_funnel_stage: :application_sent).order(application_sent_at: :asc)
   }
+  # Case-insensitive name search; every word typed must match the first or last name,
+  # so "harry kane" and "kane" both find Harry Kane.
+  scope :name_matching, lambda { |query|
+    query.to_s.split.reduce(all) do |relation, term|
+      relation.where("volunteers.first_name ILIKE :term OR volunteers.last_name ILIKE :term",
+                     term: "%#{sanitize_sql_like(term)}%")
+    end
+  }
 
   after_save :cancel_pending_reminders_if_applied
 
@@ -73,17 +81,6 @@ class Volunteer < ApplicationRecord
 
   def add_staff_note!(content:, user:, note_type: :general)
     notes.create!(content: content.to_s, user: user, note_type: note_type)
-  end
-
-  # Single label for the profile "Current status" block (matches user-facing copy elsewhere).
-  def profile_status_label
-    if applied?
-      "Application submitted"
-    elsif application_sent?
-      "Application sent"
-    else
-      current_funnel_stage.to_s.humanize
-    end
   end
 
   def change_status!(new_stage, user: nil, trigger: :manual)

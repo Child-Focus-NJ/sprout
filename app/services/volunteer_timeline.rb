@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
-# Builds the consolidated volunteer profile timeline (notes, communications, info sessions)
-# used on the volunteer show page. Extracted from VolunteersController for clarity and testing.
+# Builds the consolidated volunteer profile timeline (notes, communications, info sessions,
+# status changes) used on the volunteer show page. Extracted from VolunteersController for
+# clarity and testing.
 class VolunteerTimeline
   FILTER_ALL = "all"
   FILTER_NOTES = "notes"
+  FILTER_STATUS_CHANGES = "status_changes"
 
   def self.entries_for(volunteer, filter:)
     new(volunteer, filter: filter).entries
@@ -19,6 +21,8 @@ class VolunteerTimeline
     filtered = case @filter
     when FILTER_NOTES
       raw_entries.select { |entry| entry[:kind] == :note }
+    when FILTER_STATUS_CHANGES
+      raw_entries.select { |entry| entry[:kind] == :status_change }
     else
       raw_entries
     end
@@ -41,12 +45,26 @@ class VolunteerTimeline
       }
     end
 
-    @volunteer.communications.each do |comm|
+    @volunteer.communications.includes(:sent_by_user).each do |comm|
       entries << {
         kind: comm.communication_type.to_sym,
         time: comm.sent_at || comm.created_at,
         text: comm.body.to_s,
-        status: comm.status
+        status: comm.status,
+        subject: comm.subject,
+        byline: comm.sent_by_user&.full_name.to_s,
+        sms_to: comm.sms_to,
+        external_id: comm.external_id,
+        error_message: comm.error_message
+      }
+    end
+
+    @volunteer.status_changes.includes(:user).each do |change|
+      entries << {
+        kind: :status_change,
+        time: change.created_at,
+        text: "#{change.from_funnel_stage} → #{change.to_funnel_stage}",
+        byline: change.user&.full_name.to_s
       }
     end
 
@@ -56,7 +74,7 @@ class VolunteerTimeline
       entries << {
         kind: :info_session,
         time: registration.created_at,
-        text: "Info session: #{registration.information_session.name}"
+        text: registration.information_session.name
       }
     end
 

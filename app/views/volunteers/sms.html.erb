@@ -34,9 +34,10 @@
   <h2 id="sms-compose-heading" class="subsection-heading">Your message</h2>
 
   <%= form_with url: send_sms_volunteer_path(@volunteer), method: :post, html: { class: "grid gap-3 m-0" } do %>
+    <%= hidden_field_tag :return_to, params[:return_to] %>
     <div class="grid gap-1.5">
       <label for="message">Message</label>
-      <textarea id="message" name="message" rows="6" maxlength="320"><%= @message %></textarea>
+      <textarea id="message" name="message" rows="6" maxlength="320" required><%= @message %></textarea>
     </div>
 
     <div id="sms-character-count">
@@ -50,8 +51,8 @@
         ["One informational message", "onetime"],
         ["Recurring informational messages (send confirmation)", "recurring"],
         ["Recurring informational messages (confirmation already sent)", "recurring-no-confirm"]
-      ], @consent), prompt: "Select consent", required: true %>
-      <p class="subtle">Select the permission the volunteer has given for this sending number. A phone number or email preference alone does not establish SMS consent.</p>
+      ], @consent), prompt: "Select consent", required: true, aria: { describedby: "sms-consent-help" } %>
+      <p id="sms-consent-help" class="subtle">Select the permission the volunteer has given for this sending number. A phone number or email preference alone does not establish SMS consent.</p>
     </div>
 
     <div>

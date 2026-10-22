@@ -25,4 +25,8 @@ module ApplicationHelper
     classes += " sys-tabs__link--active" if tab == current_tab
     link_to label, system_management_path(tab: tab), class: classes
   end
+
+  def employee_active_toggle_params(user, active:)
+    { first_name: user.first_name, last_name: user.last_name, email: user.email, role: user.role, active: active }
+  end
 end
