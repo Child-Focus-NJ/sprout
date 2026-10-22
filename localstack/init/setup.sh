@@ -72,7 +72,7 @@ awslocal s3 mb "s3://sprout-reports" \
 echo "  Created: sprout-reports"
 
 # ---------------------------------------------------------------------------
-# 4. Lambda Functions (stub handlers)
+# 4. Lambda Functions
 # ---------------------------------------------------------------------------
 echo ""
 echo "--- Creating Lambda functions ---"
@@ -91,6 +91,9 @@ RUBY
 
 (cd "$LAMBDA_DIR" && zip -j handler.zip handler.rb) > /dev/null
 
+zip -j "$LAMBDA_DIR/mailchimp.zip" /opt/sprout/mailchimp_realtime/handler.rb \
+  /opt/sprout/mailchimp_realtime/sms_client.rb > /dev/null
+
 LAMBDA_FUNCTIONS=(
   "sprout-zoom-meeting"
   "sprout-zoom-attendance"
@@ -100,6 +103,10 @@ LAMBDA_FUNCTIONS=(
 )
 
 for fn in "${LAMBDA_FUNCTIONS[@]}"; do
+  handler_zip="$LAMBDA_DIR/handler.zip"
+  if [ "$fn" = "sprout-mailchimp-realtime" ]; then
+    handler_zip="$LAMBDA_DIR/mailchimp.zip"
+  fi
   # Delete existing function to make the script idempotent
   awslocal lambda delete-function \
     --function-name "$fn" \
@@ -110,11 +117,19 @@ for fn in "${LAMBDA_FUNCTIONS[@]}"; do
     --runtime ruby3.3 \
     --handler handler.handler \
     --role "arn:aws:iam::${ACCOUNT_ID}:role/lambda-role" \
-    --zip-file "fileb://${LAMBDA_DIR}/handler.zip" \
+    --zip-file "fileb://${handler_zip}" \
     --region "$REGION" > /dev/null
 
   echo "  Created Lambda: $fn"
 done
+
+MAILCHIMP_ENV=$(python3 -c 'import json, os; print(json.dumps({"Variables": {key: os.environ.get(key, "") for key in ("MAILCHIMP_API_KEY", "MAILCHIMP_SMS_FROM")}}))')
+awslocal lambda wait function-active-v2 --function-name sprout-mailchimp-realtime --region "$REGION"
+awslocal lambda update-function-configuration \
+  --function-name sprout-mailchimp-realtime \
+  --timeout 30 \
+  --environment "$MAILCHIMP_ENV" \
+  --region "$REGION" > /dev/null
 
 # Wait briefly for functions to be ready
 sleep 2

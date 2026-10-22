@@ -3,16 +3,16 @@ Feature: SMS Integration
   I want to send SMS reminders to volunteers
   So that I can reach them through multiple channels
 
-  # Integrates with MailChimp SMS functionality
-
   Background:
     Given I am a signed-in system administrator
 
+  @sms_send
   Scenario: Manual SMS can be sent from volunteer profile
     Given I am on the volunteer "Jane Doe" profile page
     And the volunteer has a phone number
     When I click "Send SMS"
     And I enter the message "Reminder: Info session tomorrow at 6pm"
+    And I select the volunteer's one-time SMS consent
     And I press "Send"
     Then the SMS should be sent to the volunteer's phone
     And I should see a confirmation message
@@ -51,11 +51,13 @@ Feature: SMS Integration
     When I click "Add Note"
     Then the SMS tab in the popup should be disabled
 
+  @sms_send
   Scenario: SMS can be sent from the volunteers list
     Given the volunteer "Jane Doe" has a phone number
     And I am on the volunteers list page
     When I click "Send SMS" for "Jane Doe" on the list
     And I enter the message "See you Thursday!"
+    And I select the volunteer's one-time SMS consent
     And I press "Send"
     Then I should be on the volunteers list page
-    And I should see "SMS sent to Jane Doe"
+    And I should see "SMS sent to Mailchimp"

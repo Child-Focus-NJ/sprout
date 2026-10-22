@@ -38,14 +38,19 @@ class VolunteersController < ApplicationController
   end
 
   def send_sms
-    Sms::MailchimpOutbound.deliver!(
+    communication = Sms::MailchimpOutbound.deliver!(
       volunteer: @volunteer,
       body: params[:message],
-      sent_by_user: current_user
+      sent_by_user: current_user,
+      consent: params[:consent]
     )
-    redirect_to return_path_for(@volunteer), notice: "SMS sent to #{@volunteer.full_name}"
+    notice = communication.queued? ? "SMS queued by Mailchimp" : "SMS sent to Mailchimp"
+    redirect_to return_path_for(@volunteer), notice: notice
   rescue Sms::MailchimpOutbound::Error => e
-    redirect_to return_path_for(@volunteer), alert: e.message
+    @message = params[:message].to_s
+    @consent = params[:consent].to_s
+    flash.now[:alert] = e.message
+    render :sms, status: :unprocessable_entity
   end
 
   def add_note
@@ -94,22 +99,29 @@ class VolunteersController < ApplicationController
     return redirect_to(list_path, alert: "Select at least one volunteer") if volunteers.empty?
 
     no_phone = volunteers.where("COALESCE(TRIM(volunteers.phone), '') = ''")
-    sent = failed = 0
+    sent = queued = uncertain = failed = 0
     volunteers.where("COALESCE(TRIM(volunteers.phone), '') <> ''").find_each do |volunteer|
-      Sms::MailchimpOutbound.deliver!(volunteer: volunteer, body: params[:message], sent_by_user: current_user)
-      sent += 1
-    rescue Sms::MailchimpOutbound::BlankMessageError, Sms::MailchimpOutbound::MessageTooLongError => e
+      communication = Sms::MailchimpOutbound.deliver!(
+        volunteer: volunteer, body: params[:message], sent_by_user: current_user, consent: params[:consent]
+      )
+      communication.queued? ? queued += 1 : sent += 1
+    rescue Sms::MailchimpOutbound::BlankMessageError, Sms::MailchimpOutbound::MessageTooLongError,
+           Sms::MailchimpOutbound::MissingConsentError, Sms::MailchimpOutbound::ConfigurationError => e
       # Same message for everyone, so stop at the first one
       return redirect_to(list_path, alert: e.message)
+    rescue Sms::MailchimpOutbound::UncertainDeliveryError
+      uncertain += 1
     rescue Sms::MailchimpOutbound::Error
       failed += 1
     end
 
     summary = [ sent.zero? ? "No SMS sent." : "SMS sent to #{helpers.pluralize(sent, 'volunteer')}." ]
+    summary << "SMS queued by Mailchimp for #{helpers.pluralize(queued, 'volunteer')}." if queued.positive?
+    summary << "#{uncertain} SMS could not be confirmed. Check Mailchimp activity before resending." if uncertain.positive?
     skipped = no_phone.count
     summary << "Skipped #{skipped} with no phone number: #{some_names(no_phone, skipped)}." if skipped.positive?
     summary << "#{failed} couldn't be sent." if failed.positive?
-    redirect_to list_path, (sent.zero? ? :alert : :notice) => summary.join(" ")
+    redirect_to list_path, (sent.zero? && queued.zero? ? :alert : :notice) => summary.join(" ")
   end
 
   # Sends the application to selected volunteers who are still at inquiry or eligible and haven't

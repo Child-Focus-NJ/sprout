@@ -88,4 +88,13 @@ RSpec.describe "Volunteer profile page", type: :request do
     expect(page_html.at_css('select#filter option[value="status_changes"][selected]')).to be_present
     expect(response.body).not_to include("Left a voicemail")
   end
+
+  it "shows failed SMS details in the consolidated timeline" do
+    volunteer.communications.create!(communication_type: :sms, body: "Reminder", status: :failed,
+      sms_to: "+12015550123", external_id: "rejected-sms", error_message: "Mailchimp rejected the SMS (unsub)", sent_by_user: user)
+    get volunteer_path(volunteer)
+    entry = page_html.at_css(".timeline .sms-entry")
+    expect(entry.text).to include("failed", "+12015550123", "rejected-sms", "unsub", "Pat Admin")
+    expect(page_html.at_css("#communications")).to be_nil
+  end
 end

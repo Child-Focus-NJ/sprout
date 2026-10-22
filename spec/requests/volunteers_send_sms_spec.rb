@@ -3,59 +3,105 @@
 require "rails_helper"
 
 RSpec.describe "Volunteer SMS send", type: :request do
+  include_context "Mailchimp SMS enabled"
+
   let(:user) { create(:user) }
-  let(:volunteer) { create(:volunteer, phone: "5559876543") }
+  let!(:volunteer) { create(:volunteer, phone: "2015550123") }
+  let(:client) { instance_double(Mailchimp::TransactionalClient) }
+  let(:result) { { "status" => "sent", "external_id" => "spec-sms-id", "to" => "+12015550123" } }
 
-  before { login_as(user, scope: :user) }
-
-  describe "POST /volunteers/:id/send_sms" do
-    it "records SMS and redirects with notice when message is present" do
-      expect do
-        post send_sms_volunteer_path(volunteer), params: { message: "Reminder: session tomorrow" }
-      end.to change { volunteer.communications.sms.count }.by(1)
-
-      expect(response).to redirect_to(volunteer_path(volunteer))
-      follow_redirect!
-      expect(response.body).to include("SMS sent to #{volunteer.full_name}")
-    end
-
-    it "redirects back with alert when message is blank" do
-      post send_sms_volunteer_path(volunteer), params: { message: "  " }
-
-      expect(response).to redirect_to(volunteer_path(volunteer))
-      expect(flash[:alert]).to match(/blank/i)
-    end
-
-    it "redirects back with alert when phone is missing" do
-      volunteer.update!(phone: nil)
-
-      post send_sms_volunteer_path(volunteer), params: { message: "Hello" }
-
-      expect(response).to redirect_to(volunteer_path(volunteer))
-      expect(flash[:alert]).to match(/phone/i)
-    end
-
-    it "redirects back with alert when message is too long" do
-      post send_sms_volunteer_path(volunteer), params: { message: ("x" * 321) }
-
-      expect(response).to redirect_to(volunteer_path(volunteer))
-      expect(flash[:alert]).to match(/too long/i)
-    end
-
-    it "returns to the page the popup was opened from" do
-      post send_sms_volunteer_path(volunteer), params: { message: "Hello", return_to: "/volunteers?status=inquiry" }
-
-      expect(response).to redirect_to("/volunteers?status=inquiry")
-    end
-
-    it "ignores a return address on another site" do
-      post send_sms_volunteer_path(volunteer), params: { message: "Hello", return_to: "https://evil.example.com/" }
-
-      expect(response).to redirect_to(volunteer_path(volunteer))
-    end
+  before do
+    login_as(user, scope: :user)
+    allow(Mailchimp::TransactionalClient).to receive(:new).and_return(client)
+    allow(client).to receive(:send_sms).and_return(result)
   end
 
-  it "no longer has a separate SMS page" do
+  def send_sms(message: "Reminder: session tomorrow", consent: "onetime")
+    post send_sms_volunteer_path(volunteer), params: { message: message, consent: consent }
+  end
+
+  it "provides SMS consent in the volunteer list dialog" do
+    get volunteers_path
+    expect(response.body).to include(send_sms_volunteer_path(volunteer))
+    expect(response.body).to include('name="message"', 'name="consent"', "Select consent")
+  end
+
+  it "records the send and displays email and SMS together in the volunteer history" do
+    volunteer.communications.create!(communication_type: :email, subject: "Session details", body: "Email content", status: :sent)
+    expect { send_sms }.to change { volunteer.communications.sms.count }.by(1)
+    expect(response).to redirect_to(volunteer_path(volunteer))
+    follow_redirect!
+    history = Nokogiri::HTML(response.body).at_css(".timeline").text
+    expect(response.body).to include("SMS sent to Mailchimp")
+    expect(history).to include("Email", "Session details", "Email content", "SMS", "Reminder: session tomorrow", "spec-sms-id", user.full_name)
+    expect(history).not_to include("delivered")
+  end
+
+  it "shows queued accurately" do
+    result["status"] = "queued"
+    send_sms
+    expect(flash[:notice]).to eq("SMS queued by Mailchimp")
+    expect(volunteer.communications.last).to be_queued
+  end
+
+  it "retains the message and consent after a provider rejection" do
+    result.merge!("status" => "rejected", "reject_reason" => "unsub")
+    send_sms
+    expect(response).to have_http_status(:unprocessable_entity)
+    html = Nokogiri::HTML(response.body)
+    expect(html.at_css("textarea#message").text).to eq("Reminder: session tomorrow")
+    expect(html.at_css("select#consent option[selected]")["value"]).to eq("onetime")
+    expect(response.body).to include("rejected", "failed", "unsub")
+    expect(flash[:notice]).to be_nil
+  end
+
+  it "reports disabled sending without recording or claiming success" do
+    ENV["SPROUT_SMS_MAILCHIMP_ENABLED"] = "false"
+    expect { send_sms }.not_to change(Communication, :count)
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.body).to include("SMS sending is not enabled")
+    expect(flash[:notice]).to be_nil
+  end
+
+  it "does not infer consent from a phone number or contact preference" do
+    volunteer.update!(preferred_contact_method: :sms)
+    expect { send_sms(consent: "") }.not_to change(Communication, :count)
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.body).to include("Select the SMS consent")
+  end
+
+  it "displays validation errors on the compose page" do
+    send_sms(message: " ")
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.body).to include("Message cannot be blank")
+    send_sms(message: "x" * 321)
+    expect(response.body).to include("Message is too long")
+    volunteer.update!(phone: nil)
+    send_sms
+    expect(response.body).to include("Add a phone number")
+    volunteer.update!(phone: "000")
+    send_sms
+    expect(response.body).to include("Enter a valid phone number")
+    expect(client).not_to have_received(:send_sms)
+  end
+
+  it "requires staff sign-in" do
+    logout(:user)
+    expect { send_sms }.not_to change(Communication, :count)
+    expect(response).to have_http_status(:redirect)
+    expect(client).not_to have_received(:send_sms)
+  end
+  it "returns to the filtered list after a successful send" do
+    post send_sms_volunteer_path(volunteer), params: { message: "Hello", consent: "onetime", return_to: "/volunteers?status=inquiry" }
+    expect(response).to redirect_to("/volunteers?status=inquiry")
+  end
+
+  it "ignores a return address on another site" do
+    post send_sms_volunteer_path(volunteer), params: { message: "Hello", consent: "onetime", return_to: "https://evil.example.com/" }
+    expect(response).to redirect_to(volunteer_path(volunteer))
+  end
+
+  it "opens new SMS drafts in the dialog instead of a separate GET page" do
     expect(Rails.application.routes.url_helpers).not_to respond_to(:sms_volunteer_path)
   end
 end

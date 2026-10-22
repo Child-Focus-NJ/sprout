@@ -139,7 +139,19 @@
             <time datetime="<%= entry[:time].iso8601 %>"><%= entry[:time].strftime("%m/%d/%Y %H:%M") %></time>
           <% end %>
         </div>
+        <% if entry[:subject].present? %>
+          <div><strong><%= entry[:subject] %></strong></div>
+        <% end %>
         <div class="content"><%= entry[:text] %></div>
+        <% if entry[:sms_to].present? %>
+          <div>To <%= entry[:sms_to] %></div>
+        <% end %>
+        <% if entry[:external_id].present? %>
+          <div>Mailchimp ID: <%= entry[:external_id] %></div>
+        <% end %>
+        <% if entry[:error_message].present? %>
+          <p><%= entry[:error_message] %></p>
+        <% end %>
         <% if entry[:byline].present? %>
           <div class="entry__byline">By <%= entry[:byline] %></div>
         <% end %>

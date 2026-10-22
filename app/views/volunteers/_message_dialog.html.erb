@@ -37,6 +37,14 @@
       <label for="dialog-sms">Message</label>
       <textarea id="dialog-sms" name="message" rows="4" maxlength="<%= Sms::MailchimpOutbound::MAX_MESSAGE_LENGTH %>" required
                 data-autogrow placeholder="Type your text message here."></textarea>
+      <label for="dialog-sms-consent">SMS consent provided by the volunteer</label>
+      <%= select_tag :consent, options_for_select([
+        ["One informational message", "onetime"],
+        ["Recurring informational messages (send confirmation)", "recurring"],
+        ["Recurring informational messages (confirmation already sent)", "recurring-no-confirm"]
+      ]), id: "dialog-sms-consent", prompt: "Select consent", required: true,
+          aria: { describedby: "dialog-sms-consent-help" } %>
+      <p id="dialog-sms-consent-help" class="subtle">Select the permission already given for this sending number. For a group, every recipient must have given the selected permission.</p>
       <div class="note-form__footer">
         <p class="subtle"><span data-message-dialog-count>0</span> / <%= Sms::MailchimpOutbound::MAX_MESSAGE_LENGTH %> characters</p>
         <button type="submit" class="button-primary">Send</button>
@@ -80,6 +88,7 @@
       // Start fresh for different recipients so a draft never goes to the wrong person.
       if (openFor !== target.key) {
         dialog.querySelectorAll("textarea").forEach((box) => { box.value = ""; });
+        dialog.querySelector("[name='consent']").value = "";
         openFor = target.key;
       }
 

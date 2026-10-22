@@ -1,4 +1,8 @@
 development:
+  refresh_queued_emails:
+    class: RefreshQueuedEmailsJob
+    schedule: every 5 minutes
+
   process_scheduled_reminders:
     class: ProcessScheduledRemindersJob
     schedule: every hour
@@ -9,6 +13,10 @@ development:
     schedule: "0 2 1,15 * *"
 
 production:
+  refresh_queued_emails:
+    class: RefreshQueuedEmailsJob
+    schedule: every 5 minutes
+
   process_scheduled_reminders:
     class: ProcessScheduledRemindersJob
     schedule: every hour

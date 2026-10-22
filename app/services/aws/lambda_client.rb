@@ -5,6 +5,7 @@ require "httparty"
 module Aws
   class LambdaClient
     class LambdaError < StandardError; end
+    class UncertainDeliveryError < LambdaError; end
 
     def initialize
       @base_url = nil
@@ -31,8 +32,10 @@ module Aws
       })
     end
 
-    def send_sms(to:, message:)
-      post("/mailchimp/send-sms", { to: to, message: message })
+    def send_sms(to:, message:, consent:)
+      post("/mailchimp/send-sms", { to: to, message: message, consent: consent })
+    rescue JSON::ParserError, IOError, SystemCallError, Timeout::Error, SocketError, OpenSSL::SSL::SSLError
+      raise UncertainDeliveryError, "SMS delivery could not be confirmed"
     end
 
     def upsert_mailchimp_member(email:, first_name:, last_name:, tags: [])
@@ -55,22 +58,21 @@ module Aws
     end
 
     def resolve_api_gateway_url
-      # In production, API_GATEWAY_URL is set directly as a full URL.
-      # In local dev, the API ID is dynamic so we read it from a file
-      # written by the LocalStack bootstrap script. The file may not
-      # exist immediately if the bootstrap is still running, so we
-      # retry briefly to handle the startup race condition.
-      return ENV["API_GATEWAY_URL"] if ENV["API_GATEWAY_URL"]
+      return ENV["API_GATEWAY_URL"].strip if ENV["API_GATEWAY_URL"].present?
 
       url_file = ENV["API_GATEWAY_URL_FILE"]
-      raise "Set API_GATEWAY_URL or API_GATEWAY_URL_FILE" unless url_file
+      raise LambdaError, "Set API_GATEWAY_URL or API_GATEWAY_URL_FILE" if url_file.blank?
 
+      # Wait for LocalStack bootstrap.
       3.times do
-        return File.read(url_file).strip if File.exist?(url_file)
+        if File.file?(url_file)
+          url = File.read(url_file).strip
+          return url if url.present?
+        end
         sleep 2
       end
 
-      raise "API Gateway URL file #{url_file} not found (LocalStack bootstrap may have failed)"
+      raise LambdaError, "API Gateway URL file is unavailable (LocalStack bootstrap may have failed)"
     end
 
     def post(path, body)
@@ -81,13 +83,14 @@ module Aws
         timeout: 30
       )
 
-      parsed = JSON.parse(response.body)
-
       unless response.success?
-        raise LambdaError, "Lambda #{path} returned #{response.code}: #{parsed}"
+        if path == "/mailchimp/send-sms" && [ 500, 502, 504 ].include?(response.code)
+          raise UncertainDeliveryError, "SMS delivery could not be confirmed"
+        end
+        raise LambdaError, "Lambda #{path} returned #{response.code}"
       end
 
-      parsed
+      JSON.parse(response.body)
     end
   end
 end

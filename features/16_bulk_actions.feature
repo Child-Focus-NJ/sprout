@@ -30,6 +30,7 @@ Feature: Bulk actions on the volunteer list
     And I select "Harry Kane" on the list
     Then the bulk toolbar should be on screen
 
+  @sms_send
   Scenario: Bulk SMS skips volunteers with no phone number
     When I visit the volunteers list
     And I select "Harry Kane" on the list
@@ -37,6 +38,7 @@ Feature: Bulk actions on the volunteer list
     And I click "Send SMS" in the bulk toolbar
     Then the popup should say "1 of the 2 selected have no phone number and will be skipped for SMS: Hana Kimura."
     When I enter the message "Info session is Thursday at 6pm"
+    And I select the volunteer's one-time SMS consent
     And I press "Send"
     Then I should see "SMS sent to 1 volunteer. Skipped 1 with no phone number: Hana Kimura."
 
