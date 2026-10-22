@@ -67,3 +67,41 @@ docker compose run --rm --no-deps --entrypoint bash \
   -e DATABASE_URL=postgres://sprout:sprout@db:5432/sprout_test web -lc \
   'bin/rails db:test:prepare && bin/rails tailwindcss:build && bundle exec rspec spec/services/sms spec/services/mailchimp'
 ```
+
+## Automatic transactional email
+
+Inquiry confirmations and application emails after attendance use
+`Email::VolunteerNotifications` → `Email::MailchimpOutbound` →
+`Mailchimp::TransactionalClient` (`messages/send`). Add these values to the
+untracked root `.env` to enable them:
+
+```dotenv
+SPROUT_EMAIL_MAILCHIMP_ENABLED=true
+MANDRILL_API_KEY=your_transactional_key
+MANDRILL_FROM_EMAIL=your_verified_sender_address
+```
+
+Set the application link in **Admin settings → Application email**. Application
+emails require a valid link. Missing configuration or sending errors preserve
+inquiries and attendance and show an error instead of claiming the email was sent.
+A queued or uncertain application attempt blocks another send until its outcome is
+known. Reminder emails use the same configured From address.
+
+Mailchimp's [Transactional demo](https://mailchimp.com/help/transactional-email-demo/)
+restricts recipients to verified domains too. A `recipient-domain-mismatch`
+rejection can occur even when the sender is authenticated and the recipient has
+the intended Marketing audience tag. An audience tag does not remove the
+Transactional account's sending restrictions. A `sent` API result alone does not
+prove inbox receipt.
+
+### Queued application emails
+
+With email enabled and the Solid Queue worker/scheduler running, `RefreshQueuedEmailsJob` checks queued email records with provider IDs every five minutes using Mandrill `messages/info`. A confirmed `sent` result records the provider's send time, adds the staff timeline note once, and advances an eligible volunteer to `application_sent`. Volunteers already applied or inactive keep their stage. Other email purposes do not change the application stage.
+
+Still-queued/scheduled results and unavailable or malformed lookups preserve the queued attempt and block duplicate application sends. Rejected/canceled messages become failed; bounced messages become bounced without advancing the volunteer. This job never resends a message. Pending attempts without a provider ID still require manual investigation, and already-sent emails are not polled for later delivery or bounce events.
+
+The check can also be run without sending anything:
+
+```sh
+docker compose exec web bin/rails runner 'RefreshQueuedEmailsJob.perform_now'
+```

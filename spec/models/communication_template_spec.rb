@@ -220,11 +220,12 @@ RSpec.describe CommunicationTemplate, type: :model do
     end
   end
 
-  describe "US3: AttendanceMailer.application_queued" do
-    it "sends an application queued email to the volunteer" do
-      mail = AttendanceMailer.application_queued("jane@childfocusnj.org")
+  describe "US3: AttendanceMailer.application" do
+    it "composes the application email with the supplied link" do
+      mail = AttendanceMailer.application("jane@childfocusnj.org", application_url: "https://example.org/apply")
       expect(mail.to).to include("jane@childfocusnj.org")
-      expect(mail.subject).to eq("Application queued")
+      expect(mail.subject).to eq("Your volunteer application")
+      expect(mail.body.decoded).to include("https://example.org/apply")
     end
   end
 end
