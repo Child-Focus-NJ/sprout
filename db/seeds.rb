@@ -53,7 +53,7 @@ end
 
 # ── NJ Vicinages ─────────────────────────────────────────────────────────────
 # Also created by db/migrate — see note above the referral sources block.
-vicinages = ['Passaic', 'Union', 'Either', 'Unknown'].map do |vicinagename|
+vicinages = %w[ Passaic Union Either Unknown ].map do |vicinagename|
   Vicinage.find_or_create_by!(name: vicinagename)
 end
 
