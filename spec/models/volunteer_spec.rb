@@ -185,28 +185,28 @@ RSpec.describe Volunteer, type: :model do
   end
 
   describe "associations" do
-    it "can be created without a county or referral source" do
-      volunteer = build(:volunteer, nj_county: nil, referral_source: nil)
+    it "can be created without a vicinage or referral source" do
+      volunteer = build(:volunteer, vicinage: nil, referral_source: nil)
       expect(volunteer).to be_valid
     end
 
-    it "belongs to an nj_county" do
-      county = create(:nj_county)
-      volunteer = create(:volunteer, nj_county: county)
-      expect(volunteer.nj_county).to eq(county)
+    it "belongs to a vicinage" do
+      vicinage = create(:vicinage)
+      volunteer = create(:volunteer, vicinage: vicinage)
+      expect(volunteer.vicinage).to eq(vicinage)
     end
   end
 
-  describe "#nj_county_name" do
-    it "returns the associated county's name" do
-      county = create(:nj_county, name: "Essex")
-      volunteer = build(:volunteer, nj_county: county)
-      expect(volunteer.nj_county_name).to eq("Essex")
+  describe "#vicinage_name" do
+    it "returns the associated vicinage's name" do
+      vicinage = create(:vicinage, name: "Passaic")
+      volunteer = build(:volunteer, vicinage: vicinage)
+      expect(volunteer.vicinage.name).to eq("Passaic")
     end
 
-    it "returns nil when no county is set" do
-      volunteer = build(:volunteer, nj_county: nil)
-      expect(volunteer.nj_county_name).to be_nil
+    it "returns nil when no vicinage is set" do
+      volunteer = build(:volunteer, vicinage: nil)
+      expect(volunteer.vicinage).to be_nil
     end
   end
 
