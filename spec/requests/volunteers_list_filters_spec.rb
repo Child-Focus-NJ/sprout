@@ -151,6 +151,48 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
     end
   end
 
+  describe "Back to volunteers link on a profile" do
+    def back_link_href
+      response.parsed_body.at_css("a.nav-back")["href"]
+    end
+
+    it "returns to the tab, search and county the list was showing" do
+      get volunteers_path, params: { q: "ha", status: "inquiry", county_id: bergen.id }
+      get volunteer_path(harry)
+
+      expect(back_link_href).to eq(volunteers_path(q: "ha", status: "inquiry", county_id: bergen.id))
+    end
+
+    it "still returns there after an action on the profile" do
+      get volunteers_path, params: { status: "inquiry", county_id: bergen.id }
+      patch update_status_volunteer_path(harry), params: { status: "applied" }
+      follow_redirect!
+
+      expect(back_link_href).to eq(volunteers_path(status: "inquiry", county_id: bergen.id))
+    end
+
+    it "goes to the plain list once the unfiltered list has been viewed" do
+      get volunteers_path, params: { status: "inquiry" }
+      get volunteers_path
+      get volunteer_path(harry)
+
+      expect(back_link_href).to eq(volunteers_path)
+    end
+
+    it "goes to the plain list when no list has been viewed" do
+      get volunteer_path(harry)
+
+      expect(back_link_href).to eq(volunteers_path)
+    end
+
+    it "leaves out an unknown status" do
+      get volunteers_path, params: { q: "ha", status: "bogus" }
+      get volunteer_path(harry)
+
+      expect(back_link_href).to eq(volunteers_path(q: "ha"))
+    end
+  end
+
   describe "POST /volunteers/bulk_add_note from a tab" do
     it "returns to the same tab, search and county" do
       post bulk_add_note_volunteers_path, params: {

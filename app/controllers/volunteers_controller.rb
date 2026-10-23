@@ -3,6 +3,7 @@ class VolunteersController < ApplicationController
 
   def index
     @filters = list_filter_params
+    session[:volunteer_list_filters] = @filters
     @counties = NjCounty.alphabetical
 
     matching = Volunteer.includes(:nj_county).order(:first_name, :last_name)

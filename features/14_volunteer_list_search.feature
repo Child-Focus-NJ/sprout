@@ -48,6 +48,20 @@ Feature: Search the volunteers list and filter it by status and county
     When I click the "All" status tab
     Then I should see only these volunteers in the list: "Harry Kane, Hana Kimura"
 
+  Scenario: Back from a profile returns to the same tab, search and county
+    Given I am on the volunteers list page
+    When I click the "Inquiry" status tab
+    And I open the volunteer filters
+    And I choose the county "Bergen"
+    And I apply the volunteer filters
+    And I search volunteers for "ha"
+    And I open the profile for "Harry Kane"
+    And I click "Back to volunteers"
+    Then I should see only these volunteers in the list: "Harry Kane"
+    And the "Inquiry" status tab should be selected with 1 volunteers
+    And I should see "County: Bergen"
+    And the volunteer search should contain "ha"
+
   Scenario: Filter popup closes when clicking away
     Given I am on the volunteers list page
     When I open the volunteer filters

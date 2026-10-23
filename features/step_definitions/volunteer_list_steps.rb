@@ -36,6 +36,10 @@ When("I apply the volunteer filters") do
   within(".volunteer-filter-menu__panel") { click_button "Apply" }
 end
 
+When("I open the profile for {string}") do |name|
+  within(".volunteer-row", text: name) { click_link "View profile" }
+end
+
 When("I click outside the volunteer filter popup") do
   find("h1", text: "Volunteers").click
 end
@@ -52,6 +56,10 @@ end
 
 Then("the {string} status tab should be selected with {int} volunteers") do |label, count|
   expect(page).to have_css("#volunteer-status-tabs a[aria-current='page']", exact_text: "#{label} #{count}", normalize_ws: true)
+end
+
+Then("the volunteer search should contain {string}") do |query|
+  expect(page).to have_field("Search by name", with: query)
 end
 
 Then("the filter button should show {int} active filters") do |count|
