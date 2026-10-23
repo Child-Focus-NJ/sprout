@@ -1,12 +1,19 @@
 <main class="volunteer-page">
-<% active_filter_count = @filters.slice(:status, :county_id).size %>
-<% filtered_county = @counties.detect { |county| county.id == @filters[:county_id] } %>
+<h1 class="page-title">Volunteers</h1>
 
-<header class="volunteer-list-header">
-  <h1 class="page-title">Volunteers</h1>
+<%# Status tabs on the left and the name search on the right, sitting on top of the list like folder tabs %>
+<div class="volunteer-tabs-bar">
+  <nav class="volunteer-status-tabs" id="volunteer-status-tabs" aria-label="Filter volunteers by status">
+    <%= volunteer_status_tab("All", nil, @status_counts.values.sum, active: @filters[:status].nil?, query: @filters[:q]) %>
+    <% volunteer_status_options.each do |label, stage| %>
+      <%= volunteer_status_tab(label, stage, @status_counts.fetch(stage, 0), active: @filters[:status] == stage, query: @filters[:q]) %>
+    <% end %>
+  </nav>
 
   <%= form_with url: volunteers_path, method: :get, local: true,
-                html: { class: "volunteer-search", role: "search", aria: { label: "Search and filter volunteers" } } do %>
+                html: { class: "volunteer-search", role: "search", aria: { label: "Search volunteers" } } do %>
+    <%# Searching keeps you on the current status tab %>
+    <%= hidden_field_tag :status, @filters[:status], id: nil if @filters[:status] %>
     <div class="volunteer-search__field">
       <svg class="volunteer-search__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -14,76 +21,11 @@
       <label for="q" class="sr-only">Search by name</label>
       <%= search_field_tag :q, @filters[:q], placeholder: "Search by name", class: "input-large", autocomplete: "off" %>
     </div>
-
-    <details class="volunteer-filter-menu" id="volunteer-filter-menu">
-      <summary class="volunteer-filter-menu__toggle" aria-label="Filters" title="Filters">
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
-        </svg>
-        <% if active_filter_count.positive? %>
-          <span class="volunteer-filter-menu__badge"><%= active_filter_count %></span>
-        <% end %>
-      </summary>
-
-      <div class="volunteer-filter-menu__panel">
-        <fieldset>
-          <legend>Status</legend>
-          <div class="volunteer-filter-options">
-            <label class="volunteer-filter-option">
-              <%= radio_button_tag :status, "", @filters[:status].nil?, id: "status_all" %> All statuses
-            </label>
-            <% volunteer_status_options.each do |label, stage| %>
-              <label class="volunteer-filter-option">
-                <%= radio_button_tag :status, stage, @filters[:status] == stage %> <%= label %>
-              </label>
-            <% end %>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>County</legend>
-          <div class="volunteer-filter-options volunteer-filter-options--scroll">
-            <label class="volunteer-filter-option">
-              <%= radio_button_tag :county_id, "", filtered_county.nil?, id: "county_id_all" %> All counties
-            </label>
-            <% @counties.each do |county| %>
-              <label class="volunteer-filter-option">
-                <%= radio_button_tag :county_id, county.id, county == filtered_county %> <%= county.name %>
-              </label>
-            <% end %>
-          </div>
-        </fieldset>
-
-        <div class="volunteer-filter-menu__actions">
-          <%= link_to "Clear", volunteers_path(@filters.slice(:q)), class: "button-link" %>
-          <button type="submit" class="button-primary">Apply</button>
-        </div>
-      </div>
-    </details>
   <% end %>
-</header>
-
-<% if @filters.any? %>
-  <div class="volunteer-active-filters" id="volunteer-count">
-    <span>Showing <%= @volunteers.length %> of <%= pluralize(@total_count, "volunteer") %></span>
-    <% if @filters[:status] %>
-      <span class="volunteer-filter-chip <%= volunteer_status_color_class(@filters[:status]) %>">
-        Status: <%= VolunteersHelper::STATUS_BADGE_LABELS.fetch(@filters[:status]) %>
-        <%= link_to "×", volunteers_path(@filters.except(:status)), aria: { label: "Remove status filter" } %>
-      </span>
-    <% end %>
-    <% if filtered_county %>
-      <span class="volunteer-filter-chip volunteer-filter-chip--county">
-        County: <%= filtered_county.name %>
-        <%= link_to "×", volunteers_path(@filters.except(:county_id)), aria: { label: "Remove county filter" } %>
-      </span>
-    <% end %>
-    <%= link_to "Clear all", volunteers_path, class: "volunteer-active-filters__clear" %>
-  </div>
-<% end %>
+</div>
 
 <%# Row checkboxes post straight to Send Application; Add Note and Send SMS copy the selection into the popup. %>
-<%= form_with url: bulk_send_application_volunteers_path, method: :post, html: { class: "card note-form", id: "volunteer-bulk-form" } do %>
+<%= form_with url: bulk_send_application_volunteers_path, method: :post, html: { class: "card note-form volunteer-list-card", id: "volunteer-bulk-form" } do %>
   <% @filters.each do |key, value| %>
     <%= hidden_field_tag key, value, id: nil %>
   <% end %>
@@ -123,8 +65,10 @@
 
     <% if @volunteers.empty? %>
       <p class="volunteer-list-empty">
-        <% if @filters.any? %>
-          No volunteers match your search. <%= link_to "Clear filters", volunteers_path %>
+        <% if @filters[:q] %>
+          No volunteers match your search. <%= link_to "Clear search", volunteers_path(@filters.except(:q)) %>
+        <% elsif @filters[:status] %>
+          No volunteers are at <%= VolunteersHelper::STATUS_BADGE_LABELS.fetch(@filters[:status]) %> right now.
         <% else %>
           No volunteers yet.
         <% end %>
@@ -185,29 +129,6 @@
     // The browser can restore ticked boxes on Back, so sync the toolbar on every page show
     window.addEventListener("pageshow", refresh);
     refresh();
-  })();
-</script>
-
-<script>
-  (function () {
-    const menu = document.getElementById("volunteer-filter-menu");
-    if (!menu) return;
-
-    // Bring the chosen county into view; the county list scrolls inside the popup.
-    menu.addEventListener("toggle", () => {
-      if (!menu.open) return;
-      menu.querySelector("input[name='county_id']:checked")?.scrollIntoView({ block: "nearest" });
-    });
-
-    // Close the filter popup on an outside click or Escape, like a normal menu.
-    document.addEventListener("click", (event) => {
-      if (menu.open && !menu.contains(event.target)) menu.open = false;
-    });
-    document.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape" || !menu.open) return;
-      menu.open = false;
-      menu.querySelector("summary").focus();
-    });
   })();
 </script>
 </main>

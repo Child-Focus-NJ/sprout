@@ -19,6 +19,17 @@ module VolunteersHelper
     "status-badge--#{stage.to_s.tr('_', '-')}"
   end
 
+  # One tab on the Volunteers list. Status tabs use the same colors as that status's badge;
+  # the "All" tab (no stage) is neutral. Tabs keep the current name search.
+  def volunteer_status_tab(label, stage, count, active:, query: nil)
+    classes = [ "volunteer-status-tab", stage ? "status-badge #{volunteer_status_color_class(stage)}" : "volunteer-status-tab--all" ]
+    classes << "volunteer-status-tab--active" if active
+
+    link_to volunteers_path({ q: query, status: stage }.compact), class: classes, aria: { current: ("page" if active) } do
+      safe_join([ label, tag.span(number_with_delimiter(count), class: "volunteer-status-tab__count") ], " ")
+    end
+  end
+
   # Heading for a profile timeline entry (e.g. :sms -> "SMS", :status_change -> "Status change").
   def timeline_entry_label(kind)
     kind == :sms ? "SMS" : kind.to_s.humanize
