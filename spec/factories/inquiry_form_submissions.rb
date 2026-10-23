@@ -7,8 +7,8 @@ FactoryBot.define do
     source { "public_inquiry_form" }
     processed { false }
 
-    trait :with_county do
-      association :nj_county
+    trait :with_vicinage do
+      association :vicinage
     end
 
     trait :with_referral_source do

@@ -26,7 +26,7 @@ class InquiryFormController < ApplicationController
     first_name = @form_values[:first_name]
     last_name = @form_values[:last_name]
     phone = @form_values[:phone]
-    nj_county_id = @form_values[:nj_county_id]
+    vicinage_id = @form_values[:vicinage_id]
     referral_source_id = @form_values[:referral_source_id]
 
     if session_id.present?
@@ -59,7 +59,7 @@ class InquiryFormController < ApplicationController
         last_name: last_name,
         email: email,
         phone: phone,
-        nj_county_id: nj_county_id,
+        vicinage_id: vicinage_id,
         referral_source_id: referral_source_id,
         current_funnel_stage: :inquiry
       )
@@ -71,7 +71,7 @@ class InquiryFormController < ApplicationController
         last_name: last_name,
         email: email,
         source: "walk_in_check_in",
-        nj_county_id: nj_county_id,
+        vicinage_id: vicinage_id,
         referral_source_id: referral_source_id,
         raw_data: {
           information_session_id: info_session.id,
@@ -79,7 +79,7 @@ class InquiryFormController < ApplicationController
           last_name: last_name,
           email: email,
           phone: phone,
-          nj_county_id: nj_county_id,
+          vicinage_id: vicinage_id,
           referral_source_id: referral_source_id
         },
         processed: true,
@@ -109,7 +109,7 @@ class InquiryFormController < ApplicationController
       last_name: last_name,
       email: email,
       phone: phone,
-      nj_county_id: nj_county_id,
+      vicinage_id: vicinage_id,
       referral_source_id: referral_source_id,
       current_funnel_stage: :inquiry
     )
@@ -117,14 +117,14 @@ class InquiryFormController < ApplicationController
     InquiryFormSubmission.create!(
       volunteer: volunteer,
       source: "public_inquiry_form",
-      nj_county_id: nj_county_id,
+      vicinage_id: vicinage_id,
       referral_source_id: referral_source_id,
       raw_data: {
         first_name: first_name,
         last_name: last_name,
         email: email,
         phone: phone,
-        nj_county_id: nj_county_id,
+        vicinage_id: vicinage_id,
         referral_source_id: referral_source_id
       },
       processed: true,
@@ -144,7 +144,7 @@ class InquiryFormController < ApplicationController
       last_name: params[:last_name].to_s.strip,
       email: params[:email].to_s.strip.downcase,
       phone: params[:phone].to_s.strip,
-      nj_county_id: params[:nj_county_id].presence,
+      vicinage_id: params[:vicinage_id].presence,
       referral_source_id: params[:referral_source_id].presence
     }
   end
@@ -169,7 +169,7 @@ class InquiryFormController < ApplicationController
   end
 
   def load_select_options
-    @nj_counties = NjCounty.alphabetical
+    @vicinages = Vicinage.numerical
     @referral_sources = ReferralSource.active.alphabetical
   end
 end

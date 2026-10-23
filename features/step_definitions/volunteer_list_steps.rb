@@ -6,7 +6,7 @@ Given("the volunteers list contains:") do |table|
       last_name: last_name,
       email: "#{row['name'].parameterize}@childfocusnj.org",
       current_funnel_stage: row["status"],
-      nj_county: NjCounty.find_or_create_by!(name: row["county"])
+      vicinage: Vicinage.find_or_create_by!(name: row["vicinage"])
     )
   end
 end
@@ -24,10 +24,10 @@ When("I open the volunteer filters") do
   find(".volunteer-filter-menu__toggle").click
 end
 
-When("I choose the status {string} and the county {string}") do |status, county|
+When("I choose the status {string} and the vicinage {string}") do |status, vicinage|
   within(".volunteer-filter-menu__panel") do
     choose status
-    choose county
+    choose vicinage
   end
 end
 

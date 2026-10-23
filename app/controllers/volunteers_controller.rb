@@ -3,13 +3,13 @@ class VolunteersController < ApplicationController
 
   def index
     @filters = list_filter_params
-    @counties = NjCounty.alphabetical
+    @vicinages = Vicinage.numerical
     @total_count = Volunteer.count
 
-    volunteers = Volunteer.includes(:nj_county).order(:first_name, :last_name)
+    volunteers = Volunteer.includes(:vicinage).order(:first_name, :last_name)
     volunteers = volunteers.name_matching(@filters[:q]) if @filters[:q]
     volunteers = volunteers.where(current_funnel_stage: @filters[:status]) if @filters[:status]
-    volunteers = volunteers.where(nj_county_id: @filters[:county_id]) if @filters[:county_id]
+    volunteers = volunteers.where(vicinage_id: @filters[:vicinage_id]) if @filters[:vicinage_id]
     @volunteers = volunteers
   end
 
@@ -176,20 +176,20 @@ class VolunteersController < ApplicationController
     url_from(params[:return_to]) || volunteers_path(list_filter_params)
   end
 
-  # Search/filter values for the volunteers list. Unknown statuses and counties are
+  # Search/filter values for the volunteers list. Unknown statuses and vicinages are
   # dropped so a stale or hand-edited URL shows the full list instead of nothing.
   def list_filter_params
-    county_param = params[:county_id].to_s.presence
-    county_id = county_param && NjCounty.where(id: county_param).pick(:id)
+    vicinage_param = params[:vicinage_id].to_s.presence
+    vicinage_id = vicinage_param && Vicinage.where(id: vicinage_param).pick(:id)
 
     {
       q: params[:q].to_s.strip.presence,
       status: params[:status].presence_in(Volunteer.current_funnel_stages.keys),
-      county_id: county_id
+      vicinage_id: vicinage_id
     }.compact
   end
 
   def volunteer_params
-    params.require(:volunteer).permit(:first_name, :last_name, :email, :phone, :nj_county_id, :referral_source_id)
+    params.require(:volunteer).permit(:first_name, :last_name, :email, :phone, :vicinage_id, :referral_source_id)
   end
 end

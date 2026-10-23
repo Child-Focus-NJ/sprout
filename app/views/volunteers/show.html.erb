@@ -41,8 +41,8 @@
           <%= form.telephone_field :phone %>
         </div>
         <div>
-          <%= form.label :nj_county_id, "County" %>
-          <%= form.collection_select :nj_county_id, NjCounty.alphabetical, :id, :name,
+          <%= form.label :vicinage_id, "Vicinage" %>
+          <%= form.collection_select :vicinage_id, Vicinage.numerical, :id, :name,
                                      { include_blank: "Select..." }, { class: "input-large" } %>
         </div>
         <div>

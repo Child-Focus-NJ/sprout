@@ -4,12 +4,12 @@ require "rails_helper"
 
 RSpec.describe "Volunteers list search and filters", type: :request do
   let(:user) { create(:user) }
-  let(:bergen) { create(:nj_county, name: "Bergen") }
-  let(:essex) { create(:nj_county, name: "Essex") }
+  let(:passaic) { create(:vicinage, name: "Passaic") }
+  let(:union) { create(:vicinage, name: "Union") }
 
-  let!(:harry) { create(:volunteer, first_name: "Harry", last_name: "Kane", current_funnel_stage: :inquiry, nj_county: bergen) }
-  let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura", current_funnel_stage: :application_eligible, nj_county: bergen) }
-  let!(:sofia) { create(:volunteer, first_name: "Sofia", last_name: "Reyes", current_funnel_stage: :inquiry, nj_county: essex) }
+  let!(:harry) { create(:volunteer, first_name: "Harry", last_name: "Kane", current_funnel_stage: :inquiry, vicinage: union) }
+  let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura", current_funnel_stage: :application_eligible, vicinage: union) }
+  let!(:sofia) { create(:volunteer, first_name: "Sofia", last_name: "Reyes", current_funnel_stage: :inquiry, vicinage: passaic) }
 
   before { login_as(user, scope: :user) }
 
@@ -46,51 +46,51 @@ RSpec.describe "Volunteers list search and filters", type: :request do
       expect(response.parsed_body.at_css(".volunteer-filter-chip.status-badge--application-eligible")).to be_present
     end
 
-    it "filters by county" do
-      get volunteers_path, params: { county_id: essex.id }
+    it "filters by vicinage" do
+      get volunteers_path, params: { vicinage_id: passaic.id }
 
       expect(listed_names).to eq([ "Sofia Reyes" ])
-      expect(response.body).to include("County: Essex")
+      expect(response.body).to include("Vicinage: Passaic")
     end
 
-    it "combines the name search with status and county" do
-      get volunteers_path, params: { q: "ha", status: "inquiry", county_id: bergen.id }
+    it "combines the name search with status and vicinage" do
+      get volunteers_path, params: { q: "ha", status: "inquiry", vicinage_id: union.id }
 
       expect(listed_names).to eq([ "Harry Kane" ])
     end
 
-    it "shows the county on each volunteer that has one" do
+    it "shows the vicinage on each volunteer that has one" do
       get volunteers_path
 
-      expect(response.parsed_body.css("#volunteer-list .volunteer-subtext").map(&:text).join).to include("Bergen County", "Essex County")
+      expect(response.parsed_body.css("#volunteer-list .volunteer-subtext").map(&:text).join).to include("Passaic", "Union")
     end
 
     it "counts active filters on the funnel button, not the name search" do
-      get volunteers_path, params: { q: "h", status: "inquiry", county_id: bergen.id }
+      get volunteers_path, params: { q: "h", status: "inquiry", vicinage_id: passaic.id }
 
       expect(response.parsed_body.at_css(".volunteer-filter-menu__badge").text.strip).to eq("2")
     end
 
     it "keeps the current search and filters selected" do
-      get volunteers_path, params: { q: "ha", status: "inquiry", county_id: essex.id }
+      get volunteers_path, params: { q: "ha", status: "inquiry", vicinage_id: union.id }
       page = response.parsed_body
 
       expect(page.at_css("input#q")["value"]).to eq("ha")
       expect(page.at_css("input#status_inquiry[checked]")).to be_present
-      expect(page.at_css("input#county_id_#{essex.id}[checked]")).to be_present
+      expect(page.at_css("input#vicinage_id_#{union.id}[checked]")).to be_present
       expect(page.at_css("input#status_all[checked]")).to be_nil
     end
 
     it "links each filter chip to the list without that filter" do
-      get volunteers_path, params: { status: "inquiry", county_id: essex.id }
+      get volunteers_path, params: { status: "inquiry", vicinage_id: passaic.id }
       page = response.parsed_body
 
-      expect(page.at_css('a[aria-label="Remove status filter"]')["href"]).to eq(volunteers_path(county_id: essex.id))
-      expect(page.at_css('a[aria-label="Remove county filter"]')["href"]).to eq(volunteers_path(status: "inquiry"))
+      expect(page.at_css('a[aria-label="Remove status filter"]')["href"]).to eq(volunteers_path(vicinage_id: passaic.id))
+      expect(page.at_css('a[aria-label="Remove vicinage filter"]')["href"]).to eq(volunteers_path(status: "inquiry"))
     end
 
-    it "ignores an unknown status or county instead of hiding everyone" do
-      get volunteers_path, params: { status: "bogus", county_id: "999999" }
+    it "ignores an unknown status or vicinage instead of hiding everyone" do
+      get volunteers_path, params: { status: "bogus", vicinage_id: "999999" }
 
       expect(listed_names.size).to eq(3)
       expect(response.parsed_body.at_css("#volunteer-count")).to be_nil
@@ -111,10 +111,10 @@ RSpec.describe "Volunteers list search and filters", type: :request do
         volunteer_ids: [ harry.id ],
         note: "Called about the next session",
         status: "inquiry",
-        county_id: bergen.id
+        vicinage_id: passaic.id
       }
 
-      expect(response).to redirect_to(volunteers_path(status: "inquiry", county_id: bergen.id))
+      expect(response).to redirect_to(volunteers_path(status: "inquiry", vicinage_id: passaic.id))
       expect(harry.reload.notes.last.content).to eq("Called about the next session")
     end
 
