@@ -3,12 +3,14 @@ class VolunteersController < ApplicationController
 
   def index
     @filters = list_filter_params
+    @counties = NjCounty.alphabetical
 
-    searched = Volunteer.includes(:nj_county).order(:first_name, :last_name)
-    searched = searched.name_matching(@filters[:q]) if @filters[:q]
+    matching = Volunteer.includes(:nj_county).order(:first_name, :last_name)
+    matching = matching.name_matching(@filters[:q]) if @filters[:q]
+    matching = matching.where(nj_county_id: @filters[:county_id]) if @filters[:county_id]
     # Tab counts follow the name search, so each tab shows how many matches are at that status
-    @status_counts = searched.reorder(nil).group(:current_funnel_stage).count
-    @volunteers = @filters[:status] ? searched.where(current_funnel_stage: @filters[:status]) : searched
+    @status_counts = matching.reorder(nil).group(:current_funnel_stage).count
+    @volunteers = @filters[:status] ? matching.where(current_funnel_stage: @filters[:status]) : matching
   end
 
   def show
@@ -167,9 +169,13 @@ class VolunteersController < ApplicationController
   # Name search and status tab for the volunteers list. An unknown status is dropped
   # so a stale or hand-edited URL shows the full list instead of nothing.
   def list_filter_params
+    county_param = params[:county_id].to_s.presence
+    county_id = county_param && NjCounty.where(id: county_param).pick(:id)
+
     {
       q: params[:q].to_s.strip.presence,
-      status: params[:status].presence_in(Volunteer.current_funnel_stages.keys)
+      status: params[:status].presence_in(Volunteer.current_funnel_stages.keys),
+      county_id: county_id
     }.compact
   end
 

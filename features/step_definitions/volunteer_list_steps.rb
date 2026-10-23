@@ -24,6 +24,22 @@ When("I click the {string} status tab") do |label|
   within("#volunteer-status-tabs") { click_link label }
 end
 
+When("I open the volunteer filters") do
+  find(".volunteer-filter-menu__toggle").click
+end
+
+When("I choose the county {string}") do |county|
+  within(".volunteer-filter-menu__panel") { choose county }
+end
+
+When("I apply the volunteer filters") do
+  within(".volunteer-filter-menu__panel") { click_button "Apply" }
+end
+
+When("I click outside the volunteer filter popup") do
+  find("h1", text: "Volunteers").click
+end
+
 Then("I should see only these volunteers in the list: {string}") do |names|
   expected = names.split(",").map(&:strip)
   expect(page).to have_css("#volunteer-list .volunteer-name", count: expected.size)
@@ -36,4 +52,16 @@ end
 
 Then("the {string} status tab should be selected with {int} volunteers") do |label, count|
   expect(page).to have_css("#volunteer-status-tabs a[aria-current='page']", exact_text: "#{label} #{count}", normalize_ws: true)
+end
+
+Then("the filter button should show {int} active filters") do |count|
+  expect(page).to have_css(".volunteer-filter-menu__badge", text: count.to_s)
+end
+
+Then("the volunteer filter popup should be open") do
+  expect(page).to have_css(".volunteer-filter-menu__panel", visible: :visible)
+end
+
+Then("the volunteer filter popup should be closed") do
+  expect(page).to have_no_css(".volunteer-filter-menu__panel", visible: :visible)
 end

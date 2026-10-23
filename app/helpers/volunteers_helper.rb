@@ -21,11 +21,11 @@ module VolunteersHelper
 
   # One tab on the Volunteers list. Status tabs use the same colors as that status's badge;
   # the "All" tab (no stage) is neutral. Tabs keep the current name search.
-  def volunteer_status_tab(label, stage, count, active:, query: nil)
+  def volunteer_status_tab(label, stage, count, active:, filters: {})
     classes = [ "volunteer-status-tab", stage ? "status-badge #{volunteer_status_color_class(stage)}" : "volunteer-status-tab--all" ]
     classes << "volunteer-status-tab--active" if active
 
-    link_to volunteers_path({ q: query, status: stage }.compact), class: classes, aria: { current: ("page" if active) } do
+    link_to volunteers_path(filters.except(:status).merge(status: stage).compact), class: classes, aria: { current: ("page" if active) } do
       safe_join([ label, tag.span(number_with_delimiter(count), class: "volunteer-status-tab__count") ], " ")
     end
   end

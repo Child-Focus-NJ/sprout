@@ -81,12 +81,45 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
       expect(page.at_css("input#q")["value"]).to eq("ha")
     end
 
-    it "no longer has the filter popup or a county filter" do
-      get volunteers_path, params: { county_id: essex.id }
+    it "filters by county inside a tab, and the tab counts follow the county" do
+      get volunteers_path, params: { status: "inquiry", county_id: bergen.id }
 
-      expect(response.parsed_body.at_css(".volunteer-filter-menu")).to be_nil
-      expect(response.body).not_to include("All counties")
-      expect(listed_names.size).to eq(3)
+      expect(listed_names).to eq([ "Harry Kane" ])
+      expect(tabs.first(3)).to eq([ "All 2", "Inquiry 1", "Application eligible 1" ])
+      expect(response.parsed_body.at_css(".volunteer-filter-chip--county").text).to include("County: Bergen")
+    end
+
+    it "combines the search, status tab and county" do
+      get volunteers_path, params: { q: "ha", status: "inquiry", county_id: essex.id }
+
+      expect(listed_names).to be_empty
+      expect(response.parsed_body.at_css(".volunteer-list-empty a")["href"]).to eq(volunteers_path(status: "inquiry"))
+    end
+
+    it "keeps the county when switching tabs or searching" do
+      get volunteers_path, params: { q: "ha", status: "inquiry", county_id: bergen.id }
+      page = response.parsed_body
+
+      tab = ->(label) { page.css("#volunteer-status-tabs a").find { |link| link.text.squish.start_with?("#{label} ") } }
+      expect(tab.call("Applied")["href"]).to eq(volunteers_path(q: "ha", county_id: bergen.id, status: "applied"))
+      expect(tab.call("All")["href"]).to eq(volunteers_path(q: "ha", county_id: bergen.id))
+      expect(page.at_css("form.volunteer-search input#county_id_#{bergen.id}[checked]")).to be_present
+    end
+
+    it "counts the county on the filter button and links the chip to the list without it" do
+      get volunteers_path, params: { q: "ha", status: "inquiry", county_id: bergen.id }
+      page = response.parsed_body
+
+      expect(page.at_css(".volunteer-filter-menu__badge").text.strip).to eq("1")
+      expect(page.at_css('a[aria-label="Remove county filter"]')["href"]).to eq(volunteers_path(q: "ha", status: "inquiry"))
+    end
+
+    it "has no filter badge or county chip when no county is picked" do
+      get volunteers_path, params: { q: "ha", status: "inquiry" }
+
+      expect(response.parsed_body.at_css(".volunteer-filter-menu__badge")).to be_nil
+      expect(response.parsed_body.at_css("#volunteer-active-filters")).to be_nil
+      expect(response.parsed_body.at_css("input#county_id_all[checked]")).to be_present
     end
 
     it "still shows the county on each volunteer that has one" do
@@ -95,8 +128,8 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
       expect(response.parsed_body.css("#volunteer-list .volunteer-subtext").map(&:text).join).to include("Bergen County", "Essex County")
     end
 
-    it "ignores an unknown status instead of hiding everyone" do
-      get volunteers_path, params: { status: "bogus" }
+    it "ignores an unknown status or county instead of hiding everyone" do
+      get volunteers_path, params: { status: "bogus", county_id: "999999" }
 
       expect(listed_names.size).to eq(3)
       expect(active_tab).to eq("All 3")
@@ -119,15 +152,16 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
   end
 
   describe "POST /volunteers/bulk_add_note from a tab" do
-    it "returns to the same tab and search" do
+    it "returns to the same tab, search and county" do
       post bulk_add_note_volunteers_path, params: {
         volunteer_ids: [ harry.id ],
         note: "Called about the next session",
         status: "inquiry",
-        q: "ha"
+        q: "ha",
+        county_id: bergen.id
       }
 
-      expect(response).to redirect_to(volunteers_path(q: "ha", status: "inquiry"))
+      expect(response).to redirect_to(volunteers_path(q: "ha", status: "inquiry", county_id: bergen.id))
       expect(harry.reload.notes.last.content).to eq("Called about the next session")
     end
 
