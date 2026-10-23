@@ -13,7 +13,7 @@ RSpec.describe InquiryFormSubmission, type: :model do
       expect(submission.referral_source).to eq(source)
     end
 
-    it "can be created without a county or referral source" do
+    it "can be created without a vicinage or referral source" do
       submission = build(:inquiry_form_submission, vicinage: nil, referral_source: nil)
       expect(submission).to be_valid
     end

@@ -44,7 +44,7 @@
           <legend>Vicinage</legend>
           <div class="volunteer-filter-options volunteer-filter-options--scroll">
             <label class="volunteer-filter-option">
-              <%= radio_button_tag :vicinage_id, "", filtered_vicinage.nil?, id: "vicinage_id_all" %> All counties
+              <%= radio_button_tag :vicinage_id, "", filtered_vicinage.nil?, id: "vicinage_id_all" %> All vicinages
             </label>
             <% @vicinages.each do |vicinage| %>
               <label class="volunteer-filter-option">

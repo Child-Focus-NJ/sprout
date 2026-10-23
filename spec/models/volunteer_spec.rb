@@ -201,7 +201,7 @@ RSpec.describe Volunteer, type: :model do
     it "returns the associated vicinage's name" do
       vicinage = create(:vicinage, name: "Passaic")
       volunteer = build(:volunteer, vicinage: vicinage)
-      expect(volunteer.vicinage.name).to eq("Passaic")
+      expect(volunteer.vicinage_name).to eq("Passaic")
     end
 
     it "returns nil when no vicinage is set" do

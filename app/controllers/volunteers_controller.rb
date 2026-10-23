@@ -176,7 +176,7 @@ class VolunteersController < ApplicationController
     url_from(params[:return_to]) || volunteers_path(list_filter_params)
   end
 
-  # Search/filter values for the volunteers list. Unknown statuses and counties are
+  # Search/filter values for the volunteers list. Unknown statuses and vicinages are
   # dropped so a stale or hand-edited URL shows the full list instead of nothing.
   def list_filter_params
     vicinage_param = params[:vicinage_id].to_s.presence
