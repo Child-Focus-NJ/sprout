@@ -3,14 +3,15 @@ class VolunteersController < ApplicationController
 
   def index
     @filters = list_filter_params
+    session[:volunteer_list_filters] = @filters
     @counties = NjCounty.alphabetical
-    @total_count = Volunteer.count
 
-    volunteers = Volunteer.includes(:nj_county).order(:first_name, :last_name)
-    volunteers = volunteers.name_matching(@filters[:q]) if @filters[:q]
-    volunteers = volunteers.where(current_funnel_stage: @filters[:status]) if @filters[:status]
-    volunteers = volunteers.where(nj_county_id: @filters[:county_id]) if @filters[:county_id]
-    @volunteers = volunteers
+    matching = Volunteer.includes(:nj_county).order(:first_name, :last_name)
+    matching = matching.name_matching(@filters[:q]) if @filters[:q]
+    matching = matching.where(nj_county_id: @filters[:county_id]) if @filters[:county_id]
+    # Tab counts follow the name search, so each tab shows how many matches are at that status
+    @status_counts = matching.reorder(nil).group(:current_funnel_stage).count
+    @volunteers = @filters[:status] ? matching.where(current_funnel_stage: @filters[:status]) : matching
   end
 
   def show
@@ -176,8 +177,8 @@ class VolunteersController < ApplicationController
     url_from(params[:return_to]) || volunteers_path(list_filter_params)
   end
 
-  # Search/filter values for the volunteers list. Unknown statuses and counties are
-  # dropped so a stale or hand-edited URL shows the full list instead of nothing.
+  # Name search and status tab for the volunteers list. An unknown status is dropped
+  # so a stale or hand-edited URL shows the full list instead of nothing.
   def list_filter_params
     county_param = params[:county_id].to_s.presence
     county_id = county_param && NjCounty.where(id: county_param).pick(:id)

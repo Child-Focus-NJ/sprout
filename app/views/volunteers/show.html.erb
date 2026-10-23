@@ -1,6 +1,6 @@
 <main class="volunteer-page">
 <nav class="page-nav page-nav--back" aria-label="Back">
-  <%= back_nav_link volunteers_path, "Back to volunteers" %>
+  <%= back_nav_link volunteers_path(session[:volunteer_list_filters].to_h), "Back to volunteers" %>
 </nav>
 <header class="volunteer-profile-header">
   <div class="volunteer-profile-header__title">
