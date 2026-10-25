@@ -17,15 +17,14 @@ puts "Seeding..."
   { email: "mike@passaiccountycasa.org",     first_name: "Mike" },
   { email: "peter.depasquale@nyu.edu",       first_name: "Peter",    last_name: "DePasquale" }
 ].each do |attrs|
-  # find_or_initialize_by (not find_or_create_by!) so someone who signed in and
-  # was auto-created as a user before this ran still gets promoted (re-running
-  # also re-promotes anyone demoted since). Names Google already filled in and
-  # deactivations are left alone.
-  u = User.find_or_initialize_by(email: attrs[:email])
-  u.first_name ||= attrs[:first_name]
-  u.last_name  ||= attrs[:last_name]
-  u.role         = :admin
-  u.save!
+  # Only applied when the account is first created, so re-running db:seed never
+  # undoes a role change or deactivation made on the Employees tab.
+  User.find_or_create_by!(email: attrs[:email]) do |u|
+    u.first_name = attrs[:first_name]
+    u.last_name  = attrs[:last_name]
+    u.role       = :admin
+    u.active     = true
+  end
 end
 
 # ── Features ───────────────────────────────────────────────────────────────────

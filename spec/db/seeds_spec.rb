@@ -34,13 +34,14 @@ RSpec.describe "db/seeds.rb" do
     end
   end
 
-  it "promotes someone who was already auto-created as a user, keeping the name Google filled in" do
-    existing = create(:user, email: "erica@passaiccountycasa.org", first_name: "Erica", last_name: "From Google", role: :user)
+  it "does not restore admin to a seeded admin who was later demoted" do
+    create(:user, role: :admin)
+    demoted = create(:user, email: "erica@passaiccountycasa.org", first_name: "Erica", last_name: "From Google", role: :user)
 
     load_seeds
 
-    expect(existing.reload).to be_admin
-    expect(existing.last_name).to eq("From Google")
+    expect(demoted.reload).not_to be_admin
+    expect(demoted.last_name).to eq("From Google")
   end
 
   it "does not reactivate a seeded admin who was deliberately deactivated" do
