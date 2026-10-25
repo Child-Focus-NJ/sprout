@@ -39,6 +39,7 @@ Rails.application.routes.draw do
       patch :mark_submitted
       post :send_sms
       post :add_note
+      patch "notes/:note_id", to: "volunteers#update_note", as: "update_note"
     end
   end
   resource :inquiry_form, controller: "inquiry_form"
@@ -59,6 +60,7 @@ Rails.application.routes.draw do
   resources :volunteer_tags, only: [ :create, :update, :destroy ]
   resources :users, only: [ :create, :update ]
   resources :referral_sources, only: [ :create, :update, :destroy ]
+  resources :note_categories, only: [ :create, :update, :destroy ]
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.

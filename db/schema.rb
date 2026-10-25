@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_22_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_24_130002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -133,13 +133,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_190000) do
     t.index ["volunteer_id"], name: "index_inquiry_form_submissions_on_volunteer_id"
   end
 
+  create_table "note_categories", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "key"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_note_categories_on_key", unique: true
+    t.index ["name"], name: "index_note_categories_on_name", unique: true
+  end
+
   create_table "notes", force: :cascade do |t|
     t.text "content", null: false
     t.datetime "created_at", null: false
+    t.datetime "edited_at"
+    t.bigint "note_category_id", null: false
     t.integer "note_type", default: 0, null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.bigint "volunteer_id", null: false
+    t.index ["note_category_id"], name: "index_notes_on_note_category_id"
     t.index ["user_id"], name: "index_notes_on_user_id"
     t.index ["volunteer_id"], name: "index_notes_on_volunteer_id"
   end
@@ -414,6 +426,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_190000) do
   add_foreign_key "inquiry_form_submissions", "referral_sources"
   add_foreign_key "inquiry_form_submissions", "vicinages"
   add_foreign_key "inquiry_form_submissions", "volunteers"
+  add_foreign_key "notes", "note_categories"
   add_foreign_key "notes", "users"
   add_foreign_key "notes", "volunteers"
   add_foreign_key "scheduled_reminders", "communication_templates"

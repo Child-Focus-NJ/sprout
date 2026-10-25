@@ -7,6 +7,12 @@ class VolunteerTimeline
   FILTER_ALL = "all"
   FILTER_NOTES = "notes"
   FILTER_STATUS_CHANGES = "status_changes"
+  NOTE_CATEGORY_FILTER_PREFIX = "note_category_"
+  NOTE_CATEGORY_FILTER = /\A#{NOTE_CATEGORY_FILTER_PREFIX}\d+\z/
+
+  def self.note_category_filter(category)
+    "#{NOTE_CATEGORY_FILTER_PREFIX}#{category.id}"
+  end
 
   def self.entries_for(volunteer, filter:)
     new(volunteer, filter: filter).entries
@@ -23,6 +29,9 @@ class VolunteerTimeline
       raw_entries.select { |entry| entry[:kind] == :note }
     when FILTER_STATUS_CHANGES
       raw_entries.select { |entry| entry[:kind] == :status_change }
+    when NOTE_CATEGORY_FILTER
+      category_id = @filter.delete_prefix(NOTE_CATEGORY_FILTER_PREFIX).to_i
+      raw_entries.select { |entry| entry[:kind] == :note && entry[:note].note_category_id == category_id }
     else
       raw_entries
     end
@@ -35,9 +44,10 @@ class VolunteerTimeline
   def raw_entries
     entries = []
 
-    @volunteer.notes.includes(:user).each do |note|
+    @volunteer.notes.includes(:user, :note_category).each do |note|
       entries << {
         kind: :note,
+        heading: note.note_category.name,
         time: note.created_at,
         text: note.content,
         byline: note.user&.full_name.to_s,
@@ -64,12 +74,14 @@ class VolunteerTimeline
     end
 
     @volunteer.session_registrations.includes(:information_session).each do |registration|
-      next unless registration.information_session
+      session = registration.information_session
+      next unless session
 
+      # What happened at the session, e.g. "No-show – Oct 14 session (Spring Orientation)"
       entries << {
         kind: :info_session,
         time: registration.created_at,
-        text: registration.information_session.name
+        text: "#{registration.status_label} – #{session.scheduled_at.strftime('%b %-d')} session (#{session.name})"
       }
     end
 

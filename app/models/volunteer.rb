@@ -75,12 +75,34 @@ class Volunteer < ApplicationRecord
   end
 
   # Staff-authored or system-captured notes (profile form, bulk list, communication callbacks).
-  def add_staff_note(content:, user:, note_type: :general)
-    notes.create(content: content.to_s, user: user, note_type: note_type)
+  def add_staff_note(content:, user:, note_type: :general, note_category: nil)
+    notes.create(content: content.to_s, user: user, note_type: note_type, note_category: note_category)
   end
 
-  def add_staff_note!(content:, user:, note_type: :general)
-    notes.create!(content: content.to_s, user: user, note_type: note_type)
+  def add_staff_note!(content:, user:, note_type: :general, note_category: nil)
+    notes.create!(content: content.to_s, user: user, note_type: note_type, note_category: note_category)
+  end
+
+  class OutcomeNoteError < StandardError; end
+
+  def add_note_with_outcome!(content:, user:, note_category:, information_session: nil, new_information_session: nil)
+    ActiveRecord::Base.transaction do
+      note = add_staff_note!(content: content, user: user, note_category: note_category)
+      registration = registration_for_outcome!(information_session) if note_category.session_outcome?
+
+      case note_category.key
+      when "attended_info_session"
+        finalize_check_in_for_session!(information_session, user: user)
+      when "no_show", "cancelled"
+        registration.update!(status: note_category.key)
+      when "rescheduled"
+        reschedule_registration!(registration, new_information_session)
+      when NoteCategory::DEACTIVATED_KEY
+        change_status!(:inactive, user: user)
+      end
+
+      note
+    end
   end
 
   def change_status!(new_stage, user: nil, trigger: :manual)
@@ -129,6 +151,24 @@ class Volunteer < ApplicationRecord
   end
 
   private
+
+  def registration_for_outcome!(information_session)
+    raise OutcomeNoteError, "Choose the session this note is about" if information_session.nil?
+
+    session_registrations.find_by(information_session: information_session) ||
+      raise(OutcomeNoteError, "#{full_name} isn't registered for that session")
+  end
+
+  def reschedule_registration!(registration, new_information_session)
+    raise OutcomeNoteError, "Choose the session they're rescheduling to" if new_information_session.nil?
+    if new_information_session == registration.information_session
+      raise OutcomeNoteError, "Choose a different session to reschedule to"
+    end
+
+    registration.update!(status: :rescheduled)
+    session_registrations.find_or_initialize_by(information_session: new_information_session)
+                         .update!(status: :registered)
+  end
 
   def cancel_pending_reminders_if_applied
     return unless saved_change_to_current_funnel_stage? && applied?

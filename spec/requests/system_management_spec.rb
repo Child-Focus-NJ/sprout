@@ -51,6 +51,19 @@ RSpec.describe "SystemManagement", type: :request do
       expect(response.body).to include("Volunteer Tags")
       expect(response.body).to include("Employees")
       expect(response.body).to include("Referral Sources")
+      expect(response.body).to include("Note Categories")
+    end
+
+    it "shows note categories, with Remove only on the ones admins added" do
+      NoteCategory.create!(key: "no_show", name: "No-show")
+      create(:note_category, name: "Phone call")
+
+      get system_management_path(tab: "note_categories")
+
+      rows = response.parsed_body.css("#note-category-list li").to_h do |row|
+        [ row.at_css(".volunteer-name").text, row.css("a").map(&:text) ]
+      end
+      expect(rows).to eq("No-show" => [ "Edit" ], "Phone call" => [ "Edit", "Remove" ])
     end
 
     it "links to the usage report" do
@@ -214,6 +227,15 @@ RSpec.describe "SystemManagement", type: :request do
       expect(me.reload).not_to be_admin
     end
 
+    it "cannot manage note categories" do
+      category = create(:note_category, name: "Phone call")
+
+      expect { post note_categories_path, params: { name: "New" } }.not_to change(NoteCategory, :count)
+      expect { patch note_category_path(category), params: { name: "Changed" } }.not_to change { category.reload.name }
+      expect { delete note_category_path(category) }.not_to change(NoteCategory, :count)
+      expect(response).to redirect_to(root_path)
+    end
+
     it "cannot manage reminder frequencies, volunteer tags, or referral sources" do
       freq = ReminderFrequency.create!(title: "Six Months")
       tag = VolunteerTag.create!(title: "VIP")
@@ -326,5 +348,42 @@ RSpec.describe "System management item updates", type: :request do
     expect {
       delete referral_source_path(source)
     }.to change(ReferralSource, :count).by(-1)
+  end
+
+  it "creates, renames, and removes a note category" do
+    expect {
+      post note_categories_path, params: { name: "Phone call" }
+    }.to change(NoteCategory, :count).by(1)
+
+    category = NoteCategory.find_by!(name: "Phone call")
+    patch note_category_path(category), params: { name: "Phone check-in" }
+    expect(category.reload.name).to eq("Phone check-in")
+    expect(response).to redirect_to(system_management_path(tab: "note_categories"))
+
+    expect {
+      delete note_category_path(category)
+    }.to change(NoteCategory, :count).by(-1)
+  end
+
+  it "renames a built-in note category but won't remove it" do
+    no_show = NoteCategory.create!(key: "no_show", name: "No-show")
+
+    patch note_category_path(no_show), params: { name: "Missed session" }
+    expect(no_show.reload).to have_attributes(name: "Missed session", key: "no_show")
+
+    expect { delete note_category_path(no_show) }.not_to change(NoteCategory, :count)
+    expect(flash[:alert]).to eq("Missed session is built in and can't be removed")
+  end
+
+  it "explains a duplicate or blank note category name" do
+    create(:note_category, name: "Phone call")
+
+    expect { post note_categories_path, params: { name: "Phone call" } }.not_to change(NoteCategory, :count)
+    expect(flash[:alert]).to eq("Name has already been taken")
+
+    category = create(:note_category, name: "Email")
+    patch note_category_path(category), params: { name: "" }
+    expect(response).to redirect_to(system_management_path(tab: "note_categories", edit_note_category_id: category.id))
+    expect(category.reload.name).to eq("Email")
   end
 end

@@ -199,6 +199,10 @@
     @apply m-0 grid gap-1.5;
   }
 
+  .message-dialog__session {
+    @apply grid gap-1.5;
+  }
+
   .page-nav {
     @apply flex gap-2 items-center;
   }
@@ -433,6 +437,14 @@
 
   .entry__byline {
     @apply text-sm text-gray-600;
+  }
+
+  .entry__edit-link {
+    @apply ml-2 font-semibold text-indigo-700 underline;
+  }
+
+  .note-edit-form {
+    @apply m-0 grid gap-1.5;
   }
 
   .alert-success {
