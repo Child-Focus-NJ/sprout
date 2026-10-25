@@ -70,9 +70,13 @@ RSpec.describe User, type: :model do
   end
 
   describe '.allow_all_domains?' do
-    after { ENV.delete("ALLOW_ALL_DOMAINS") }
-
     it 'defaults to true when ALLOW_ALL_DOMAINS is unset' do
+      expect(User.allow_all_domains?).to be true
+    end
+
+    it 'is true when ALLOW_ALL_DOMAINS is "true", ignoring case and whitespace' do
+      ENV["ALLOW_ALL_DOMAINS"] = " TRUE "
+
       expect(User.allow_all_domains?).to be true
     end
 
@@ -81,6 +85,14 @@ RSpec.describe User, type: :model do
 
       expect(User.allow_all_domains?).to be false
     end
+
+    it 'fails closed for anything other than "true", like a mistyped "False" or "no"' do
+      [ "False", "no", " false", "" ].each do |value|
+        ENV["ALLOW_ALL_DOMAINS"] = value
+
+        expect(User.allow_all_domains?).to be(false), "expected #{value.inspect} to turn on whitelist-only sign-in"
+      end
+    end
   end
 
   describe '.domain_allowed?' do
@@ -88,8 +100,8 @@ RSpec.describe User, type: :model do
       expect(User.domain_allowed?("admin@passaiccountycasa.org")).to be true
     end
 
-    it 'returns true for nyu.edu emails' do
-      expect(User.domain_allowed?("izzy@nyu.edu")).to be true
+    it 'returns false for nyu.edu emails' do
+      expect(User.domain_allowed?("izzy@nyu.edu")).to be false
     end
 
     it 'returns false for gmail.com emails' do
@@ -152,7 +164,6 @@ RSpec.describe User, type: :model do
 
     context 'with ALLOW_ALL_DOMAINS set to false' do
       before { ENV["ALLOW_ALL_DOMAINS"] = "false" }
-      after { ENV.delete("ALLOW_ALL_DOMAINS") }
 
       it 'does not auto-create a user, even on an allowed domain' do
         expect { User.from_omniauth(auth) }.not_to change(User, :count)
@@ -308,8 +319,6 @@ RSpec.describe User, type: :model do
       })
 
       expect(User.from_omniauth(auth)).to be_nil
-    ensure
-      ENV.delete("ALLOW_ALL_DOMAINS")
     end
 
     it 'auto-provisions a fresh account for the old domain-matching email when domains are allowed' do

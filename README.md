@@ -100,3 +100,14 @@ For more implementation details, see [docs/](https://github.com/Child-Focus-NJ/s
 ### App version
 
 The page footer displays Sprout's version from the root `VERSION` file. Update this file when releasing a new version, then restart the app to load the change.
+
+### Sign-in access
+
+Sign-in is through Google. `db:seed` creates the default admin (`sprout@passaiccountycasa.org`) and the launch admins in every environment; admins add everyone else on the Employees tab of the Admin page.
+
+The `ALLOW_ALL_DOMAINS` environment variable controls whether anyone else can get in:
+
+- **Unset or `true` (default):** emails an admin has added can sign in, and so can any `@passaiccountycasa.org` Google account, which gets a regular user account the first time it signs in.
+- **Any other value (e.g. `false`):** whitelist only. Only emails an admin has added can sign in, and no accounts are created automatically.
+
+To try whitelist-only sign-in locally, add `ALLOW_ALL_DOMAINS=false` to your `.env`.

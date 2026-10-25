@@ -3,34 +3,47 @@
 puts "Seeding..."
 
 # ── Users (Employees) ──────────────────────────────────────────────────────────
-# The only account seeded in production is the primary CASA admin. Everyone
-# else is added afterward through the whitelist on the Employees tab.
-admin = User.find_or_create_by!(email: "sprout@passaiccountycasa.org") do |u|
-  u.first_name = "Sprout"
-  u.last_name  = "Admin"
-  u.role       = :admin
-  u.active     = true
+# Seeded in every environment: the primary CASA admin (sprout@), the Child Focus
+# admin, and the launch admins. Everyone else is added afterward through the
+# whitelist on the Employees tab.
+[
+  { email: "sprout@passaiccountycasa.org",   first_name: "Sprout",   last_name: "Admin" },
+  { email: "admin@childfocusnj.org",         first_name: "Admin",    last_name: "User" },
+  { email: "az2924@nyu.edu",                 first_name: "Alisha",   last_name: "Zaman" },
+  { email: "wr2256@nyu.edu",                 first_name: "Will",     last_name: "Roche" },
+  { email: "sw6002@nyu.edu",                 first_name: "Sufyan",   last_name: "Waryah" },
+  { email: "erica@passaiccountycasa.org",    first_name: "Erica",    last_name: "Fischer-Kaslander" },
+  { email: "michelle@passaiccountycasa.org", first_name: "Michelle", last_name: "Schaefer" },
+  { email: "mike@passaiccountycasa.org",     first_name: "Mike" },
+  { email: "peter.depasquale@nyu.edu",       first_name: "Peter",    last_name: "DePasquale" }
+].each do |attrs|
+  # find_or_initialize_by (not find_or_create_by!) so someone who signed in and
+  # was auto-created as a user before this ran still gets promoted (re-running
+  # also re-promotes anyone demoted since). Names Google already filled in and
+  # deactivations are left alone.
+  u = User.find_or_initialize_by(email: attrs[:email])
+  u.first_name ||= attrs[:first_name]
+  u.last_name  ||= attrs[:last_name]
+  u.role         = :admin
+  u.save!
 end
 
-unless Rails.env.production?
-  User.find_or_create_by!(email: "staff@childfocusnj.org") do |u|
-    u.first_name = "Sarah"
-    u.last_name  = "Mitchell"
-    u.role       = :user
-    u.active     = true
-  end
-
-  [
-    { email: "az2924@nyu.edu", first_name: "Alisha", last_name: "Zaman" },
-    { email: "wr2256@nyu.edu", first_name: "Will",   last_name: "Roche" },
-    { email: "sw6002@nyu.edu", first_name: "Sufyan", last_name: "Waryah" }
-  ].each do |dev|
-    User.find_or_create_by!(email: dev[:email]) do |u|
-      u.first_name = dev[:first_name]
-      u.last_name  = dev[:last_name]
-      u.role       = :admin
-      u.active     = true
-    end
+# ── Features ───────────────────────────────────────────────────────────────────
+# Also created by db/migrate (SeedFeatures) — see the note on the referral
+# sources block below.
+{
+  "system_management" => "Admin tab: reminder frequencies, volunteer tags, employees, referral sources",
+  "users" => "Adding, editing, and deactivating employees",
+  "reminder_frequencies" => "Managing reminder frequency options",
+  "volunteer_tags" => "Managing volunteer tag options",
+  "referral_sources" => "Managing referral source options",
+  "admin_settings" => "Admin settings page",
+  "admin_data_exports" => "Full data export",
+  "admin_usage_reports" => "Admin-only usage report"
+}.each do |key, description|
+  Feature.find_or_create_by!(key: key) do |f|
+    f.admin_only = true
+    f.description = description
   end
 end
 
@@ -100,73 +113,88 @@ end
 
 puts "  Created communication templates"
 
-# ── Information Sessions ───────────────────────────────────────────────────────
-sessions = [
-  { name: "May Info Session",    location: "Zoom",                 scheduled_at: 2.days.from_now,   capacity: 30, zoom_link: "https://zoom.us/j/111111111" },
-  { name: "May In-Person",       location: "415 Hamburg Turnpike", scheduled_at: 5.days.from_now,   capacity: 15 },
-  { name: "June Virtual A",      location: "Zoom",                 scheduled_at: 2.weeks.from_now,  capacity: 25, zoom_link: "https://zoom.us/j/222222222" },
-  { name: "June In-Person",      location: "415 Hamburg Turnpike", scheduled_at: 3.weeks.from_now,  capacity: 20 },
-  { name: "Summer Virtual",      location: "Zoom",                 scheduled_at: 5.weeks.from_now,  capacity: 30, zoom_link: "https://zoom.us/j/333333333" },
-  { name: "Summer In-Person",    location: "415 Hamburg Turnpike", scheduled_at: 6.weeks.from_now,  capacity: 20 }
-]
+# ── Demo data ──────────────────────────────────────────────────────────────────
+# Sample staff, sessions, volunteers, and registrations for local/dev only, so
+# running db:seed against production never adds fake records.
+unless Rails.env.production?
+  admin = User.find_by!(email: "sprout@passaiccountycasa.org")
 
-info_sessions = sessions.map do |attrs|
-  InformationSession.find_or_create_by!(name: attrs[:name]) do |s|
-    s.scheduled_at    = attrs[:scheduled_at]
-    s.location        = attrs[:location]
-    s.capacity        = attrs[:capacity]
-    s.zoom_link       = attrs[:zoom_link]
-    s.active          = true
-    s.created_by_user = admin
+  User.find_or_create_by!(email: "staff@childfocusnj.org") do |u|
+    u.first_name = "Sarah"
+    u.last_name  = "Mitchell"
+    u.role       = :user
+    u.active     = true
   end
-end
 
-# ── Volunteers ─────────────────────────────────────────────────────────────────
-# Keep the demo dataset tiny so local/dev lists stay easy to scan.
-volunteer_data = [
-  { first_name: "Harry", last_name: "Kane",   email: "harry-kane@childfocusnj.org", inquiry_date: Date.new(2026, 4, 1),  stage: :inquiry },
-  { first_name: "Sofia", last_name: "Reyes",  email: "sofia.reyes@example.com",     inquiry_date: Date.new(2024, 4, 14), stage: :application_sent,     application_sent_at: Date.new(2024, 5, 1) },
-  { first_name: "Hana",  last_name: "Kimura", email: "hana.kimura@example.com",     inquiry_date: Date.new(2026, 3, 22), stage: :application_eligible, first_session_attended_at: Date.new(2026, 4, 10) }
-]
+  # ── Information Sessions ─────────────────────────────────────────────────────
+  sessions = [
+    { name: "May Info Session",    location: "Zoom",                 scheduled_at: 2.days.from_now,   capacity: 30, zoom_link: "https://zoom.us/j/111111111" },
+    { name: "May In-Person",       location: "415 Hamburg Turnpike", scheduled_at: 5.days.from_now,   capacity: 15 },
+    { name: "June Virtual A",      location: "Zoom",                 scheduled_at: 2.weeks.from_now,  capacity: 25, zoom_link: "https://zoom.us/j/222222222" },
+    { name: "June In-Person",      location: "415 Hamburg Turnpike", scheduled_at: 3.weeks.from_now,  capacity: 20 },
+    { name: "Summer Virtual",      location: "Zoom",                 scheduled_at: 5.weeks.from_now,  capacity: 30, zoom_link: "https://zoom.us/j/333333333" },
+    { name: "Summer In-Person",    location: "415 Hamburg Turnpike", scheduled_at: 6.weeks.from_now,  capacity: 20 }
+  ]
 
-volunteers = volunteer_data.map do |attrs|
-  v = Volunteer.find_or_initialize_by(email: attrs[:email])
-
-  v.first_name                = attrs[:first_name]
-  v.last_name                 = attrs[:last_name]
-  v.current_funnel_stage      = attrs[:stage]
-  v.inquiry_date              = attrs[:inquiry_date]
-  v.application_submitted_at  = attrs[:application_submitted_at]
-  v.application_sent_at       = attrs[:application_sent_at]
-  v.first_session_attended_at = attrs[:first_session_attended_at]
-  v.became_inactive_at        = attrs[:became_inactive_at]
-  v.inactive_reason           = attrs[:inactive_reason]
-  v.referral_source           = sources.sample
-  v.vicinage                  = vicinages.sample
-  v.preferred_contact_method  = [ :email, :sms, :both ].sample
-
-  v.save!
-  v
-end
-
-# ── Session Registrations ──────────────────────────────────────────────────────
-eligible_volunteers = volunteers.select { |v| v.application_eligible? || v.application_sent? || v.applied? }
-
-info_sessions.each do |session|
-  attendees = eligible_volunteers.sample([ eligible_volunteers.size, 2 ].min)
-  attendees.each do |volunteer|
-    next if SessionRegistration.exists?(volunteer: volunteer, information_session: session)
-
-    SessionRegistration.create!(
-      volunteer:           volunteer,
-      information_session: session,
-      status:              :registered,
-      registered_at:       Time.current - rand(1..10).days
-    )
+  info_sessions = sessions.map do |attrs|
+    InformationSession.find_or_create_by!(name: attrs[:name]) do |s|
+      s.scheduled_at    = attrs[:scheduled_at]
+      s.location        = attrs[:location]
+      s.capacity        = attrs[:capacity]
+      s.zoom_link       = attrs[:zoom_link]
+      s.active          = true
+      s.created_by_user = admin
+    end
   end
+
+  # ── Volunteers ───────────────────────────────────────────────────────────────
+  # Keep the demo dataset tiny so local/dev lists stay easy to scan.
+  volunteer_data = [
+    { first_name: "Harry", last_name: "Kane",   email: "harry-kane@childfocusnj.org", inquiry_date: Date.new(2026, 4, 1),  stage: :inquiry },
+    { first_name: "Sofia", last_name: "Reyes",  email: "sofia.reyes@example.com",     inquiry_date: Date.new(2024, 4, 14), stage: :application_sent,     application_sent_at: Date.new(2024, 5, 1) },
+    { first_name: "Hana",  last_name: "Kimura", email: "hana.kimura@example.com",     inquiry_date: Date.new(2026, 3, 22), stage: :application_eligible, first_session_attended_at: Date.new(2026, 4, 10) }
+  ]
+
+  volunteers = volunteer_data.map do |attrs|
+    v = Volunteer.find_or_initialize_by(email: attrs[:email])
+
+    v.first_name                = attrs[:first_name]
+    v.last_name                 = attrs[:last_name]
+    v.current_funnel_stage      = attrs[:stage]
+    v.inquiry_date              = attrs[:inquiry_date]
+    v.application_submitted_at  = attrs[:application_submitted_at]
+    v.application_sent_at       = attrs[:application_sent_at]
+    v.first_session_attended_at = attrs[:first_session_attended_at]
+    v.became_inactive_at        = attrs[:became_inactive_at]
+    v.inactive_reason           = attrs[:inactive_reason]
+    v.referral_source           = sources.sample
+    v.vicinage                  = vicinages.sample
+    v.preferred_contact_method  = [ :email, :sms, :both ].sample
+
+    v.save!
+    v
+  end
+
+  # ── Session Registrations ────────────────────────────────────────────────────
+  eligible_volunteers = volunteers.select { |v| v.application_eligible? || v.application_sent? || v.applied? }
+
+  info_sessions.each do |session|
+    attendees = eligible_volunteers.sample([ eligible_volunteers.size, 2 ].min)
+    attendees.each do |volunteer|
+      next if SessionRegistration.exists?(volunteer: volunteer, information_session: session)
+
+      SessionRegistration.create!(
+        volunteer:           volunteer,
+        information_session: session,
+        status:              :registered,
+        registered_at:       Time.current - rand(1..10).days
+      )
+    end
+  end
+
+  puts "  Created session registrations"
+
+  puts "  Created #{volunteers.size} volunteers"
 end
 
-puts "  Created session registrations"
-
-puts "  Created #{volunteers.size} volunteers"
-puts "Done! Seeded volunteers, sessions, tags, and frequencies."
+puts "Done!"
