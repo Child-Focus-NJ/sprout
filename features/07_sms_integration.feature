@@ -7,6 +7,43 @@ Feature: SMS Integration
     Given I am a signed-in system administrator
 
   @sms_send
+  Scenario: Open a volunteer by name and send an edited SMS template
+    Given the volunteer "Jane Doe" has a phone number
+    And an active SMS template named "Session reminder" says "Hi {{first_name}}, your session is tomorrow."
+    And I am on the volunteers list page
+    When I open the volunteer named "Jane Doe" from the list
+    And I click "Send SMS"
+    And I choose the SMS template "Session reminder"
+    Then the message draft should be "Hi Jane, your session is tomorrow."
+    When I enter the message "Hi Jane, see you Friday at 6pm!"
+    And I select the volunteer's one-time SMS consent
+    And I press "Send"
+    Then the SMS should be sent to the volunteer's phone
+    And the saved SMS should say "Hi Jane, see you Friday at 6pm!" and use template "Session reminder"
+
+  Scenario: Open the full SMS page and find both provider dashboards
+    Given I am on the volunteer "Jane Doe" profile page
+    And the volunteer has a phone number
+    When I click "Send SMS"
+    Then the SMS composer should link to the Mailchimp dashboards in new tabs
+    When I click "Open full SMS page"
+    Then I should see "Send SMS"
+    And the SMS composer should link to the Mailchimp dashboards in new tabs
+
+  Scenario: Changing recipients clears the template and consent
+    Given the volunteer "Jane Doe" has a phone number
+    And the volunteer "Jack Smith" has a phone number
+    And an active SMS template named "Session reminder" says "Hi {{first_name}}, your session is tomorrow."
+    And I am on the volunteers list page
+    When I click "Send SMS" for "Jane Doe" on the list
+    And I choose the SMS template "Session reminder"
+    And I select the volunteer's one-time SMS consent
+    And I close the message dialog
+    And I click "Send SMS" for "Jack Smith" on the list
+    Then the message draft should be ""
+    And the SMS template and consent should be blank
+
+  @sms_send
   Scenario: Manual SMS can be sent from volunteer profile
     Given I am on the volunteer "Jane Doe" profile page
     And the volunteer has a phone number

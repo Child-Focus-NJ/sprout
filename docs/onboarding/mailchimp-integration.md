@@ -15,6 +15,89 @@ The implementation follows [Mailchimp's official OpenAPI schema](https://github.
 
 ## Configuration
 
+Start with [the local environment template](../../.env.example) or
+[the production environment template](../../.env.production.example). These files
+contain placeholders only; keep your actual `.env` untracked.
+
+### Local and production accounts
+
+The server's `MANDRILL_API_KEY` selects the Mandrill account. Localhost does not
+automatically select a sandbox, and a browser's hostname does not change the key.
+Use the testing account's key and approved sending number in the local `.env`.
+Set the production account's key and sender in the production host's secret store,
+for both web and job processes. Use the same variable names in both environments.
+Do not place both accounts' secrets in the local file.
+
+`MAILCHIMP_API_KEY` is normally the separate **Marketing** credential used by the
+testing-tag inspection scripts. Always set `MANDRILL_API_KEY` explicitly when using
+both products; the legacy fallback is only for installations that previously
+stored a Transactional key under `MAILCHIMP_API_KEY`.
+
+Mailchimp's [email test API keys](https://mailchimp.com/developer/transactional/docs/fundamentals/#test-mode)
+simulate email sends without inbox delivery. Switching the Mailchimp browser UI to
+test mode does not change requests sent with a live API key. For a real phone test,
+use an SMS-enabled testing account with an approved sender and credits, and restrict
+the recipients to the agreed **Sprout Testing** contacts. Automated RSpec/Cucumber
+tests simulate responses and do not need a live account. The normal staff composer
+does not filter volunteers by Mailchimp audience tags.
+
+After updating the local `.env`, recreate the web container so Compose refreshes
+its configuration:
+
+```bash
+docker compose up -d --force-recreate web
+docker compose exec web bin/rails db:migrate
+```
+
+The production image excludes `.env` files. Inject runtime secrets through the
+deployment platform and restart its web/job processes. `docker-compose.yml` is the
+local development setup, not the production deployment configuration.
+
+### Frontend flow
+
+1. Open **Volunteers**, click a volunteer's name, and choose **Send SMS** in Actions.
+   The list's phone icon opens the same composer directly.
+2. Leave **SMS template** on **Custom message**, or choose an active SMS template.
+   Individual templates load with merge fields filled in for that volunteer.
+   The resulting message is editable, with a 320-character limit and counter.
+3. Select the SMS consent that the recipient has already provided and press **Send**.
+   The profile's timeline retains the final message, recipient, status and provider ID.
+4. **Open full SMS page** provides the same composer at `/volunteers/:id/sms`.
+   Both views link to **Open Mailchimp dashboard** and **View Mandrill activity** in
+   new tabs. These links use the staff member's browser login, not the API key.
+
+Create reusable templates under **Message Templates → New Template**, choose
+**SMS** as the type and keep it **Active**. Supported merge fields include
+`{{first_name}}`, `{{last_name}}`, `{{full_name}}`, `{{email}}`, `{{phone}}`,
+`{{current_date}}` and `{{organization_name}}`. Templates are stored in Sprout;
+this does not import Mailchimp campaign templates.
+
+Bulk SMS also supports templates. Its draft retains merge fields until sending,
+then fills them in separately for each selected volunteer. The final personalized
+length is checked per recipient. The result counts successes and failures, including
+recipients whose expanded messages are too long. Changing recipients clears the
+individual draft, template choice and consent. Failed single sends retain the draft.
+
+### Screenshots for PR review
+
+Use fictional volunteers or the agreed testing contacts; keep keys and unrelated
+contact details out of screenshots.
+
+1. **Volunteer list → profile:** the volunteer name link and profile Actions with Send SMS.
+2. **Custom SMS:** the open dialog showing recipient, custom draft, character count,
+   consent selector and Mailchimp dashboard links.
+3. **Template SMS:** a selected template with the volunteer's name filled in and
+   an edited message. Include the template dropdown and character count.
+4. **Send result:** the confirmation banner and the new SMS timeline entry with
+   final body, `sent` or `queued` status and provider ID. A `sent` status is provider
+   acceptance, not a claim of final handset delivery.
+5. **Template management:** an active SMS template with merge fields in the editor.
+6. Optional: the full SMS page, missing-phone disabled state, or a failed send with
+   its retained draft. For actual delivery evidence, include the received test SMS
+   or corresponding Mandrill activity separately from the simulated test screenshots.
+
+### Environment variables
+
 | Setting | Where | Purpose |
 |---|---|---|
 | `SPROUT_SMS_MAILCHIMP_ENABLED=true` | Rails | Explicitly enables outbound SMS |

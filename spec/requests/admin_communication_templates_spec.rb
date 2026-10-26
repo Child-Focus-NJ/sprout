@@ -12,7 +12,7 @@ RSpec.describe "Admin communication templates", type: :request do
       get edit_admin_communication_template_path(template)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Edit Email Template")
+      expect(response.body).to include("Edit Message Template")
       expect(response.body).to include("Welcome")
     end
   end

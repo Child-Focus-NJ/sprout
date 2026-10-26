@@ -1,18 +1,19 @@
 # User Story 7: SMS Integration
 
-Staff can open **Send SMS** from the volunteer list or profile, compose up to 320 characters, and select the SMS consent the volunteer has provided. Sprout sends through the API Gateway and Mailchimp Transactional Lambda when configured. Configuration and provider errors preserve the draft and display an error.
+Staff can click a volunteer's name, choose **Send SMS**, and write a custom message or personalize an active SMS template. Drafts remain editable, show a character count, and require the volunteer's existing consent. The list and full SMS page offer the same flow and links to Mailchimp and Mandrill activity. Rails sends directly to Mailchimp Transactional. Configuration and provider errors preserve the draft and display an error.
 
-See [Mailchimp integration](mailchimp-integration.md) for WSL/Docker setup, the `MAILCHIMP_API_KEY` placeholder, provider requirements, status semantics, and tests.
+See [Mailchimp integration](mailchimp-integration.md) for separate local/production environment templates, `MANDRILL_API_KEY`, provider requirements, screenshot guidance, status semantics, and tests.
 
-The profile groups stored email and SMS messages in **Communication history**. Provider acceptance is recorded as `sent` or `queued`, with the provider message ID; rejection is recorded as `failed`. Unknown outcomes stay `pending` with an explanation. Sprout no longer marks unsent local records as delivered. Final delivery webhooks and historical Mailchimp imports are not implemented.
+The profile groups stored email and SMS messages in its timeline. Provider acceptance is recorded as `sent` or `queued`, with the provider message ID; rejection is recorded as `failed`. Unknown outcomes stay `pending` with an explanation. Sprout no longer marks unsent local records as delivered. Final delivery webhooks and historical Mailchimp imports are not implemented.
 
 ## Key files
 
 - `app/services/sms/mailchimp_outbound.rb`: validation, consent, phone normalization, persistence, and send outcomes.
-- `app/services/aws/lambda_client.rb`: gateway request and transport errors.
+- `app/services/mailchimp/transactional_client.rb`: direct Mandrill API requests and transport errors.
 - `lambdas/mailchimp_realtime/handler.rb` and `sms_client.rb`: request validation and documented Mailchimp API call.
 - `app/models/communication.rb`: communication status and sent timeline notes.
-- `app/views/volunteers/sms.html.erb` and `show.html.erb`: composition and grouped history.
+- `app/views/volunteers/_message_dialog.html.erb`, `sms.html.erb` and `show.html.erb`: composition and grouped history.
+- `app/javascript/sms_templates.js`: load personalized templates without overwriting newer drafts.
 - `localstack/init/setup.sh`: deploys the real SMS Lambda in Docker.
 
 ## Related work

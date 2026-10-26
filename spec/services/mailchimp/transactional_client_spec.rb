@@ -3,6 +3,25 @@
 require "rails_helper"
 
 RSpec.describe Mailchimp::TransactionalClient do
+  describe "environment configuration" do
+    include_context "Mailchimp SMS enabled"
+
+    it "uses the configured account key and sender for each deployment" do
+      response = instance_double(HTTParty::Response, success?: true,
+        body: [ { "status" => "sent", "_id" => "id", "to" => "+12015550123" } ].to_json)
+      allow(described_class).to receive(:post).and_return(response)
+      ENV["MAILCHIMP_API_KEY"] = "marketing-key-us1"
+      { "local-testing-key" => "+12015550101", "production-key" => "+12015550102" }.each do |key, sender|
+        ENV["MANDRILL_API_KEY"] = key
+        ENV["MANDRILL_SMS_FROM"] = sender
+        described_class.new.send_sms(to: "+12015550123", message: "Hello", consent: "onetime")
+        expect(described_class).to have_received(:post).with("/messages/send-sms", hash_including(
+          body: { key: key, message: { sms: { to: [ "+12015550123" ], from: sender, text: "Hello", consent: "onetime" } } }.to_json
+        ))
+      end
+    end
+  end
+
   describe "#send_sms" do
     def send_with_response(payload, http_code: 200)
       response = instance_double(HTTParty::Response, success?: http_code == 200, code: http_code, body: payload.to_json)

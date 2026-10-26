@@ -1,5 +1,5 @@
 class VolunteersController < ApplicationController
-  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :send_sms ]
+  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :sms_template, :send_sms ]
 
   def index
     @filters = list_filter_params
@@ -37,18 +37,30 @@ class VolunteersController < ApplicationController
     redirect_to volunteers_path, notice: "#{name} was deleted."
   end
 
+  def sms
+  end
+
+  def sms_template
+    template = Sms::MailchimpOutbound.template!(params[:template_id])
+    render json: { body: template.render_body(@volunteer) }
+  rescue Sms::MailchimpOutbound::InvalidTemplateError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
   def send_sms
     communication = Sms::MailchimpOutbound.deliver!(
       volunteer: @volunteer,
       body: params[:message],
       sent_by_user: current_user,
-      consent: params[:consent]
+      consent: params[:consent],
+      template_id: params[:template_id]
     )
     notice = communication.queued? ? "SMS queued by Mailchimp" : "SMS sent to Mailchimp"
     redirect_to return_path_for(@volunteer), notice: notice
   rescue Sms::MailchimpOutbound::Error => e
     @message = params[:message].to_s
     @consent = params[:consent].to_s
+    @template_id = params[:template_id].to_s
     flash.now[:alert] = e.message
     render :sms, status: :unprocessable_entity
   end
@@ -102,11 +114,17 @@ class VolunteersController < ApplicationController
     sent = queued = uncertain = failed = 0
     volunteers.where("COALESCE(TRIM(volunteers.phone), '') <> ''").find_each do |volunteer|
       communication = Sms::MailchimpOutbound.deliver!(
-        volunteer: volunteer, body: params[:message], sent_by_user: current_user, consent: params[:consent]
+        volunteer: volunteer, body: params[:message], sent_by_user: current_user, consent: params[:consent],
+        template_id: params[:template_id], personalize: true
       )
       communication.queued? ? queued += 1 : sent += 1
-    rescue Sms::MailchimpOutbound::BlankMessageError, Sms::MailchimpOutbound::MessageTooLongError,
-           Sms::MailchimpOutbound::MissingConsentError, Sms::MailchimpOutbound::ConfigurationError => e
+    rescue Sms::MailchimpOutbound::MessageTooLongError => e
+      return redirect_to(list_path, alert: e.message) if params[:template_id].blank?
+
+      failed += 1
+    rescue Sms::MailchimpOutbound::BlankMessageError,
+           Sms::MailchimpOutbound::MissingConsentError, Sms::MailchimpOutbound::ConfigurationError,
+           Sms::MailchimpOutbound::InvalidTemplateError => e
       # Same message for everyone, so stop at the first one
       return redirect_to(list_path, alert: e.message)
     rescue Sms::MailchimpOutbound::UncertainDeliveryError

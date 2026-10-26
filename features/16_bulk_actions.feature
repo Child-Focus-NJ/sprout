@@ -31,6 +31,22 @@ Feature: Bulk actions on the volunteer list
     Then the bulk toolbar should be on screen
 
   @sms_send
+  Scenario: A bulk SMS template is personalized for each selected volunteer
+    Given an active SMS template named "Session reminder" says "Hi {{first_name}}, your session is tomorrow."
+    When I visit the volunteers list
+    And I select "Harry Kane" on the list
+    And I select "Sofia Reyes" on the list
+    And I click "Send SMS" in the bulk toolbar
+    And I choose the SMS template "Session reminder"
+    Then the message draft should be "Hi {{first_name}}, your session is tomorrow."
+    When I enter the message "Hi {{first_name}}, see you Friday!"
+    And I select the volunteer's one-time SMS consent
+    And I press "Send"
+    Then I should see "SMS sent to 2 volunteers."
+    And the SMS for "Harry Kane" should say "Hi Harry, see you Friday!"
+    And the SMS for "Sofia Reyes" should say "Hi Sofia, see you Friday!"
+
+  @sms_send
   Scenario: Bulk SMS skips volunteers with no phone number
     When I visit the volunteers list
     And I select "Harry Kane" on the list

@@ -123,3 +123,47 @@ end
 Then("I should be on the volunteers list page") do
   expect(page).to have_current_path(volunteers_path)
 end
+Given("an active SMS template named {string} says {string}") do |name, body|
+  CommunicationTemplate.create!(name: name, body: body, template_type: :sms,
+    funnel_stage: :inquiry, trigger_type: :manual, active: true)
+end
+
+When("I open the volunteer named {string} from the list") do |name|
+  @volunteer = find_or_create_volunteer_by_name(name)
+  within(find(".volunteer-row", text: name)) { click_link name }
+end
+
+When("I choose the SMS template {string}") do |name|
+  select name, from: "SMS template"
+  expect(page).to have_content("Template loaded.")
+end
+
+Then("the message draft should be {string}") do |body|
+  expect(page).to have_field("Message", with: body)
+end
+
+Then("the saved SMS should say {string} and use template {string}") do |body, name|
+  communication = @volunteer.communications.sms.last
+  expect(communication.body).to eq(body)
+  expect(communication.communication_template.name).to eq(name)
+  expect(page).to have_content(body)
+end
+
+Then("the SMS composer should link to the Mailchimp dashboards in new tabs") do
+  expect(page).to have_link("Open Mailchimp dashboard", href: "https://login.mailchimp.com/", target: "_blank")
+  expect(page).to have_link("View Mandrill activity", href: "https://mandrillapp.com/activity", target: "_blank")
+end
+
+When("I close the message dialog") do
+  find("#message-dialog [data-message-dialog-close]").click
+end
+
+Then("the SMS template and consent should be blank") do
+  expect(find("[data-sms-template-picker]").value).to eq("")
+  expect(find("#dialog-sms-consent").value).to eq("")
+end
+
+Then("the SMS for {string} should say {string}") do |name, body|
+  volunteer = find_or_create_volunteer_by_name(name)
+  expect(volunteer.communications.sms.last).to have_attributes(body: body, status: "sent")
+end

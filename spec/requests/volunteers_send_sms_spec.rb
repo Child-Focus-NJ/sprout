@@ -101,7 +101,9 @@ RSpec.describe "Volunteer SMS send", type: :request do
     expect(response).to redirect_to(volunteer_path(volunteer))
   end
 
-  it "opens new SMS drafts in the dialog instead of a separate GET page" do
-    expect(Rails.application.routes.url_helpers).not_to respond_to(:sms_volunteer_path)
+  it "offers the same composer and dashboard links on a dedicated SMS page" do
+    get sms_volunteer_path(volunteer)
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("SMS template", "Open Mailchimp dashboard", "View Mandrill activity", volunteer.full_name)
   end
 end

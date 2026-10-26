@@ -4,6 +4,7 @@
 </nav>
 
 <h1 class="page-title">Send SMS</h1>
+<%= render "volunteers/mailchimp_links" %>
 
 <section id="sms-recipient" class="card">
   <h2>Sending to <%= @volunteer.full_name %></h2>
@@ -33,11 +34,13 @@
 <section id="sms-compose" class="card sms-compose-form" aria-labelledby="sms-compose-heading">
   <h2 id="sms-compose-heading" class="subsection-heading">Your message</h2>
 
-  <%= form_with url: send_sms_volunteer_path(@volunteer), method: :post, html: { class: "grid gap-3 m-0" } do %>
+  <%= form_with url: send_sms_volunteer_path(@volunteer), method: :post,
+        html: { class: "grid gap-3 m-0", data: { sms_template_url: sms_template_volunteer_path(@volunteer) } } do %>
     <%= hidden_field_tag :return_to, params[:return_to] %>
+    <%= render "volunteers/sms_template_picker", prefix: "sms-page" %>
     <div class="grid gap-1.5">
       <label for="message">Message</label>
-      <textarea id="message" name="message" rows="6" maxlength="320" required><%= @message %></textarea>
+      <textarea id="message" name="message" rows="6" maxlength="320" required data-sms-message><%= @message %></textarea>
     </div>
 
     <div id="sms-character-count">
