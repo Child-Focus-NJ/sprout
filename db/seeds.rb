@@ -101,6 +101,8 @@ follow_up_copy.each do |stage, by_days|
   end
 end
 
+load Rails.root.join("db/seeds/sms_templates.rb")
+
 puts "  Created communication templates"
 
 # ── Information Sessions ───────────────────────────────────────────────────────

@@ -167,3 +167,19 @@ Then("the SMS for {string} should say {string}") do |name, body|
   volunteer = find_or_create_volunteer_by_name(name)
   expect(volunteer.communications.sms.last).to have_attributes(body: body, status: "sent")
 end
+
+Then("the SMS template choices should be unavailable") do
+  expect(page).to have_select("SMS template", options: ["Custom message"], disabled: true)
+end
+
+Then("the new template should default to active manual SMS") do
+  expect(page).to have_select("Template type", selected: "SMS")
+  expect(page).to have_select("Trigger type", selected: "Manual")
+  expect(page).to have_checked_field("Active")
+end
+
+When("I save this SMS template named {string} with body {string}") do |name, body|
+  fill_in "Name", with: name
+  fill_in "Body", with: body
+  click_button "Create"
+end

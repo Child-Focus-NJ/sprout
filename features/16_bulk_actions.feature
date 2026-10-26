@@ -31,6 +31,30 @@ Feature: Bulk actions on the volunteer list
     Then the bulk toolbar should be on screen
 
   @sms_send
+  Scenario: Create an SMS template when only email templates exist, then use it for a group
+    Given an email template exists named "Email follow-up" with subject "Hello" and body "Hi {{first_name}}"
+    When I visit the volunteers list
+    And I select "Harry Kane" on the list
+    And I select "Sofia Reyes" on the list
+    And I click "Send SMS" in the bulk toolbar
+    Then I should see "No active SMS templates yet."
+    And the SMS template choices should be unavailable
+    When I click "Create SMS template"
+    Then the new template should default to active manual SMS
+    When I save this SMS template named "Group follow-up" with body "Hi {{first_name}}, see you Friday!"
+    And I visit the volunteers list
+    And I select "Harry Kane" on the list
+    And I select "Sofia Reyes" on the list
+    And I click "Send SMS" in the bulk toolbar
+    And I choose the SMS template "Group follow-up"
+    Then the message draft should be "Hi {{first_name}}, see you Friday!"
+    When I select the volunteer's one-time SMS consent
+    And I press "Send"
+    Then I should see "SMS sent to 2 volunteers."
+    And the SMS for "Harry Kane" should say "Hi Harry, see you Friday!"
+    And the SMS for "Sofia Reyes" should say "Hi Sofia, see you Friday!"
+
+  @sms_send
   Scenario: A bulk SMS template is personalized for each selected volunteer
     Given an active SMS template named "Session reminder" says "Hi {{first_name}}, your session is tomorrow."
     When I visit the volunteers list

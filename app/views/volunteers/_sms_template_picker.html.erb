@@ -1,9 +1,21 @@
+<% template_options = sms_template_options %>
 <div class="grid gap-1.5">
   <%= label_tag "#{prefix}-template", "SMS template" %>
-  <%= select_tag :template_id, options_for_select(sms_template_options, @template_id),
+  <%= select_tag :template_id, options_for_select(template_options, @template_id),
         id: "#{prefix}-template", prompt: "Custom message", data: { sms_template_picker: true },
+        disabled: template_options.empty?,
         aria: { describedby: "#{prefix}-template-help #{prefix}-template-status" } %>
-  <p id="<%= prefix %>-template-help" class="subtle" data-sms-template-help>Choose a template to personalize, then edit the message before sending.</p>
+  <p id="<%= prefix %>-template-help" class="subtle" data-sms-template-help>
+    <% if template_options.empty? %>
+      No active SMS templates yet. Write a custom message or create an SMS template to reuse for one or several volunteers.
+    <% else %>
+      Choose a template to personalize, then edit the message before sending.
+    <% end %>
+  </p>
   <p id="<%= prefix %>-template-status" class="subtle" role="status" data-sms-template-status></p>
-  <%= link_to "Manage message templates", admin_communication_templates_path, class: "button-link" %>
+  <% if template_options.empty? %>
+    <%= link_to "Create SMS template", new_admin_communication_template_path(template_type: :sms), class: "button-link" %>
+  <% else %>
+    <%= link_to "Manage message templates", admin_communication_templates_path, class: "button-link" %>
+  <% end %>
 </div>

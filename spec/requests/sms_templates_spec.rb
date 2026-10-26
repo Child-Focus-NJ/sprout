@@ -36,6 +36,16 @@ RSpec.describe "SMS template composition", type: :request do
     expect(client).not_to have_received(:send_sms)
   end
 
+  it "explains missing SMS templates and links to an SMS-specific creation form" do
+    template.update!(template_type: :email)
+    get sms_volunteer_path(volunteer)
+
+    expect(response.parsed_body.at_css("[data-sms-template-picker]")["disabled"]).to be_present
+    expect(response.parsed_body.text).to include("No active SMS templates yet.")
+    expect(response.parsed_body.at_css("a[href='#{new_admin_communication_template_path(template_type: :sms)}']").text).to eq("Create SMS template")
+    expect(client).not_to have_received(:send_sms)
+  end
+
   it "requires staff authentication to read personalized templates" do
     logout(:user)
     get sms_template_volunteer_path(volunteer), params: { template_id: template.id }

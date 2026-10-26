@@ -107,9 +107,11 @@
       panels.sms.dataset.smsTemplateUrl = opener.dataset.smsTemplateUrl || "";
       panels.sms.querySelector("[data-message-dialog-recipient]").textContent =
         target.ids.length ? `Sending to ${target.name}` : `To: ${target.name} · ${opener.dataset.phone || "No phone number"}`;
-      panels.sms.querySelector("[data-sms-template-help]").textContent = target.ids.length ?
-        "Merge fields such as {{first_name}} are filled in separately for each volunteer. You can edit the message." :
-        "Choose a template to personalize, then edit the message before sending.";
+      if (!panels.sms.querySelector("[data-sms-template-picker]").disabled) {
+        panels.sms.querySelector("[data-sms-template-help]").textContent = target.ids.length ?
+          "Merge fields such as {{first_name}} are filled in separately for each volunteer. You can edit the message." :
+          "Choose a template to personalize, then edit the message before sending.";
+      }
       const composeLink = panels.sms.querySelector("[data-sms-compose-link]");
       composeLink.hidden = !opener.dataset.smsComposeUrl;
       if (opener.dataset.smsComposeUrl) composeLink.href = opener.dataset.smsComposeUrl;

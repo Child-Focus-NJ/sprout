@@ -72,6 +72,14 @@ Create reusable templates under **Message Templates → New Template**, choose
 `{{current_date}}` and `{{organization_name}}`. Templates are stored in Sprout;
 this does not import Mailchimp campaign templates.
 
+Seeds include an editable **General SMS follow-up** template with a manual trigger.
+For an existing database, add just this starter with
+`docker compose exec web bin/rails runner db/seeds/sms_templates.rb`.
+This creates no messages and preserves edits or an inactive setting on later runs.
+If the composer only offers **Custom message**, there are no active SMS templates;
+email templates do not appear there. **Create SMS template** opens the editor with
+SMS and Manual already selected. Save it as Active, then reopen the Volunteers page.
+
 Bulk SMS also supports templates. Its draft retains merge fields until sending,
 then fills them in separately for each selected volunteer. The final personalized
 length is checked per recipient. The result counts successes and failures, including
