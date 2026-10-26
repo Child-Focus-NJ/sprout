@@ -169,7 +169,7 @@ Then("the SMS for {string} should say {string}") do |name, body|
 end
 
 Then("the SMS template choices should be unavailable") do
-  expect(page).to have_select("SMS template", options: ["Custom message"], disabled: true)
+  expect(page).to have_select("SMS template", options: [ "Custom message" ], disabled: true)
 end
 
 Then("the new template should default to active manual SMS") do
