@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_09_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -119,7 +119,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_000001) do
     t.string "email"
     t.string "first_name"
     t.string "last_name"
-    t.bigint "nj_county_id"
     t.string "other_info"
     t.string "phone"
     t.bigint "preferred_session_id"
@@ -129,20 +128,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_000001) do
     t.bigint "referral_source_id"
     t.string "source"
     t.datetime "updated_at", null: false
+    t.bigint "vicinage_id"
     t.bigint "volunteer_id"
-    t.index ["nj_county_id"], name: "index_inquiry_form_submissions_on_nj_county_id"
     t.index ["preferred_session_id"], name: "index_inquiry_form_submissions_on_preferred_session_id"
     t.index ["processed"], name: "index_inquiry_form_submissions_on_processed"
     t.index ["referral_source_id"], name: "index_inquiry_form_submissions_on_referral_source_id"
     t.index ["source"], name: "index_inquiry_form_submissions_on_source"
+    t.index ["vicinage_id"], name: "index_inquiry_form_submissions_on_vicinage_id"
     t.index ["volunteer_id"], name: "index_inquiry_form_submissions_on_volunteer_id"
-  end
-
-  create_table "nj_counties", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "name"
-    t.datetime "updated_at", null: false
-    t.index ["name"], name: "index_nj_counties_on_name", unique: true
   end
 
   create_table "notes", force: :cascade do |t|
@@ -370,6 +363,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_000001) do
     t.index ["google_uid"], name: "index_users_on_google_uid"
   end
 
+  create_table "vicinages", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name"
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_vicinage_on_name", unique: true
+  end
+
   create_table "volunteer_tags", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "title"
@@ -390,7 +390,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_000001) do
     t.integer "inactive_reason"
     t.datetime "inquiry_date"
     t.string "last_name", null: false
-    t.bigint "nj_county_id"
     t.string "phone"
     t.integer "preferred_contact_method", default: 0, null: false
     t.datetime "reactivated_at"
@@ -398,15 +397,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_000001) do
     t.bigint "referral_source_id"
     t.bigint "referred_by_volunteer_id"
     t.datetime "updated_at", null: false
+    t.bigint "vicinage_id"
     t.integer "weeks_at_inactivation"
     t.index ["became_inactive_at"], name: "index_volunteers_on_became_inactive_at"
     t.index ["current_funnel_stage"], name: "index_volunteers_on_current_funnel_stage"
     t.index ["email"], name: "index_volunteers_on_email", unique: true
     t.index ["external_id"], name: "index_volunteers_on_external_id"
     t.index ["inquiry_date"], name: "index_volunteers_on_inquiry_date"
-    t.index ["nj_county_id"], name: "index_volunteers_on_nj_county_id"
     t.index ["referral_source_id"], name: "index_volunteers_on_referral_source_id"
     t.index ["referred_by_volunteer_id"], name: "index_volunteers_on_referred_by_volunteer_id"
+    t.index ["vicinage_id"], name: "index_volunteers_on_vicinage_id"
   end
 
   add_foreign_key "communications", "communication_templates"
@@ -416,8 +416,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_000001) do
   add_foreign_key "external_sync_logs", "volunteers"
   add_foreign_key "information_sessions", "users", column: "created_by_user_id"
   add_foreign_key "inquiry_form_submissions", "information_sessions", column: "preferred_session_id"
-  add_foreign_key "inquiry_form_submissions", "nj_counties"
   add_foreign_key "inquiry_form_submissions", "referral_sources"
+  add_foreign_key "inquiry_form_submissions", "vicinages"
   add_foreign_key "inquiry_form_submissions", "volunteers"
   add_foreign_key "notes", "users"
   add_foreign_key "notes", "volunteers"
@@ -435,7 +435,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_000001) do
   add_foreign_key "status_changes", "users"
   add_foreign_key "status_changes", "volunteers"
   add_foreign_key "system_settings", "users", column: "updated_by_user_id"
-  add_foreign_key "volunteers", "nj_counties"
   add_foreign_key "volunteers", "referral_sources"
+  add_foreign_key "volunteers", "vicinages"
   add_foreign_key "volunteers", "volunteers", column: "referred_by_volunteer_id"
 end

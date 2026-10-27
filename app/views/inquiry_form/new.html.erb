@@ -50,9 +50,9 @@
       </div>
 
       <div class="inquiry-form__row">
-        <%= label_tag :nj_county_id, "County" %>
-        <%= select_tag :nj_county_id,
-                       options_from_collection_for_select(@nj_counties, :id, :name, params[:nj_county_id]),
+        <%= label_tag :vicinage_id, "Vicinage" %>
+        <%= select_tag :vicinage_id,
+                       options_from_collection_for_select(@vicinages, :id, :name, params[:vicinage_id]),
                        include_blank: "Select...", class: "input-large" %>
       </div>
 
