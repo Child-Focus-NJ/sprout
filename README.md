@@ -1,4 +1,4 @@
-## 🌱 Sprout – Volunteer Management System
+## Sprout – Volunteer Management System
 
 **Sprout** is a Ruby on Rails application that replaces spreadsheet-based workflows with a centralized system for managing the full volunteer lifecycle.
 
@@ -6,7 +6,7 @@ Sprout supports the journey from initial inquiry through information session att
 
 ---
 
-## 👥 Team
+## Team
 
 Working under **Dr. Peter DePasquale**
 
@@ -15,7 +15,7 @@ Working under **Dr. Peter DePasquale**
 
 ---
 
-## 🚀 Core Capabilities
+## Core Capabilities
 
 - **Volunteer funnel tracking:** Inquiry → info session registered → attended → application eligible → applied → inactive, with a status history timeline.
 - **Public inquiry form:** Tablet- and mobile-friendly public form that creates/links volunteers and starts them in the funnel.
@@ -25,20 +25,33 @@ Working under **Dr. Peter DePasquale**
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Language:** Ruby (3.4.5)
 - **Framework:** Ruby on Rails 8.1.2
 - **Database:** PostgreSQL
 - **Cloud Services:** AWS
 - **App Deployment:** Heroku
+- **External APIs:** Mailchimp
 - **Styling:** Tailwind CSS via `tailwindcss-rails`
 
 Architecture, gem choices, and integration decisions are detailed in `docs/architecture-and-tech-stack.md` and `docs/feature-specifications.md`.
 
 ---
 
-## ⚙️ Local Setup (Development)
+## Local Setup (Development)
+
+### `.env` file:
+
+```
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+MANDRILL_API_KEY=
+MANDRILL_FROM_EMAIL=
+MANDRILL_SMS_FROM=
+SPROUT_EMAIL_MAILCHIMP_ENABLED=true
+SPROUT_SMS_MAILCHIMP_ENABLED=true
+```
 
 ### Option A: Docker (recommended)
 
