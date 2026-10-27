@@ -1,6 +1,6 @@
-Feature: Search and filter the volunteers list
+Feature: Search the volunteers list and filter it by status and vicinage
   As a staff member
-  I want to search volunteers by name and filter them by status and vicinage
+  I want to search volunteers by name, switch between status tabs and filter by vicinage
   So that I can find one volunteer or a group without scrolling the whole list
 
   Background:
@@ -15,23 +15,52 @@ Feature: Search and filter the volunteers list
     Given I am on the volunteers list page
     When I search volunteers for "kane"
     Then I should see only these volunteers in the list: "Harry Kane"
-    And I should see "Showing 1 of 3 volunteers"
 
-  Scenario: Filter by status and vicinage from the filter popup
+  Scenario: Pick a status tab
     Given I am on the volunteers list page
-    When I open the volunteer filters
-    And I choose the status "Inquiry" and the vicinage "Union"
+    Then the "All" status tab should be selected with 3 volunteers
+    When I click the "Inquiry" status tab
+    Then I should see only these volunteers in the list: "Harry Kane, Sofia Reyes"
+    And the "Inquiry" status tab should be selected with 2 volunteers
+
+  Scenario: Search stays on the current status tab
+    Given I am on the volunteers list page
+    When I click the "Inquiry" status tab
+    And I search volunteers for "ha"
+    Then I should see only these volunteers in the list: "Harry Kane"
+    And the "Inquiry" status tab should be selected with 1 volunteers
+
+  Scenario: Back to everyone from the All tab
+    Given I am on the volunteers list page filtered to status "Inquiry"
+    When I click the "All" status tab
+    Then I should see all 3 volunteers in the list
+
+  Scenario: Filter by vicinage inside a status tab
+    Given I am on the volunteers list page
+    When I click the "Inquiry" status tab
+    And I open the volunteer filters
+    And I choose the vicinage "Union"
     And I apply the volunteer filters
     Then I should see only these volunteers in the list: "Harry Kane"
-    And the filter button should show 2 active filters
-    And I should see "Status: Inquiry"
+    And the "Inquiry" status tab should be selected with 1 volunteers
+    And the filter button should show 1 active filters
     And I should see "Vicinage: Union"
+    When I click the "All" status tab
+    Then I should see only these volunteers in the list: "Harry Kane, Hana Kimura"
 
-  Scenario: Clear all filters
-    Given I am on the volunteers list page filtered to status "Inquiry"
-    Then I should see only these volunteers in the list: "Harry Kane, Sofia Reyes"
-    When I click "Clear all"
-    Then I should see all 3 volunteers in the list
+  Scenario: Back from a profile returns to the same tab, search and vicinage
+    Given I am on the volunteers list page
+    When I click the "Inquiry" status tab
+    And I open the volunteer filters
+    And I choose the vicinage "Union"
+    And I apply the volunteer filters
+    And I search volunteers for "ha"
+    And I open the profile for "Harry Kane"
+    And I click "Back to volunteers"
+    Then I should see only these volunteers in the list: "Harry Kane"
+    And the "Inquiry" status tab should be selected with 1 volunteers
+    And I should see "Vicinage: Union"
+    And the volunteer search should contain "ha"
 
   Scenario: Filter popup closes when clicking away
     Given I am on the volunteers list page
