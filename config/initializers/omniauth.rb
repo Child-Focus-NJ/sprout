@@ -5,8 +5,8 @@ OmniAuth.config.allowed_request_methods = Rails.env.test? ? %i[post get] : %i[po
 
 Rails.application.config.middleware.use OmniAuth::Builder do
   provider :google_oauth2,
-           ENV["GOOGLE_CLIENT_ID"],
-           ENV["GOOGLE_CLIENT_SECRET"],
+           Rails.application.credentials.google.client_id,
+           Rails.application.credentials.google.client_secret,
            scope: "email,profile",
            prompt: "select_account"
 end
