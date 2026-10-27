@@ -86,6 +86,12 @@ length is checked per recipient. The result counts successes and failures, inclu
 recipients whose expanded messages are too long. Changing recipients clears the
 individual draft, template choice and consent. Failed single sends retain the draft.
 
+The shared SMS/note dialog changes both its POST URL and the matching per-form
+CSRF token when it opens for an individual or a group. SMS, notes and bulk browser
+features explicitly enable Rails CSRF protection, which is otherwise off in test.
+Request coverage also confirms that missing tokens and tokens for another action,
+volunteer or browser session are rejected before a message is sent.
+
 ### Screenshots for PR review
 
 Use fictional volunteers or the agreed testing contacts; keep keys and unrelated

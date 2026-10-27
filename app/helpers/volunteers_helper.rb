@@ -66,6 +66,8 @@ module VolunteersHelper
         volunteer_name: volunteer.full_name,
         note_url: add_note_volunteer_path(volunteer),
         sms_url: send_sms_volunteer_path(volunteer),
+        note_authenticity_token: form_authenticity_token(form_options: { action: add_note_volunteer_path(volunteer), method: "post" }),
+        sms_authenticity_token: form_authenticity_token(form_options: { action: send_sms_volunteer_path(volunteer), method: "post" }),
         sms_template_url: sms_template_volunteer_path(volunteer),
         sms_compose_url: sms_volunteer_path(volunteer),
         phone: volunteer.phone,
@@ -84,7 +86,9 @@ module VolunteersHelper
         message_dialog_open: tab,
         message_dialog_bulk: true,
         note_url: bulk_add_note_volunteers_path,
-        sms_url: bulk_send_sms_volunteers_path
+        sms_url: bulk_send_sms_volunteers_path,
+        note_authenticity_token: form_authenticity_token(form_options: { action: bulk_add_note_volunteers_path, method: "post" }),
+        sms_authenticity_token: form_authenticity_token(form_options: { action: bulk_send_sms_volunteers_path, method: "post" })
       }
     )
   end

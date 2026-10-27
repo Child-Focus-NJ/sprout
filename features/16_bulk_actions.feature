@@ -1,3 +1,4 @@
+@csrf
 Feature: Bulk actions on the volunteer list
   As a staff member
   I want to act on several volunteers at once

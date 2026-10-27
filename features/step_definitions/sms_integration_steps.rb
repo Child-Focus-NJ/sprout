@@ -168,6 +168,10 @@ Then("the SMS for {string} should say {string}") do |name, body|
   expect(volunteer.communications.sms.last).to have_attributes(body: body, status: "sent")
 end
 
+Then("{string} should have no SMS records") do |name|
+  expect(find_or_create_volunteer_by_name(name).communications.sms).to be_empty
+end
+
 Then("the SMS template choices should be unavailable") do
   expect(page).to have_select("SMS template", options: [ "Custom message" ], disabled: true)
 end

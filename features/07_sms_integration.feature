@@ -1,3 +1,4 @@
+@csrf
 Feature: SMS Integration
   As a system administrator
   I want to send SMS reminders to volunteers
@@ -30,7 +31,8 @@ Feature: SMS Integration
     Then I should see "Send SMS"
     And the SMS composer should link to the Mailchimp dashboards in new tabs
 
-  Scenario: Changing recipients clears the template and consent
+  @sms_send
+  Scenario: Changing recipients clears the draft and updates the protected SMS destination
     Given the volunteer "Jane Doe" has a phone number
     And the volunteer "Jack Smith" has a phone number
     And an active SMS template named "Session reminder" says "Hi {{first_name}}, your session is tomorrow."
@@ -42,6 +44,11 @@ Feature: SMS Integration
     And I click "Send SMS" for "Jack Smith" on the list
     Then the message draft should be ""
     And the SMS template and consent should be blank
+    When I enter the message "Hi Jack, see you Friday!"
+    And I select the volunteer's one-time SMS consent
+    And I press "Send"
+    Then the SMS for "Jack Smith" should say "Hi Jack, see you Friday!"
+    And "Jane Doe" should have no SMS records
 
   @sms_send
   Scenario: Manual SMS can be sent from volunteer profile

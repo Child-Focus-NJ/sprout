@@ -72,6 +72,14 @@
     };
     let openFor = null;
 
+    function setFormDestination(form, url, token) {
+      form.action = url;
+      // Rails binds per-form tokens to the POST URL. Change both together when
+      // reusing this dialog for a different volunteer or the bulk endpoints.
+      const tokenField = form.querySelector("input[name='authenticity_token']");
+      if (tokenField) tokenField.value = token || "";
+    }
+
     function showTab(name) {
       tabs.forEach((tab) => {
         const selected = tab.dataset.messageDialogTab === name;
@@ -102,8 +110,8 @@
       }
 
       title.textContent = `Message ${target.name}`;
-      panels.note.action = noteUrl;
-      panels.sms.action = smsUrl;
+      setFormDestination(panels.note, noteUrl, opener.dataset.noteAuthenticityToken);
+      setFormDestination(panels.sms, smsUrl, opener.dataset.smsAuthenticityToken);
       panels.sms.dataset.smsTemplateUrl = opener.dataset.smsTemplateUrl || "";
       panels.sms.querySelector("[data-message-dialog-recipient]").textContent =
         target.ids.length ? `Sending to ${target.name}` : `To: ${target.name} · ${opener.dataset.phone || "No phone number"}`;
