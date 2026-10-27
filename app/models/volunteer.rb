@@ -88,11 +88,11 @@ class Volunteer < ApplicationRecord
   def add_note_with_outcome!(content:, user:, note_category:, information_session: nil, new_information_session: nil)
     ActiveRecord::Base.transaction do
       note = add_staff_note!(content: content, user: user, note_category: note_category)
-      registration = registration_for_outcome!(information_session) if note_category.session_outcome?
+      registration = registration_for_outcome!(information_session, note_category) if note_category.session_outcome?
 
       case note_category.key
       when "attended_info_session"
-        finalize_check_in_for_session!(information_session, user: user)
+        record_attendance!(registration, user: user)
       when "no_show", "cancelled"
         registration.update!(status: note_category.key)
       when "rescheduled"
@@ -152,11 +152,22 @@ class Volunteer < ApplicationRecord
 
   private
 
-  def registration_for_outcome!(information_session)
+  def registration_for_outcome!(information_session, note_category)
     raise OutcomeNoteError, "Choose the session this note is about" if information_session.nil?
 
-    session_registrations.find_by(information_session: information_session) ||
+    registration = session_registrations.find_by(information_session: information_session) ||
       raise(OutcomeNoteError, "#{full_name} isn't registered for that session")
+    if registration.attended? && note_category.key != "attended_info_session"
+      raise OutcomeNoteError, "#{full_name} already attended that session, so it can't be marked #{note_category.name}"
+    end
+
+    registration
+  end
+
+  def record_attendance!(registration, user:)
+    registration.update!(status: :attended, checked_in_at: registration.checked_in_at || Time.current)
+    update!(first_session_attended_at: Time.current) if first_session_attended_at.blank?
+    change_status!(:application_eligible, user: user, trigger: :event) if inquiry?
   end
 
   def reschedule_registration!(registration, new_information_session)
