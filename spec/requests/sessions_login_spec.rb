@@ -61,5 +61,14 @@ RSpec.describe "Login", type: :request do
         get "/auth/google_oauth2/callback"
       }.not_to change(SignInLog, :count)
     end
+
+    it "does not record a sign-in log entry for a deactivated user" do
+      create(:user, :inactive, email: "gone@passaiccountycasa.org", google_uid: "existing-uid")
+      mock_google_oauth(email: "gone@passaiccountycasa.org", uid: "existing-uid")
+
+      expect {
+        get "/auth/google_oauth2/callback"
+      }.not_to change(SignInLog, :count)
+    end
   end
 end

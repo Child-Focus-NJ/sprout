@@ -28,6 +28,13 @@ RSpec.configure do |config|
 
   config.before(:suite) { Warden.test_mode! }
   config.after(:each, type: :request) { Warden.test_reset! }
+
+  config.around do |example|
+    original = ENV.delete("ALLOW_ALL_DOMAINS")
+    example.run
+  ensure
+    ENV["ALLOW_ALL_DOMAINS"] = original
+  end
 end
 
 Shoulda::Matchers.configure do |config|
