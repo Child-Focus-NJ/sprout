@@ -15,6 +15,11 @@ class SessionsController < ApplicationController
       return redirect_to login_path
     end
 
+    unless user.active?
+      flash[:alert] = "Your account is inactive."
+      return redirect_to login_path
+    end
+
     reset_session
     session[:user_id] = user.id
     SignInLog.create!(user: user, ip_address: request.remote_ip)

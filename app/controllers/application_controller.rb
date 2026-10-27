@@ -10,10 +10,14 @@ class ApplicationController < ActionController::Base
 
   helper_method :current_user
 
+  def self.restrict_to_feature(key)
+    before_action { require_feature_access!(key) }
+  end
 
   private
 
-  def require_admin!
+  def require_feature_access!(key)
+    return unless Feature.admin_only?(key)
     return if current_user&.admin?
 
     redirect_to root_path, alert: "You are not authorized to view that page."
@@ -45,7 +49,7 @@ class ApplicationController < ActionController::Base
   end
 
   # Seeded employees have no Google uid. A leftover cookie can point at that
-  # record (often admin@childfocusnj.org) after a DB reset. Cucumber/Warden
+  # record (often sprout@passaiccountycasa.org) after a DB reset. Cucumber/Warden
   # logins in test do not set google_uid, so skip this check there.
   def signed_in_via_google?
     return true if Rails.env.test?

@@ -7,7 +7,7 @@ gem "rails", "~> 8.1.2", ">= 8.1.3.1"
 gem "propshaft"
 gem "tailwindcss-rails", "~> 4.0"
 # Use PostgreSQL as the database for Active Record
-gem "pg", "~> 1.5"
+gem "pg", "~> 1.7"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
@@ -58,7 +58,7 @@ gem "httparty"
 
 # AWS SDK (SQS for async Lambda triggers, S3 for report storage)
 gem "aws-sdk-sqs", "~> 1.0"
-gem "aws-sdk-s3", "~> 1.232"
+gem "aws-sdk-s3", "~> 1.233"
 
 # Excel generation for data exports (admin full-data export, reporting)
 gem "caxlsx"

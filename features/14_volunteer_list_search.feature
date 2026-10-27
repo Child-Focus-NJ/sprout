@@ -1,15 +1,15 @@
-Feature: Search the volunteers list and filter it by status and county
+Feature: Search the volunteers list and filter it by status and vicinage
   As a staff member
-  I want to search volunteers by name, switch between status tabs and filter by county
+  I want to search volunteers by name, switch between status tabs and filter by vicinage
   So that I can find one volunteer or a group without scrolling the whole list
 
   Background:
     Given I am a signed-in system administrator
     And the volunteers list contains:
-      | name        | status               | county |
-      | Harry Kane  | inquiry              | Bergen |
-      | Hana Kimura | application_eligible | Bergen |
-      | Sofia Reyes | inquiry              | Essex  |
+      | name        | status               | vicinage |
+      | Harry Kane  | inquiry              | Union    |
+      | Hana Kimura | application_eligible | Union    |
+      | Sofia Reyes | inquiry              | Passaic    |
 
   Scenario: Search volunteers by name
     Given I am on the volunteers list page
@@ -35,31 +35,31 @@ Feature: Search the volunteers list and filter it by status and county
     When I click the "All" status tab
     Then I should see all 3 volunteers in the list
 
-  Scenario: Filter by county inside a status tab
+  Scenario: Filter by vicinage inside a status tab
     Given I am on the volunteers list page
     When I click the "Inquiry" status tab
     And I open the volunteer filters
-    And I choose the county "Bergen"
+    And I choose the vicinage "Union"
     And I apply the volunteer filters
     Then I should see only these volunteers in the list: "Harry Kane"
     And the "Inquiry" status tab should be selected with 1 volunteers
     And the filter button should show 1 active filters
-    And I should see "County: Bergen"
+    And I should see "Vicinage: Union"
     When I click the "All" status tab
     Then I should see only these volunteers in the list: "Harry Kane, Hana Kimura"
 
-  Scenario: Back from a profile returns to the same tab, search and county
+  Scenario: Back from a profile returns to the same tab, search and vicinage
     Given I am on the volunteers list page
     When I click the "Inquiry" status tab
     And I open the volunteer filters
-    And I choose the county "Bergen"
+    And I choose the vicinage "Union"
     And I apply the volunteer filters
     And I search volunteers for "ha"
     And I open the profile for "Harry Kane"
     And I click "Back to volunteers"
     Then I should see only these volunteers in the list: "Harry Kane"
     And the "Inquiry" status tab should be selected with 1 volunteers
-    And I should see "County: Bergen"
+    And I should see "Vicinage: Union"
     And the volunteer search should contain "ha"
 
   Scenario: Filter popup closes when clicking away

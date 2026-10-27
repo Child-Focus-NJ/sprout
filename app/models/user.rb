@@ -43,11 +43,11 @@ class User < ApplicationRecord
   end
 
   def self.allow_all_domains?
-    ActiveModel::Type::Boolean.new.cast(ENV.fetch("ALLOW_ALL_DOMAINS", "true"))
+    ENV.fetch("ALLOW_ALL_DOMAINS", "true").strip.casecmp?("true")
   end
 
   def self.domain_allowed?(email)
-    email&.end_with?("@passaiccountycasa.org", "@nyu.edu") || false
+    email&.end_with?("@passaiccountycasa.org") || false
   end
 
   def self.normalize_email(value)

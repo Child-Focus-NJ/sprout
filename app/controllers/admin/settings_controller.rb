@@ -1,6 +1,6 @@
 module Admin
   class SettingsController < ApplicationController
-    before_action :require_admin!
+    restrict_to_feature :admin_settings
 
     REMINDER_INTERVAL_WEEKS = [ 1, 2, 4, 8, 12 ].freeze
 

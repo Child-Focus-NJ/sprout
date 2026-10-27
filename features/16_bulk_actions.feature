@@ -35,10 +35,17 @@ Feature: Bulk actions on the volunteer list
     And I select "Harry Kane" on the list
     And I select "Hana Kimura" on the list
     And I click "Send SMS" in the bulk toolbar
-    Then the popup should say "1 of the 2 selected have no phone number"
+    Then the popup should say "1 of the 2 selected have no phone number and will be skipped for SMS: Hana Kimura."
     When I enter the message "Info session is Thursday at 6pm"
     And I press "Send"
-    Then I should see "SMS sent to 1 volunteer. Skipped 1 with no phone number."
+    Then I should see "SMS sent to 1 volunteer. Skipped 1 with no phone number: Hana Kimura."
+
+  Scenario: Bulk SMS names the first few skipped volunteers and counts the rest
+    Given there are 4 more volunteers on the list
+    When I visit the volunteers list
+    And I select all volunteers
+    And I click "Send SMS" in the bulk toolbar
+    Then the popup should say "5 of the 7 selected have no phone number and will be skipped for SMS: Extra Volunteer 0, Extra Volunteer 1, Extra Volunteer 2, and 2 more."
 
   Scenario: Send the application to the selected volunteers
     When I visit the volunteers list

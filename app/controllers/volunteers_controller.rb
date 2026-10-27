@@ -4,11 +4,11 @@ class VolunteersController < ApplicationController
   def index
     @filters = list_filter_params
     session[:volunteer_list_filters] = @filters
-    @counties = NjCounty.alphabetical
+    @vicinages = Vicinage.numerical
 
-    matching = Volunteer.includes(:nj_county).order(:first_name, :last_name)
+    matching = Volunteer.includes(:vicinage).order(:first_name, :last_name)
     matching = matching.name_matching(@filters[:q]) if @filters[:q]
-    matching = matching.where(nj_county_id: @filters[:county_id]) if @filters[:county_id]
+    matching = matching.where(vicinage_id: @filters[:vicinage_id]) if @filters[:vicinage_id]
     # Tab counts follow the name search, so each tab shows how many matches are at that status
     @status_counts = matching.reorder(nil).group(:current_funnel_stage).count
     @volunteers = @filters[:status] ? matching.where(current_funnel_stage: @filters[:status]) : matching
@@ -87,15 +87,16 @@ class VolunteersController < ApplicationController
     redirect_to list_path, notice: "Note added to #{helpers.pluralize(volunteers.size, 'volunteer')}"
   end
 
-  # Texts every selected volunteer who has a phone number; the rest are skipped and counted.
+  # Texts every selected volunteer who has a phone number; the rest are skipped and named (a few of
+  # them, plus a count) so staff know who didn't get it.
   def bulk_send_sms
     volunteers = selected_volunteers
     list_path = bulk_return_path
     return redirect_to(list_path, alert: "Select at least one volunteer") if volunteers.empty?
 
-    textable, no_phone = volunteers.partition { |volunteer| volunteer.phone.present? }
+    no_phone = volunteers.where("COALESCE(TRIM(volunteers.phone), '') = ''")
     sent = failed = 0
-    textable.each do |volunteer|
+    volunteers.where("COALESCE(TRIM(volunteers.phone), '') <> ''").find_each do |volunteer|
       Sms::MailchimpOutbound.deliver!(volunteer: volunteer, body: params[:message], sent_by_user: current_user)
       sent += 1
     rescue Sms::MailchimpOutbound::BlankMessageError, Sms::MailchimpOutbound::MessageTooLongError => e
@@ -106,7 +107,8 @@ class VolunteersController < ApplicationController
     end
 
     summary = [ sent.zero? ? "No SMS sent." : "SMS sent to #{helpers.pluralize(sent, 'volunteer')}." ]
-    summary << "Skipped #{no_phone.size} with no phone number." if no_phone.any?
+    skipped = no_phone.count
+    summary << "Skipped #{skipped} with no phone number: #{some_names(no_phone, skipped)}." if skipped.positive?
     summary << "#{failed} couldn't be sent." if failed.positive?
     redirect_to list_path, (sent.zero? ? :alert : :notice) => summary.join(" ")
   end
@@ -159,7 +161,15 @@ class VolunteersController < ApplicationController
   end
 
   def selected_volunteers
-    Volunteer.where(id: Array(params[:volunteer_ids]).reject(&:blank?)).to_a
+    Volunteer.where(id: Array(params[:volunteer_ids]).reject(&:blank?))
+  end
+
+  # The first few names plus a count of the rest, so the message stays short (and fits in the
+  # session cookie the flash lives in) no matter how many volunteers are in the list
+  def some_names(scope, total, shown: 3)
+    names = scope.order(:first_name, :last_name).limit(shown).pluck(:first_name, :last_name).map { |name| name.join(" ") }
+    rest = total - names.size
+    (rest.positive? ? names + [ "#{helpers.number_with_delimiter(rest)} more" ] : names).to_sentence
   end
 
   # Bulk actions go back to the same filtered list they were sent from
@@ -167,20 +177,20 @@ class VolunteersController < ApplicationController
     url_from(params[:return_to]) || volunteers_path(list_filter_params)
   end
 
-  # Name search and status tab for the volunteers list. An unknown status is dropped
-  # so a stale or hand-edited URL shows the full list instead of nothing.
+  # Search/filter values for the volunteers list. Unknown statuses and vicinages are
+  # dropped so a stale or hand-edited URL shows the full list instead of nothing.
   def list_filter_params
-    county_param = params[:county_id].to_s.presence
-    county_id = county_param && NjCounty.where(id: county_param).pick(:id)
+    vicinage_param = params[:vicinage_id].to_s.presence
+    vicinage_id = vicinage_param && Vicinage.where(id: vicinage_param).pick(:id)
 
     {
       q: params[:q].to_s.strip.presence,
       status: params[:status].presence_in(Volunteer.current_funnel_stages.keys),
-      county_id: county_id
+      vicinage_id: vicinage_id
     }.compact
   end
 
   def volunteer_params
-    params.require(:volunteer).permit(:first_name, :last_name, :email, :phone, :nj_county_id, :referral_source_id)
+    params.require(:volunteer).permit(:first_name, :last_name, :email, :phone, :vicinage_id, :referral_source_id)
   end
 end

@@ -111,11 +111,14 @@
     function selectedVolunteers() {
       const boxes = [...document.querySelectorAll("[data-bulk-select]:checked")];
       const ids = boxes.map((box) => box.value);
-      const missing = boxes.filter((box) => box.dataset.hasPhone !== "true").length;
-      const canText = missing < boxes.length;
+      const missing = boxes.filter((box) => box.dataset.hasPhone !== "true");
+      const canText = missing.length < boxes.length;
       let phoneNote = "";
       if (!canText) phoneNote = "None of the selected volunteers have a phone number, so SMS is turned off.";
-      else if (missing) phoneNote = `${missing} of the ${boxes.length} selected have no phone number and will be skipped for SMS.`;
+      else if (missing.length) {
+        phoneNote = `${count(missing.length)} of the ${count(boxes.length)} selected have no phone number and will be ` +
+                    `skipped for SMS: ${someNames(missing)}.`;
+      }
 
       return {
         key: `bulk:${ids.join(",")}`,
@@ -124,6 +127,17 @@
         canText,
         phoneNote
       };
+    }
+
+    const count = (n) => n.toLocaleString("en-US");
+
+    // The first few names plus "and N more", so the note stays one line however many are skipped
+    function someNames(boxes, shown = 3) {
+      const names = boxes.slice(0, shown).map((box) => box.dataset.name);
+      const rest = boxes.length - names.length;
+      if (rest > 0) names.push(`${count(rest)} more`);
+      if (names.length === 1) return names[0];
+      return `${names.slice(0, -1).join(", ")}${names.length > 2 ? "," : ""} and ${names[names.length - 1]}`;
     }
 
     // Bulk sends post every selected volunteer's id; a single volunteer's id is already in the URL

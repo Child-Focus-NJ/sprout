@@ -63,6 +63,22 @@ RSpec.describe "Admin usage reports", type: :request do
         expect(response).to redirect_to(root_path)
         expect(flash[:alert]).to eq("You are not authorized to view that page.")
       end
+
+      it "is allowed in once the admin_usage_reports feature is opened up to everyone" do
+        Feature.create!(key: "admin_usage_reports", admin_only: false)
+
+        get admin_usage_report_path
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "stays blocked while the admin_usage_reports feature is still admin-only" do
+        Feature.create!(key: "admin_usage_reports", admin_only: true)
+
+        get admin_usage_report_path
+
+        expect(response).to redirect_to(root_path)
+      end
     end
 
     context "when signed out" do
