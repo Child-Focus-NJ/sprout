@@ -9,6 +9,9 @@ class InformationSession < ApplicationRecord
   belongs_to :created_by_user, class_name: "User", optional: true
 
   has_many :session_registrations, dependent: :destroy
+  has_many :current_registrations,
+    -> { where(status: SessionRegistration.statuses[:registered]) },
+    class_name: "SessionRegistration"
   has_many :volunteers, through: :session_registrations
 
   validates :scheduled_at, presence: { message: "Must include date." }
@@ -27,6 +30,12 @@ class InformationSession < ApplicationRecord
 
   def spots_remaining
     capacity && capacity - session_registrations.where(status: [ :registered, :attended ]).count
+  end
+
+  # People who still hold a seat. Attended, no-show, cancelled, and rescheduled rows drop out,
+  # so the summary changes as soon as a registration is created or its status changes.
+  def registered_count
+    current_registrations.size
   end
 
   def label
