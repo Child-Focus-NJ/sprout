@@ -7,7 +7,7 @@ class VmsPushInquiryJob < ApplicationJob
 
   def perform(volunteer_id)
     volunteer = Volunteer.find(volunteer_id)
-    inquired_on = (volunteer.inquiry_date || volunteer.created_at || Time.current).to_date
+    inquired_on = volunteer.inquiry_date.to_date
 
     encrypted_id = ExternalVmsSync.new.create_inquiry!(
       first_name: volunteer.first_name,
