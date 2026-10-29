@@ -341,28 +341,29 @@
     @apply text-gray-700 mb-3 max-w-2xl text-base;
   }
 
+  /* Each status sets its colors once as variables; badges and the Volunteers list tabs both use them. */
   .status-badge {
-    @apply inline-flex items-center rounded-md border px-2.5 py-0.5 text-sm font-semibold;
+    @apply inline-flex items-center rounded-md border border-(--badge-border) bg-(--badge-bg) px-2.5 py-0.5 text-sm font-semibold;
   }
 
   .status-badge--inquiry {
-    @apply border-slate-300 bg-slate-100 text-slate-800;
+    @apply text-slate-800 [--badge-bg:var(--color-slate-100)] [--badge-border:var(--color-slate-300)];
   }
 
   .status-badge--application-eligible {
-    @apply border-sky-300 bg-sky-100 text-sky-900;
+    @apply text-sky-900 [--badge-bg:var(--color-sky-100)] [--badge-border:var(--color-sky-300)];
   }
 
   .status-badge--application-sent {
-    @apply border-amber-300 bg-amber-100 text-amber-950;
+    @apply text-amber-950 [--badge-bg:var(--color-amber-100)] [--badge-border:var(--color-amber-300)];
   }
 
   .status-badge--applied {
-    @apply border-emerald-300 bg-emerald-100 text-emerald-900;
+    @apply text-emerald-900 [--badge-bg:var(--color-emerald-100)] [--badge-border:var(--color-emerald-300)];
   }
 
   .status-badge--inactive {
-    @apply border-gray-300 bg-gray-100 text-gray-600;
+    @apply text-gray-600 [--badge-bg:var(--color-gray-100)] [--badge-border:var(--color-gray-300)];
   }
 
   .status-update-form {
@@ -497,17 +498,9 @@
     @apply h-auto rounded-lg border-0 bg-transparent px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-sky-100 hover:text-sky-950;
   }
 
-  /* Volunteers list: title on the left; name search + funnel filter popup on the right. */
-  .volunteer-list-header {
-    @apply mb-3 flex flex-wrap items-center justify-between gap-3;
-  }
-
-  .volunteer-list-header .page-title {
-    @apply mb-0;
-  }
-
+  /* Floats just above the line the tabs stand on. */
   .volunteer-search {
-    @apply flex w-full items-center gap-2 sm:w-auto;
+    @apply mb-1.5 flex w-full items-center gap-2 sm:w-auto;
   }
 
   .volunteer-search__field {
@@ -543,7 +536,7 @@
   }
 
   .volunteer-filter-menu__panel {
-    @apply absolute right-0 top-full z-30 mt-2 grid w-[min(28rem,calc(100vw-2rem))] gap-4 rounded-lg border border-gray-300 bg-white p-4 shadow-lg sm:grid-cols-2;
+    @apply absolute right-0 top-full z-40 mt-2 grid w-[min(16rem,calc(100vw-2rem))] gap-4 rounded-lg border border-gray-300 bg-white p-4 shadow-lg;
   }
 
   .volunteer-filter-menu__panel fieldset {
@@ -567,15 +560,13 @@
   }
 
   .volunteer-filter-menu__actions {
-    @apply flex justify-end gap-2 border-t border-gray-200 pt-3 sm:col-span-2;
+    @apply flex justify-end gap-2 border-t border-gray-200 pt-3;
   }
 
-  /* Summary of what's filtered, shown under the header only when something is. */
   .volunteer-active-filters {
     @apply mb-3 flex flex-wrap items-center gap-2 text-sm text-gray-600;
   }
 
-  /* Status chips take their colors from the matching .status-badge--* class. */
   .volunteer-filter-chip {
     @apply inline-flex items-center gap-1 rounded-full border py-0.5 pl-2.5 pr-1 font-medium;
   }
@@ -588,7 +579,58 @@
     @apply flex h-5 w-5 items-center justify-center rounded-full text-current no-underline opacity-70 hover:bg-black/5 hover:opacity-100;
   }
 
-  .volunteer-active-filters__clear,
+  /* Volunteers list: status tabs on the left and the name search on the right, sitting on one line
+     like folder tabs. The selected tab turns white and joins the list card below it. */
+  .volunteer-tabs-bar {
+    @apply flex flex-col-reverse gap-2 border-b border-gray-300 sm:flex-row sm:items-end sm:justify-between;
+  }
+
+  .volunteer-status-tabs {
+    @apply -mb-px flex items-end overflow-x-auto pl-1 pt-2;
+  }
+
+  /* Each tab is a trapezoid with slightly rounded top corners, drawn behind its label in its status's
+     badge colors. Tabs overlap like browser tabs and grow from 36px to the search bar's 42px on hover,
+     staying attached to the line. */
+  .volunteer-status-tab {
+    @apply relative isolate -ml-5 inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-none border-0 bg-transparent px-7 text-sm font-medium no-underline transition-[height] duration-150 ease-out first:ml-0 hover:z-20 hover:h-[42px] motion-reduce:transition-none;
+  }
+
+  /* The tilt makes the shape look shorter than the tab, so scaleY stretches it back to the full height. */
+  .volunteer-status-tab::before {
+    content: "";
+    @apply absolute inset-0 -z-10 rounded-t-lg border border-(--badge-border) border-b-gray-300 bg-(--badge-bg) shadow-[0_-2px_4px_rgba(15,23,42,0.06)];
+    transform: scaleY(1.28) perspective(0.75em) rotateX(4deg);
+    transform-origin: bottom;
+  }
+
+  .volunteer-status-tab:hover::before {
+    @apply shadow-[0_-4px_10px_rgba(15,23,42,0.12)];
+  }
+
+  .volunteer-status-tab--all {
+    @apply text-gray-700 [--badge-bg:var(--color-gray-50)] [--badge-border:var(--color-gray-300)];
+  }
+
+  /* The selected tab keeps its color, stays at the search bar's height and on top, and its bottom
+     edge blends into the line so it reads as the open folder. */
+  .volunteer-status-tab--active {
+    @apply z-30 h-[42px] font-semibold hover:z-30;
+  }
+
+  .volunteer-status-tab--active::before {
+    @apply border-b-transparent shadow-[0_-3px_8px_rgba(15,23,42,0.1)];
+  }
+
+  .volunteer-status-tab__count {
+    @apply rounded-full bg-white/70 px-1.5 text-xs font-semibold tabular-nums;
+  }
+
+  /* The list card's top edge is the line the tabs sit on. */
+  .volunteer-list-card {
+    @apply rounded-t-none border-t-0;
+  }
+
   .volunteer-list-empty a {
     @apply font-medium text-sky-700 underline underline-offset-2 hover:text-sky-900;
   }

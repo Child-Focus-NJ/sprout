@@ -32,11 +32,28 @@ RSpec.describe "Google OAuth sign-in", type: :request do
       follow_redirect!
       expect(response.body).to include("not been granted access")
     end
+
+    it "rejects a brand-new nyu.edu account" do
+      mock_google_oauth(email: "student@nyu.edu")
+
+      get "/auth/google_oauth2/callback"
+
+      expect(User.find_by(email: "student@nyu.edu")).to be_nil
+      expect(response).to redirect_to(login_path)
+    end
+
+    it "still signs in an nyu.edu email an admin has whitelisted" do
+      create(:user, email: "dev@nyu.edu", role: :user)
+      mock_google_oauth(email: "dev@nyu.edu")
+
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to(application_dashboard_path)
+    end
   end
 
   describe "with ALLOW_ALL_DOMAINS set to false" do
     before { ENV["ALLOW_ALL_DOMAINS"] = "false" }
-    after { ENV.delete("ALLOW_ALL_DOMAINS") }
 
     it "still signs in an already-whitelisted user" do
       create(:user, email: "whitelisted@passaiccountycasa.org", role: :user)
@@ -60,14 +77,11 @@ RSpec.describe "Google OAuth sign-in", type: :request do
   end
 
   describe "a deactivated user" do
-    it "is bounced back to login the moment they land, even with valid Google credentials" do
+    it "is turned away at sign-in, even with valid Google credentials" do
       create(:user, :inactive, email: "gone@passaiccountycasa.org", google_uid: "existing-uid")
       mock_google_oauth(email: "gone@passaiccountycasa.org", uid: "existing-uid")
 
       get "/auth/google_oauth2/callback"
-      expect(response).to redirect_to(application_dashboard_path)
-
-      follow_redirect!
 
       expect(response).to redirect_to(login_path)
       follow_redirect!

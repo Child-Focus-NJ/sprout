@@ -3,14 +3,15 @@ class VolunteersController < ApplicationController
 
   def index
     @filters = list_filter_params
+    session[:volunteer_list_filters] = @filters
     @vicinages = Vicinage.numerical
-    @total_count = Volunteer.count
 
-    volunteers = Volunteer.includes(:vicinage).order(:first_name, :last_name)
-    volunteers = volunteers.name_matching(@filters[:q]) if @filters[:q]
-    volunteers = volunteers.where(current_funnel_stage: @filters[:status]) if @filters[:status]
-    volunteers = volunteers.where(vicinage_id: @filters[:vicinage_id]) if @filters[:vicinage_id]
-    @volunteers = volunteers
+    matching = Volunteer.includes(:vicinage).order(:first_name, :last_name)
+    matching = matching.name_matching(@filters[:q]) if @filters[:q]
+    matching = matching.where(vicinage_id: @filters[:vicinage_id]) if @filters[:vicinage_id]
+    # Tab counts follow the name search, so each tab shows how many matches are at that status
+    @status_counts = matching.reorder(nil).group(:current_funnel_stage).count
+    @volunteers = @filters[:status] ? matching.where(current_funnel_stage: @filters[:status]) : matching
   end
 
   def show

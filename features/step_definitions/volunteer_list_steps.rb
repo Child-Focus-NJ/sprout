@@ -20,19 +20,24 @@ When("I search volunteers for {string}") do |query|
   find_field("Search by name").send_keys(:enter)
 end
 
+When("I click the {string} status tab") do |label|
+  within("#volunteer-status-tabs") { click_link label }
+end
+
 When("I open the volunteer filters") do
   find(".volunteer-filter-menu__toggle").click
 end
 
-When("I choose the status {string} and the vicinage {string}") do |status, vicinage|
-  within(".volunteer-filter-menu__panel") do
-    choose status
-    choose vicinage
-  end
+When("I choose the vicinage {string}") do |vicinage|
+  within(".volunteer-filter-menu__panel") { choose vicinage }
 end
 
 When("I apply the volunteer filters") do
   within(".volunteer-filter-menu__panel") { click_button "Apply" }
+end
+
+When("I open the profile for {string}") do |name|
+  within(".volunteer-row", text: name) { click_link "View profile" }
 end
 
 When("I click outside the volunteer filter popup") do
@@ -47,7 +52,14 @@ end
 
 Then("I should see all {int} volunteers in the list") do |count|
   expect(page).to have_css("#volunteer-list .volunteer-name", count: count)
-  expect(page).not_to have_css("#volunteer-count")
+end
+
+Then("the {string} status tab should be selected with {int} volunteers") do |label, count|
+  expect(page).to have_css("#volunteer-status-tabs a[aria-current='page']", exact_text: "#{label} #{count}", normalize_ws: true)
+end
+
+Then("the volunteer search should contain {string}") do |query|
+  expect(page).to have_field("Search by name", with: query)
 end
 
 Then("the filter button should show {int} active filters") do |count|
