@@ -93,6 +93,9 @@
           <label for="volunteer_<%= volunteer.id %>" class="volunteer-name"><%= volunteer.full_name %></label>
           <div class="volunteer-subtext">
             <span>Contact: <%= volunteer.phone.presence || volunteer.email %></span>
+            <% if @filters[:status] == "inquiry" %>
+              <span>Inquired <%= volunteer.inquiry_date.strftime("%b %-d, %Y") %></span>
+            <% end %>
             <% if volunteer.vicinage %>
               <span>Vicinage: <%= volunteer.vicinage.name %></span>
             <% end %>

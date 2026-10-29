@@ -6,7 +6,8 @@ Given("the volunteers list contains:") do |table|
       last_name: last_name,
       email: "#{row['name'].parameterize}@childfocusnj.org",
       current_funnel_stage: row["status"],
-      vicinage: Vicinage.find_or_create_by!(name: row["vicinage"])
+      vicinage: Vicinage.find_or_create_by!(name: row["vicinage"]),
+      inquiry_date: row["inquired"]
     )
   end
 end
@@ -48,6 +49,12 @@ Then("I should see only these volunteers in the list: {string}") do |names|
   expected = names.split(",").map(&:strip)
   expect(page).to have_css("#volunteer-list .volunteer-name", count: expected.size)
   expect(all("#volunteer-list .volunteer-name").map(&:text)).to match_array(expected)
+end
+
+Then("I should see these volunteers in order: {string}") do |names|
+  expected = names.split(",").map(&:strip)
+  expect(page).to have_css("#volunteer-list .volunteer-name", count: expected.size)
+  expect(all("#volunteer-list .volunteer-name").map(&:text)).to eq(expected)
 end
 
 Then("I should see all {int} volunteers in the list") do |count|

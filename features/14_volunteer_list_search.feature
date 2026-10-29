@@ -6,10 +6,10 @@ Feature: Search the volunteers list and filter it by status and vicinage
   Background:
     Given I am a signed-in system administrator
     And the volunteers list contains:
-      | name        | status               | vicinage |
-      | Harry Kane  | inquiry              | Union    |
-      | Hana Kimura | application_eligible | Union    |
-      | Sofia Reyes | inquiry              | Passaic    |
+      | name        | status               | vicinage | inquired   |
+      | Harry Kane  | inquiry              | Union    | 2026-09-01 |
+      | Hana Kimura | application_eligible | Union    | 2026-08-15 |
+      | Sofia Reyes | inquiry              | Passaic  | 2026-10-01 |
 
   Scenario: Search volunteers by name
     Given I am on the volunteers list page
@@ -61,6 +61,13 @@ Feature: Search the volunteers list and filter it by status and vicinage
     And the "Inquiry" status tab should be selected with 1 volunteers
     And I should see "Vicinage: Union"
     And the volunteer search should contain "ha"
+
+  Scenario: The Inquiry tab lists the newest inquiries first with their dates
+    Given I am on the volunteers list page
+    When I click the "Inquiry" status tab
+    Then I should see these volunteers in order: "Sofia Reyes, Harry Kane"
+    And I should see "Inquired Oct 1, 2026"
+    And I should see "Inquired Sep 1, 2026"
 
   Scenario: Filter popup closes when clicking away
     Given I am on the volunteers list page
