@@ -7,6 +7,9 @@ class Admin::CommunicationTemplatesController < ApplicationController
 
   def new
     @template = CommunicationTemplate.new
+    if params[:template_type] == "sms"
+      @template.assign_attributes(template_type: :sms, trigger_type: :manual, active: true)
+    end
   end
 
   def create

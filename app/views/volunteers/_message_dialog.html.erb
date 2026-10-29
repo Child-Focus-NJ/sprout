@@ -34,13 +34,25 @@
                   html: { id: "message-dialog-sms", class: "message-dialog__panel note-form", role: "tabpanel", hidden: true,
                           aria: { labelledby: "message-dialog-tab-sms" }, data: { message_dialog_panel: "sms" } } do %>
       <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
+      <p class="subtle" data-message-dialog-recipient></p>
+      <%= render "volunteers/sms_template_picker", prefix: "dialog-sms" %>
       <label for="dialog-sms">Message</label>
       <textarea id="dialog-sms" name="message" rows="4" maxlength="<%= Sms::MailchimpOutbound::MAX_MESSAGE_LENGTH %>" required
-                data-autogrow placeholder="Type your text message here."></textarea>
+                data-autogrow data-sms-message placeholder="Type your text message here."></textarea>
+      <label for="dialog-sms-consent">SMS consent provided by the volunteer</label>
+      <%= select_tag :consent, options_for_select([
+        ["One informational message", "onetime"],
+        ["Recurring informational messages (send confirmation)", "recurring"],
+        ["Recurring informational messages (confirmation already sent)", "recurring-no-confirm"]
+      ]), id: "dialog-sms-consent", prompt: "Select consent", required: true,
+          aria: { describedby: "dialog-sms-consent-help" } %>
+      <p id="dialog-sms-consent-help" class="subtle">Select the permission already given for this sending number. For a group, every recipient must have given the selected permission.</p>
       <div class="note-form__footer">
         <p class="subtle"><span data-message-dialog-count>0</span> / <%= Sms::MailchimpOutbound::MAX_MESSAGE_LENGTH %> characters</p>
         <button type="submit" class="button-primary">Send</button>
       </div>
+      <a class="button-link" data-sms-compose-link>Open full SMS page</a>
+      <%= render "volunteers/mailchimp_links" %>
     <% end %>
   </div>
 </dialog>
@@ -60,8 +72,20 @@
     };
     let openFor = null;
 
+    function setFormDestination(form, url, token) {
+      form.action = url;
+      // Rails binds per-form tokens to the POST URL. Change both together when
+      // reusing this dialog for a different volunteer or the bulk endpoints.
+      const tokenField = form.querySelector("input[name='authenticity_token']");
+      if (tokenField) tokenField.value = token || "";
+    }
+
     function showTab(name) {
-      tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.messageDialogTab === name)));
+      tabs.forEach((tab) => {
+        const selected = tab.dataset.messageDialogTab === name;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      });
       Object.entries(panels).forEach(([key, panel]) => { panel.hidden = key !== name; });
 
       // Fire input so the box sizes itself and the character count is current.
@@ -80,12 +104,25 @@
       // Start fresh for different recipients so a draft never goes to the wrong person.
       if (openFor !== target.key) {
         dialog.querySelectorAll("textarea").forEach((box) => { box.value = ""; });
+        dialog.querySelector("[name='consent']").value = "";
+        panels.sms.dispatchEvent(new Event("sms-recipient-changed", { bubbles: true }));
         openFor = target.key;
       }
 
       title.textContent = `Message ${target.name}`;
-      panels.note.action = noteUrl;
-      panels.sms.action = smsUrl;
+      setFormDestination(panels.note, noteUrl, opener.dataset.noteAuthenticityToken);
+      setFormDestination(panels.sms, smsUrl, opener.dataset.smsAuthenticityToken);
+      panels.sms.dataset.smsTemplateUrl = opener.dataset.smsTemplateUrl || "";
+      panels.sms.querySelector("[data-message-dialog-recipient]").textContent =
+        target.ids.length ? `Sending to ${target.name}` : `To: ${target.name} · ${opener.dataset.phone || "No phone number"}`;
+      if (!panels.sms.querySelector("[data-sms-template-picker]").disabled) {
+        panels.sms.querySelector("[data-sms-template-help]").textContent = target.ids.length ?
+          "Merge fields such as {{first_name}} are filled in separately for each volunteer. You can edit the message." :
+          "Choose a template to personalize, then edit the message before sending.";
+      }
+      const composeLink = panels.sms.querySelector("[data-sms-compose-link]");
+      composeLink.hidden = !opener.dataset.smsComposeUrl;
+      if (opener.dataset.smsComposeUrl) composeLink.href = opener.dataset.smsComposeUrl;
       setVolunteerIds(target.ids);
       smsTab.disabled = !target.canText;
       smsTab.title = target.canText ? "" : "No phone number on file";
@@ -153,6 +190,15 @@
     }
 
     tabs.forEach((tab) => tab.addEventListener("click", () => showTab(tab.dataset.messageDialogTab)));
+    tabs.forEach((tab) => tab.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      event.preventDefault();
+      const enabled = [...tabs].filter((item) => !item.disabled);
+      const next = event.key === "Home" ? enabled[0] : event.key === "End" ? enabled[enabled.length - 1] :
+        enabled[(enabled.indexOf(tab) + (event.key === "ArrowLeft" ? -1 : 1) + enabled.length) % enabled.length];
+      showTab(next.dataset.messageDialogTab);
+      next.focus();
+    }));
     dialog.querySelector("[data-message-dialog-close]").addEventListener("click", () => dialog.close());
     // A click on the dimmed area outside the popup closes it, like Escape does.
     dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });

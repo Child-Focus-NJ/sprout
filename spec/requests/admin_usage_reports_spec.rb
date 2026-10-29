@@ -36,7 +36,7 @@ RSpec.describe "Admin usage reports", type: :request do
 
       it "lists recent communications by volunteer" do
         volunteer = create(:volunteer, first_name: "Jamie", last_name: "Lee")
-        volunteer.communications.create!(communication_type: :sms, body: "Hi", sent_at: Time.current)
+        volunteer.communications.create!(communication_type: :sms, body: "Hi", sent_at: Time.current, status: :delivered)
 
         get admin_usage_report_path
 
