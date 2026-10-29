@@ -3,6 +3,11 @@
     <h1 class="page-title sessions-index__title">Information Sessions</h1>
   </header>
 
+  <nav class="sys-tabs" aria-label="Information sessions">
+    <%= information_session_tab_link("Upcoming Info Sessions", "upcoming") %>
+    <%= information_session_tab_link("Past Info Sessions", "past") %>
+  </nav>
+
   <section class="card sessions-filter-card" aria-label="Filter sessions">
     <%= form_with url: information_sessions_path, method: :get, local: true do |f| %>
       <div class="sessions-filter-grid">
@@ -24,20 +29,7 @@
               { include_blank: "All locations" },
               { class: "input-large" } %>
         </div>
-        <div class="form-row">
-          <%= f.label :upcoming_past, "Time range" %>
-          <%= f.select :upcoming_past,
-              options_for_select(
-                [
-                  ["All sessions", "All"],
-                  ["Upcoming only", "Upcoming"],
-                  ["Past only", "Past"]
-                ],
-                selected: params[:upcoming_past].presence || "All"
-              ),
-              {},
-              { class: "input-large" } %>
-        </div>
+        <%= hidden_field_tag :tab, @session_tab %>
         <div class="sessions-filter-actions">
           <%= f.button "Filter", type: "submit", class: "button-primary" %>
           <%= link_to "Clear filters", information_sessions_path, class: "button-link" %>
@@ -54,12 +46,18 @@
   <% sessions = @information_sessions || [] %>
   <% if sessions.empty? %>
     <section class="sessions-empty" aria-live="polite">
-      <h2 class="subsection-heading">No sessions found</h2>
-      <p class="subtle">Try different dates or location, or use the Clear filters control in the section above.</p>
+      <h2 class="subsection-heading">No <%= @session_tab == "past" ? "past" : "upcoming" %> info sessions</h2>
+      <p class="subtle">
+        <% if @session_tab == "past" %>
+          Sessions move here automatically once their scheduled time has passed. Try different dates or location, or clear the filters above.
+        <% else %>
+          Upcoming sessions stay on this tab until their scheduled time has passed. Try different dates or location, or clear the filters above.
+        <% end %>
+      </p>
     </section>
   <% else %>
     <% filter_opts = information_sessions_filter_params.compact_blank %>
-    <h2 class="section-heading sessions-history-heading">Information Session History</h2>
+    <h2 class="section-heading sessions-history-heading"><%= @session_tab == "past" ? "Past Info Sessions" : "Upcoming Info Sessions" %></h2>
     <section id="information-session-list" class="card volunteer-list sessions-history-list" aria-label="Information sessions">
       <% sessions.each do |session| %>
         <% tz = session.scheduled_at.in_time_zone %>
