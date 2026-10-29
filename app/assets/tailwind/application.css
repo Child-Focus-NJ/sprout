@@ -362,6 +362,26 @@
     @apply text-gray-600 [--badge-bg:var(--color-gray-100)] [--badge-border:var(--color-gray-300)];
   }
 
+  .status-badge--outcome-registered {
+    @apply text-slate-800 [--badge-bg:var(--color-slate-100)] [--badge-border:var(--color-slate-300)];
+  }
+
+  .status-badge--outcome-attended {
+    @apply text-emerald-900 [--badge-bg:var(--color-emerald-100)] [--badge-border:var(--color-emerald-300)];
+  }
+
+  .status-badge--outcome-rescheduled {
+    @apply text-sky-900 [--badge-bg:var(--color-sky-100)] [--badge-border:var(--color-sky-300)];
+  }
+
+  .status-badge--outcome-no-show {
+    @apply text-amber-950 [--badge-bg:var(--color-amber-100)] [--badge-border:var(--color-amber-300)];
+  }
+
+  .status-badge--outcome-cancelled {
+    @apply text-gray-600 [--badge-bg:var(--color-gray-100)] [--badge-border:var(--color-gray-300)];
+  }
+
   .status-update-form {
     @apply flex flex-col items-start gap-3;
   }
@@ -752,6 +772,10 @@
 
   .session-history-created-by {
     @apply m-0 mt-2 text-sm leading-snug text-gray-600;
+  }
+
+  .session-roster-link {
+    @apply text-sky-800 underline decoration-sky-300 underline-offset-2 hover:text-sky-950;
   }
 
   .sessions-participants-wrap {
