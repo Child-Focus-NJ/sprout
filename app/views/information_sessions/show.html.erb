@@ -1,0 +1,46 @@
+<main class="volunteer-page">
+  <nav class="page-nav page-nav--back" aria-label="Back">
+    <%= back_nav_link information_sessions_path(information_sessions_filter_params.compact_blank), "Back to information sessions" %>
+  </nav>
+
+  <h1 class="page-title"><%= @information_session.name %></h1>
+  <% tz = @information_session.scheduled_at.in_time_zone %>
+  <p class="subtle">
+    <%= @information_session.location %>
+    at
+    <time datetime="<%= tz.iso8601 %>"><%= tz.strftime("%b %d, %Y %I:%M %p") %></time>
+  </p>
+
+  <section class="card status-panel">
+    <h2 class="section-heading">Registered volunteers</h2>
+    <p class="help-text">
+      <%= pluralize(@registrations.size, "volunteer") %> currently registered.
+      This includes people who signed up for this session and people who rescheduled into it.
+      Cancelled registrations, and volunteers who rescheduled to a different session, are left off this list.
+    </p>
+
+    <% if @registrations.empty? %>
+      <p class="subtle">No volunteers are registered for this session.</p>
+    <% else %>
+      <div class="sessions-table-wrap sessions-participants-wrap">
+        <table class="sessions-table sessions-participants-table">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @registrations.each do |registration| %>
+              <% volunteer = registration.volunteer %>
+              <tr id="registrant-<%= volunteer.id %>">
+                <td class="sessions-participants-name"><%= link_to volunteer.full_name, volunteer_path(volunteer) %></td>
+                <td class="sessions-participants-email"><%= volunteer.email %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
+</main>
