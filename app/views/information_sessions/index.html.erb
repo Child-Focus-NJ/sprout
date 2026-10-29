@@ -72,6 +72,7 @@
             <div class="volunteer-name"><%= session.name %></div>
             <div class="volunteer-subtext session-history-meta">
               <span><%= session.location %></span>
+              <span><%= pluralize(session.registered_count, "registered volunteer") %></span>
               <span>
                 <time datetime="<%= tz.iso8601 %>">
                   <%= date_part %> <%= time_part %>

@@ -22,6 +22,18 @@ RSpec.describe "Information Sessions", type: :request do
       expect(response.body).to include(information_session.name)
     end
 
+    it "shows how many volunteers are currently registered" do
+      create(:session_registration, information_session: information_session, status: :registered)
+      create(:session_registration, information_session: information_session, status: :registered)
+      create(:session_registration, information_session: information_session, status: :cancelled)
+      create(:session_registration, information_session: information_session, status: :rescheduled)
+
+      get information_sessions_path
+
+      expect(response.body.scan(information_session.name).size).to eq(1)
+      expect(response.body).to include("2 registered volunteers")
+    end
+
     context "with date filters" do
       it "filters by start_date" do
         information_session
