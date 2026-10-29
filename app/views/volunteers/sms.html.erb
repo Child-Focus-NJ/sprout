@@ -40,13 +40,13 @@
     <%= render "volunteers/sms_template_picker", prefix: "sms-page" %>
     <div class="grid gap-1.5">
       <label for="message">Message</label>
-      <textarea id="message" name="message" rows="6" maxlength="320" required data-sms-message><%= @message %></textarea>
+      <textarea id="message" name="message" rows="6" maxlength="<%= Sms::MailchimpOutbound::MAX_MESSAGE_LENGTH %>" required data-sms-message><%= @message %></textarea>
     </div>
 
     <div id="sms-character-count">
-      Character count: <span id="sms-char-count-value"><%= @message.to_s.length %></span> / 320
+      Character count: <span id="sms-char-count-value"><%= @message.to_s.length %></span> / <%= Sms::MailchimpOutbound::MAX_MESSAGE_LENGTH %>
     </div>
-    <p class="subtle">Maximum 320 characters.</p>
+    <p class="subtle">Maximum <%= Sms::MailchimpOutbound::MAX_MESSAGE_LENGTH %> characters.</p>
 
     <div class="grid gap-1.5">
       <label for="consent">SMS consent provided by the volunteer</label>

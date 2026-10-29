@@ -134,7 +134,7 @@ class InquiryFormController < ApplicationController
     begin
       Email::VolunteerNotifications.inquiry!(volunteer: volunteer)
     rescue Email::MailchimpOutbound::Error => e
-      flash[:alert] = "Inquiry saved. #{e.message}"
+      Rails.logger.error("[InquiryForm] confirmation email failed for volunteer #{volunteer.id}: #{e.class}: #{e.message}")
     end
 
     redirect_to new_inquiry_form_path, notice: "Thanks! Your inquiry has been submitted."

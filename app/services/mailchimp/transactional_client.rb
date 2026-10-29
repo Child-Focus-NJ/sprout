@@ -4,12 +4,11 @@ require "httparty"
 
 module Mailchimp
   # Direct Mailchimp Transactional (Mandrill) API client used by Rails for SMS and email.
-  # Matches the v1.4 send-sms contract used by lambdas/mailchimp_realtime/sms_client.rb.
+  # This is the only send path. Consent values live here so callers do not keep a second copy.
   class TransactionalClient
     include HTTParty
     base_uri "https://mandrillapp.com/api/1.4"
 
-    # Keep the independently deployed Lambda SmsClient consent values in sync.
     CONSENT_TYPES = %w[onetime recurring recurring-no-confirm].freeze
     STATUSES = %w[sent queued scheduled rejected invalid].freeze
     EMAIL_STATES = %w[sent bounced rejected queued scheduled canceled].freeze
@@ -19,15 +18,43 @@ module Mailchimp
     class ApiError < Error; end
     class UncertainDeliveryError < Error; end
 
-    def initialize(api_key: ENV["MANDRILL_API_KEY"].presence || ENV["MAILCHIMP_API_KEY"])
-      @api_key = api_key.to_s.strip
-      raise ConfigurationError, "MANDRILL_API_KEY (or MAILCHIMP_API_KEY) is not set" if @api_key.blank?
+    # Encrypted credentials (config/master.key) are the source of truth.
+    # Environment variables remain a fallback so the test suite can supply values
+    # without a Mandrill entry in the credentials file. Tests prefer the environment
+    # so a developer key in the vault cannot change assertions.
+    def self.credential(key, *env_names)
+      candidates = []
+      candidates << environment_value(env_names) if Rails.env.test?
+      candidates << credentials_value(key)
+      candidates << environment_value(env_names) unless Rails.env.test?
+      candidates.find(&:present?)
     end
 
-    # Returns { "status", "external_id", "to", "reject_reason" } like the Lambda SMS path.
-    def send_sms(to:, message:, consent:, from: ENV["MANDRILL_SMS_FROM"].presence || ENV["MAILCHIMP_SMS_FROM"])
+    def self.credentials_value(key)
+      Rails.application.credentials.dig(:mandrill, key)
+    rescue ActiveSupport::EncryptedFile::MissingKeyError, ActiveSupport::MessageEncryptor::InvalidMessage
+      nil
+    end
+    private_class_method :credentials_value
+
+    def self.environment_value(env_names)
+      env_names.each do |name|
+        value = ENV[name].presence
+        return value if value
+      end
+      nil
+    end
+    private_class_method :environment_value
+
+    def initialize(api_key: self.class.credential(:api_key, "MANDRILL_API_KEY", "MAILCHIMP_API_KEY"))
+      @api_key = api_key.to_s.strip
+      raise ConfigurationError, "Mandrill API key is not set in the encrypted credentials" if @api_key.blank?
+    end
+
+    # Returns { "status", "external_id", "to", "reject_reason" }.
+    def send_sms(to:, message:, consent:, from: self.class.credential(:sms_from, "MANDRILL_SMS_FROM", "MAILCHIMP_SMS_FROM"))
       from_number = from.to_s.strip
-      raise ConfigurationError, "MANDRILL_SMS_FROM (or MAILCHIMP_SMS_FROM) is not set" if from_number.blank?
+      raise ConfigurationError, "Mandrill SMS sender is not set in the encrypted credentials" if from_number.blank?
       unless CONSENT_TYPES.include?(consent)
         raise ApiError, "Invalid SMS consent type"
       end
@@ -55,9 +82,9 @@ module Mailchimp
     end
 
     # Returns { "status", "external_id", "to", "reject_reason" } like the Lambda email path.
-    def send_email(to:, subject:, text_body:, from_email: ENV["MANDRILL_FROM_EMAIL"].presence || ENV["MAILCHIMP_EMAIL_FROM"])
+    def send_email(to:, subject:, text_body:, from_email: self.class.credential(:from_email, "MANDRILL_FROM_EMAIL", "MAILCHIMP_EMAIL_FROM"))
       sender = from_email.to_s.strip
-      raise ConfigurationError, "MANDRILL_FROM_EMAIL (or MAILCHIMP_EMAIL_FROM) is not set" if sender.blank?
+      raise ConfigurationError, "Mandrill From address is not set in the encrypted credentials" if sender.blank?
 
       response = self.class.post(
         "/messages/send",
@@ -114,9 +141,9 @@ module Mailchimp
 
       results = JSON.parse(response.body)
       result = results.first if results.is_a?(Array) && results.length == 1
-      # Compare the complete E.164 number; harmless spacing must not hide a successful send.
-      recipient = result["to"].delete(" \t\r\n") if result.is_a?(Hash) && result["to"].is_a?(String)
-      unless result.is_a?(Hash) && recipient == expected_to &&
+      # Mailchimp may reformat the number it accepted. Compare digits so spacing or
+      # punctuation on a successful send is not treated as an unrecognized result.
+      unless result.is_a?(Hash) && same_phone_number?(result["to"], expected_to) &&
           STATUSES.include?(result["status"]) && result["_id"].is_a?(String) && result["_id"].present?
         raise UncertainDeliveryError, "Mailchimp returned an unrecognized SMS result"
       end
@@ -124,9 +151,15 @@ module Mailchimp
       {
         "status" => result["status"],
         "external_id" => result["_id"],
-        "to" => recipient,
+        "to" => expected_to,
         "reject_reason" => result["reject_reason"]
       }
+    end
+
+    def same_phone_number?(returned, expected)
+      returned_digits = returned.to_s.gsub(/\D/, "")
+      expected_digits = expected.to_s.gsub(/\D/, "")
+      returned_digits.present? && returned_digits == expected_digits
     end
 
     def parse_email_response!(response, expected_to:)

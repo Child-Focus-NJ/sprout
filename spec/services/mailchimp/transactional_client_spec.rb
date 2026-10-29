@@ -34,6 +34,11 @@ RSpec.describe Mailchimp::TransactionalClient do
       expect(result).to include("to" => "+12015550123", "status" => "sent")
     end
 
+    it "accepts punctuation in a successful recipient instead of treating the send as uncertain" do
+      result = send_with_response([ { "status" => "sent", "_id" => "abc", "to" => "+1 (201) 555-0123" } ])
+      expect(result).to include("to" => "+12015550123", "status" => "sent", "external_id" => "abc")
+    end
+
     it "keeps a different recipient uncertain instead of accepting it" do
       expect do
         send_with_response([ { "status" => "sent", "_id" => "abc", "to" => "+1 201 555 9999" } ])

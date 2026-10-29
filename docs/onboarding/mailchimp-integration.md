@@ -8,30 +8,41 @@ Rails calls Mandrill directly (no API Gateway / Lambda required for SMS). The cl
 `POST https://mandrillapp.com/api/1.4/messages/send-sms` with the nested `message.sms` payload
 (recipient array, approved sender, message text, and consent type).
 
-Use a **Mailchimp Transactional** API key (`MANDRILL_API_KEY`), not a Marketing API key.
-`MAILCHIMP_API_KEY` / `MAILCHIMP_SMS_FROM` are also accepted as fallbacks for local setup.
+Use a **Mailchimp Transactional** API key stored as `mandrill.api_key` in the encrypted credentials, not a Marketing API key.
 
 The implementation follows [Mailchimp's official OpenAPI schema](https://github.com/mailchimp/mailchimp-client-lib-codegen/blob/main/spec/transactional.openapi.json), specifically `MessagesSendSmsRequest` and `MessagesSmsMessage`.
 
 ## Configuration
 
-Start with [the local environment template](../../.env.example) or
-[the production environment template](../../.env.production.example). These files
-contain placeholders only; keep your actual `.env` untracked.
+Secrets live in `config/credentials.yml.enc` and are unlocked by `config/master.key`
+(the same key used for Google sign-in). Obtain `master.key` from Dr. DePasquale via
+1Password and place it in `config/` before starting the app. Then edit the vault:
+
+```sh
+bin/rails credentials:edit
+```
+
+```yaml
+mandrill:
+  api_key: your_transactional_key
+  sms_from: "+1..."
+  from_email: your_verified_sender_address
+```
+
+`api_key` is the Mailchimp Transactional key. `sms_from` is the approved sending
+number or sender ID. `from_email` is the verified From address for transactional
+email. Do not put these values in a `.env` file.
 
 ### Local and production accounts
 
-The server's `MANDRILL_API_KEY` selects the Mandrill account. Localhost does not
+The `mandrill.api_key` value selects the Mandrill account. Localhost does not
 automatically select a sandbox, and a browser's hostname does not change the key.
-Use the testing account's key and approved sending number in the local `.env`.
-Set the production account's key and sender in the production host's secret store,
-for both web and job processes. Use the same variable names in both environments.
-Do not place both accounts' secrets in the local file.
+Use the testing account's key and approved sending number in the local credentials
+file. Production uses its own `config/credentials.yml.enc` (or the host's
+`RAILS_MASTER_KEY`) with the production account's key and sender, for both web and
+job processes. Do not place both accounts' secrets in the local credentials file.
 
-`MAILCHIMP_API_KEY` is normally the separate **Marketing** credential used by the
-testing-tag inspection scripts. Always set `MANDRILL_API_KEY` explicitly when using
-both products; the legacy fallback is only for installations that previously
-stored a Transactional key under `MAILCHIMP_API_KEY`.
+A Marketing API key is a different credential. It is not read for SMS or email.
 
 Mailchimp's [email test API keys](https://mailchimp.com/developer/transactional/docs/fundamentals/#test-mode)
 simulate email sends without inbox delivery. Switching the Mailchimp browser UI to
@@ -41,17 +52,17 @@ the recipients to the agreed **Sprout Testing** contacts. Automated RSpec/Cucumb
 tests simulate responses and do not need a live account. The normal staff composer
 does not filter volunteers by Mailchimp audience tags.
 
-After updating the local `.env`, recreate the web container so Compose refreshes
-its configuration:
+After editing credentials, restart the web container so Rails reloads them:
 
 ```bash
 docker compose up -d --force-recreate web
 docker compose exec web bin/rails db:migrate
 ```
 
-The production image excludes `.env` files. Inject runtime secrets through the
-deployment platform and restart its web/job processes. `docker-compose.yml` is the
-local development setup, not the production deployment configuration.
+The production image does not include `config/master.key`. Provide `RAILS_MASTER_KEY`
+through the deployment platform and restart its web and job processes.
+`docker-compose.yml` is the local development setup, not the production deployment
+configuration.
 
 ### Frontend flow
 
@@ -110,23 +121,13 @@ contact details out of screenshots.
    its retained draft. For actual delivery evidence, include the received test SMS
    or corresponding Mandrill activity separately from the simulated test screenshots.
 
-### Environment variables
+### Enabling SMS
 
 | Setting | Where | Purpose |
 |---|---|---|
-| `SPROUT_SMS_MAILCHIMP_ENABLED=true` | Rails | Explicitly enables outbound SMS |
-| `MANDRILL_API_KEY` | Rails | Mailchimp Transactional credential (preferred) |
-| `MANDRILL_SMS_FROM` | Rails | Approved sending number / sender ID |
-| `MAILCHIMP_API_KEY` | Rails (fallback) | Alternate name for the Transactional key |
-| `MAILCHIMP_SMS_FROM` | Rails (fallback) | Alternate name for the sender |
-
-For WSL + Docker, configure the variables in your untracked `.env`:
-
-```dotenv
-SPROUT_SMS_MAILCHIMP_ENABLED=true
-MANDRILL_API_KEY=
-MANDRILL_SMS_FROM=
-```
+| `mandrill.api_key` | Encrypted credentials | Mailchimp Transactional key |
+| `mandrill.sms_from` | Encrypted credentials | Approved sending number / sender ID |
+| `SPROUT_SMS_MAILCHIMP_ENABLED=true` | Environment | Turns outbound SMS on after the vault is configured |
 
 Real sending requires an enabled Transactional account (Owner/Admin), an approved SMS program, and SMS credits. Manager-level Mailchimp users cannot open Mandrill to create keys. See [Mailchimp's prerequisites and consent documentation](https://mailchimp.com/developer/transactional/docs/transactional-sms/).
 
@@ -169,18 +170,15 @@ docker compose run --rm --no-deps --entrypoint bash \
 
 Inquiry confirmations and application emails after attendance use
 `Email::VolunteerNotifications` → `Email::MailchimpOutbound` →
-`Mailchimp::TransactionalClient` (`messages/send`). Add these values to the
-untracked root `.env` to enable them:
+`Mailchimp::TransactionalClient` (`messages/send`). Store `mandrill.api_key` and
+`mandrill.from_email` in the encrypted credentials, then set
+`SPROUT_EMAIL_MAILCHIMP_ENABLED=true`.
 
-```dotenv
-SPROUT_EMAIL_MAILCHIMP_ENABLED=true
-MANDRILL_API_KEY=your_transactional_key
-MANDRILL_FROM_EMAIL=your_verified_sender_address
-```
-
-Set the application link in **Admin settings → Application email**. Application
-emails require a valid link. Missing configuration or sending errors preserve
-inquiries and attendance and show an error instead of claiming the email was sent.
+Set the application link in **Admin settings → Application email**. That link is
+included when a volunteer checks in. The check-in email is not sent without it.
+A failed inquiry confirmation is logged and the public thanks message stays in
+place. A failed check-in email keeps the attendance record and shows an error
+instead of claiming the email was sent.
 A queued or uncertain application attempt blocks another send until its outcome is
 known. Reminder emails use the same configured From address.
 

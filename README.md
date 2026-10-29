@@ -41,17 +41,24 @@ Architecture, gem choices, and integration decisions are detailed in `docs/archi
 
 ## Local Setup (Development)
 
-### `.env` file:
+Secrets live in `config/credentials.yml.enc`, unlocked by `config/master.key`. That includes Google sign-in and the Mandrill account used for SMS and email. Do not put those values in a `.env` file.
 
+Obtain the `master.key` file from a current team member via a secure exchange. Dr. DePasquale can securely share it with you via 1Password. Place the file in the `config/` directory before building the application.
+
+Mailchimp Transactional settings belong under the `mandrill` key. With `config/master.key` in place:
+
+```sh
+bin/rails credentials:edit
 ```
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-MANDRILL_API_KEY=
-MANDRILL_FROM_EMAIL=
-MANDRILL_SMS_FROM=
-SPROUT_EMAIL_MAILCHIMP_ENABLED=true
-SPROUT_SMS_MAILCHIMP_ENABLED=true
+
+```yaml
+mandrill:
+  api_key: your_transactional_key
+  sms_from: "+1..."
+  from_email: your_verified_sender_address
 ```
+
+Channel switches are not secrets. Set `SPROUT_SMS_MAILCHIMP_ENABLED=true` and `SPROUT_EMAIL_MAILCHIMP_ENABLED=true` in the environment when that account is ready to send. See `docs/onboarding/mailchimp-integration.md`.
 
 ### Option A: Docker (recommended)
 
@@ -100,7 +107,10 @@ docker compose exec web bin/rails "tailwindcss:watch[always]"
    bin/rails db:prepare
    ```
 
-3. **Run the app**
+3. **Obtain the `master.key` file**
+   Obtain the `master.key` file from a current team member via a secure exchange. Dr. DePasquale can securely share it with you via 1Password. Place the file in the `config/` directory before building the application.
+
+4. **Run the app**
    ```sh
    bin/dev
    ```
@@ -113,3 +123,14 @@ For more implementation details, see [docs/](https://github.com/Child-Focus-NJ/s
 ### App version
 
 The page footer displays Sprout's version from the root `VERSION` file. Update this file when releasing a new version, then restart the app to load the change.
+
+### Sign-in access
+
+Sign-in is through Google. `db:seed` creates the default admin (`sprout@passaiccountycasa.org`) and the launch admins in every environment; admins add everyone else on the Employees tab of the Admin page.
+
+The `ALLOW_ALL_DOMAINS` environment variable controls whether anyone else can get in:
+
+- **Unset or `true` (default):** emails an admin has added can sign in, and so can any `@passaiccountycasa.org` Google account, which gets a regular user account the first time it signs in.
+- **Any other value (e.g. `false`):** whitelist only. Only emails an admin has added can sign in, and no accounts are created automatically.
+
+To try whitelist-only sign-in locally, add `ALLOW_ALL_DOMAINS=false` to your `.env`.

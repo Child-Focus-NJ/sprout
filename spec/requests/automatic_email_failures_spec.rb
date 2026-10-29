@@ -17,7 +17,7 @@ RSpec.describe "Automatic email failures", type: :request do
     end.to change(InquiryFormSubmission, :count).by(1)
     expect(response).to redirect_to(new_inquiry_form_path)
     expect(flash[:notice]).to include("inquiry has been submitted")
-    expect(flash[:alert]).to include("Email could not be sent")
+    expect(flash[:alert]).to be_nil
     expect(Volunteer.find_by!(email: "jane@example.org").communications.last).to be_failed
   end
 
