@@ -61,6 +61,8 @@ mandrill:
 Channel switches are not secrets. Set `SPROUT_SMS_MAILCHIMP_ENABLED=true` and `SPROUT_EMAIL_MAILCHIMP_ENABLED=true` in the environment when that account is ready to send. See `docs/onboarding/mailchimp-integration.md`.
 
 ### Option A: Docker (recommended)
+Obtain the `master.key` file from a current team member via a secure exchange. Dr. DePasquale can securely share it
+with you via 1Password. Place the file in the `config/` directory before building the application.
 
 One script starts everything — Rails, PostgreSQL, and LocalStack (AWS emulator) — in Docker containers. No local Ruby, Postgres, or AWS tools needed.
 
@@ -106,9 +108,9 @@ docker compose exec web bin/rails "tailwindcss:watch[always]"
    ```sh
    bin/rails db:prepare
    ```
-
 3. **Obtain the `master.key` file**
-   Obtain the `master.key` file from a current team member via a secure exchange. Dr. DePasquale can securely share it with you via 1Password. Place the file in the `config/` directory before building the application.
+   Obtain the `master.key` file from a current team member via a secure exchange. Dr. DePasquale can securely share it
+   with you via 1Password. Place the file in the `config/` directory before building the application.
 
 4. **Run the app**
    ```sh

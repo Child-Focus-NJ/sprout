@@ -49,7 +49,7 @@ class ApplicationController < ActionController::Base
   end
 
   # Seeded employees have no Google uid. A leftover cookie can point at that
-  # record (often admin@childfocusnj.org) after a DB reset. Cucumber/Warden
+  # record (often sprout@passaiccountycasa.org) after a DB reset. Cucumber/Warden
   # logins in test do not set google_uid, so skip this check there.
   def signed_in_via_google?
     return true if Rails.env.test?
