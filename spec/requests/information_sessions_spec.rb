@@ -219,4 +219,37 @@ RSpec.describe "Information Sessions", type: :request do
       expect(flash[:notice]).to include(volunteer.full_name)
     end
   end
+
+  describe "GET /information_sessions/:id" do
+    it "lists volunteers registered for an upcoming session, including people who rescheduled into it" do
+      staying = create(:volunteer, first_name: "Amy", last_name: "Ng")
+      moved_in = create(:volunteer, first_name: "Bea", last_name: "Cole")
+      moved_away = create(:volunteer, first_name: "Cara", last_name: "Diaz")
+      cancelled = create(:volunteer, first_name: "Dee", last_name: "Ellis")
+
+      create(:session_registration, information_session: information_session, volunteer: staying, status: :registered)
+      create(:session_registration, information_session: information_session, volunteer: moved_in, status: :registered)
+      create(:session_registration, information_session: information_session, volunteer: moved_away, status: :rescheduled)
+      create(:session_registration, information_session: information_session, volunteer: cancelled, status: :cancelled)
+
+      get information_session_path(information_session)
+
+      expect(response).to be_successful
+      expect(response.body).to include(staying.full_name, moved_in.email)
+      expect(response.body).to include(moved_in.full_name)
+      expect(response.body).not_to include(moved_away.full_name, cancelled.full_name)
+      expect(response.body.index(moved_in.full_name)).to be < response.body.index(staying.full_name)
+    end
+
+    it "links an upcoming session name to that list and leaves a past session as text" do
+      upcoming = information_session
+      past = build(:information_session, name: "Old Orientation", scheduled_at: 2.days.ago)
+      past.save!(validate: false)
+
+      get information_sessions_path
+
+      expect(response.body).to include(%(href="#{information_session_path(upcoming)}"))
+      expect(response.body).not_to include(%(href="#{information_session_path(past)}"))
+    end
+  end
 end
