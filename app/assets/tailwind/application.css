@@ -754,6 +754,10 @@
     @apply m-0 mt-2 text-sm leading-snug text-gray-600;
   }
 
+  .session-roster-link {
+    @apply text-sky-800 underline decoration-sky-300 underline-offset-2 hover:text-sky-950;
+  }
+
   .sessions-participants-wrap {
     @apply mt-2;
   }
