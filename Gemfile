@@ -57,7 +57,7 @@ gem "image_processing", "~> 1.2"
 gem "httparty"
 
 # AWS SDK (SQS for async Lambda triggers, S3 for report storage)
-gem "aws-sdk-sqs", "~> 1.0"
+gem "aws-sdk-sqs", "~> 1.122"
 gem "aws-sdk-s3", "~> 1.233"
 
 # Excel generation for data exports (admin full-data export, reporting)
