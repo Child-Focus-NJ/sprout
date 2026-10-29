@@ -10,11 +10,12 @@ module GoogleOauthHelper
       },
       credentials: {
         token: "mock_token",
+        refresh_token: "mock_refresh_token",
         expires_at: Time.now + 1.week
       }
     })
 
-    Rails.application.env_config["omniauth.auth"] = OmniAuth.config.mock_auth[:google_oauth2]
+    Rails.application.env_config[:google_oauth2] = OmniAuth.config.mock_auth[:google_oauth2]
   end
 end
 
