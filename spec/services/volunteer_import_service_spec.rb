@@ -25,6 +25,7 @@ RSpec.describe VolunteerImportService do
       volunteer = Volunteer.find_by(email: "colin@import.test")
       expect(volunteer.first_name).to eq("Colin")
       expect(volunteer.last_name).to eq("Smith")
+      expect(volunteer.inquiry_date).to be_within(1.minute).of(Time.current)
     end
 
     it "does not duplicate an existing volunteer" do

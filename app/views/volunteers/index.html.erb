@@ -94,6 +94,9 @@
           <%= link_to volunteer.full_name, volunteer_path(volunteer), class: "volunteer-name" %>
           <div class="volunteer-subtext">
             <span>Contact: <%= volunteer.phone.presence || volunteer.email %></span>
+            <% if @filters[:status] == "inquiry" %>
+              <span>Inquired <%= volunteer.inquiry_date.strftime("%b %-d, %Y") %></span>
+            <% end %>
             <% if volunteer.vicinage %>
               <span>Vicinage: <%= volunteer.vicinage.name %></span>
             <% end %>
