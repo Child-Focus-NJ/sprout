@@ -165,8 +165,9 @@ class Volunteer < ApplicationRecord
   end
 
   def record_attendance!(registration, user:)
-    registration.update!(status: :attended, checked_in_at: registration.checked_in_at || Time.current)
-    update!(first_session_attended_at: Time.current) if first_session_attended_at.blank?
+    attended_at = registration.information_session.scheduled_at
+    registration.update!(status: :attended, checked_in_at: registration.checked_in_at || attended_at)
+    update!(first_session_attended_at: attended_at) if first_session_attended_at.blank?
     change_status!(:application_eligible, user: user, trigger: :event) if inquiry?
   end
 
@@ -176,9 +177,16 @@ class Volunteer < ApplicationRecord
       raise OutcomeNoteError, "Choose a different session to reschedule to"
     end
 
+    raise OutcomeNoteError, "The session they're rescheduling to isn't active" unless new_information_session.active?
+
+    new_registration = session_registrations.find_or_initialize_by(information_session: new_information_session)
+    holds_spot = new_registration.persisted? && (new_registration.registered? || new_registration.attended?)
+    if !holds_spot && new_information_session.spots_remaining&.<=(0)
+      raise OutcomeNoteError, "The session they're rescheduling to is full"
+    end
+
     registration.update!(status: :rescheduled)
-    session_registrations.find_or_initialize_by(information_session: new_information_session)
-                         .update!(status: :registered)
+    new_registration.update!(status: :registered) unless new_registration.attended?
   end
 
   def cancel_pending_reminders_if_applied

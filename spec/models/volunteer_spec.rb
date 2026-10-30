@@ -214,8 +214,8 @@ RSpec.describe Volunteer, type: :model do
                                        note_category: category("attended_info_session"), information_session: session)
 
       expect(registration.reload).to be_attended
-      expect(registration.checked_in_at).to be_present
-      expect(volunteer.reload.first_session_attended_at).to be_present
+      expect(registration.checked_in_at).to eq(session.scheduled_at)
+      expect(volunteer.reload.first_session_attended_at).to eq(session.scheduled_at)
       expect(volunteer).to be_application_eligible
     end
 
@@ -299,6 +299,29 @@ RSpec.describe Volunteer, type: :model do
         end.to raise_error(Volunteer::OutcomeNoteError, "Choose the session they're rescheduling to")
       end.not_to change(Note, :count)
       expect(registration.reload).to be_registered
+    end
+
+    it "doesn't reset the new session to registered when the volunteer already attended it" do
+      later = create(:information_session, scheduled_at: 2.weeks.from_now)
+      attended = SessionRegistration.create!(volunteer: volunteer, information_session: later, status: :attended)
+
+      volunteer.add_note_with_outcome!(content: "Moving", user: admin, note_category: category("rescheduled"),
+                                       information_session: session, new_information_session: later)
+
+      expect(attended.reload).to be_attended
+      expect(registration.reload).to be_rescheduled
+    end
+
+    it "won't reschedule to a full session" do
+      later = create(:information_session, scheduled_at: 2.weeks.from_now, capacity: 1)
+      SessionRegistration.create!(volunteer: create(:volunteer), information_session: later, status: :registered)
+
+      expect do
+        volunteer.add_note_with_outcome!(content: "Moving", user: admin, note_category: category("rescheduled"),
+                                         information_session: session, new_information_session: later)
+      end.to raise_error(Volunteer::OutcomeNoteError, "The session they're rescheduling to is full")
+      expect(registration.reload).to be_registered
+      expect(volunteer.session_registrations.find_by(information_session: later)).to be_nil
     end
 
     it "refuses to reschedule to the same session" do

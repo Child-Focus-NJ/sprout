@@ -119,6 +119,19 @@ RSpec.describe "Volunteer notes (US8)", type: :request do
       expect(volunteer.session_registrations.find_by!(information_session: later)).to be_registered
     end
 
+    it "won't reschedule to an inactive session" do
+      rescheduled = NoteCategory.create!(key: "rescheduled", name: "Rescheduled")
+      inactive = create(:information_session, scheduled_at: 2.weeks.from_now, active: false)
+
+      post add_note_volunteer_path(volunteer), params: {
+        note: "Moving to the next one", note_category_id: rescheduled.id,
+        information_session_id: session.id, new_information_session_id: inactive.id
+      }
+
+      expect(flash[:alert]).to eq("The session they're rescheduling to isn't active")
+      expect(registration.reload).to be_registered
+    end
+
     it "explains what's missing and saves nothing without a session" do
       expect do
         post add_note_volunteer_path(volunteer), params: { note: "Didn't come", note_category_id: no_show.id }
