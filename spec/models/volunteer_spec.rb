@@ -373,9 +373,10 @@ RSpec.describe Volunteer, type: :model do
       expect(volunteer.days_in_current_stage).to eq(45)
     end
 
-    it "falls back to created_at for inquiry when inquiry_date is blank" do
+    it "gives a volunteer created without an inquiry date one from when they were added" do
       volunteer = create(:volunteer, current_funnel_stage: :inquiry, inquiry_date: nil)
-      expect(volunteer.stage_started_at).to be_within(1.second).of(volunteer.created_at)
+      expect(volunteer.inquiry_date).to be_within(1.second).of(volunteer.created_at)
+      expect(volunteer.stage_started_at).to eq(volunteer.inquiry_date)
     end
 
     it "anchors the application_eligible stage on first_session_attended_at" do

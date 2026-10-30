@@ -7,9 +7,9 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
   let(:passaic) { create(:vicinage, name: "Passaic") }
   let(:union) { create(:vicinage, name: "Union") }
 
-  let!(:harry) { create(:volunteer, first_name: "Harry", last_name: "Kane", current_funnel_stage: :inquiry, vicinage: union) }
-  let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura", current_funnel_stage: :application_eligible, vicinage: union) }
-  let!(:sofia) { create(:volunteer, first_name: "Sofia", last_name: "Reyes", current_funnel_stage: :inquiry, vicinage: passaic) }
+  let!(:harry) { create(:volunteer, first_name: "Harry", last_name: "Kane", current_funnel_stage: :inquiry, vicinage: union, inquiry_date: Date.new(2026, 9, 1)) }
+  let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura", current_funnel_stage: :application_eligible, vicinage: union, inquiry_date: Date.new(2026, 8, 15)) }
+  let!(:sofia) { create(:volunteer, first_name: "Sofia", last_name: "Reyes", current_funnel_stage: :inquiry, vicinage: passaic, inquiry_date: Date.new(2026, 10, 1)) }
 
   before { login_as(user, scope: :user) }
 
@@ -51,10 +51,27 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
     end
 
     it "shows only that status when a tab is picked" do
+      get volunteers_path, params: { status: "application_eligible" }
+
+      expect(listed_names).to eq([ "Hana Kimura" ])
+      expect(active_tab).to eq("Application eligible 1")
+    end
+
+    it "lists the Inquiry tab newest inquiry first, with each inquiry date" do
       get volunteers_path, params: { status: "inquiry" }
 
-      expect(listed_names).to eq([ "Harry Kane", "Sofia Reyes" ])
+      expect(listed_names).to eq([ "Sofia Reyes", "Harry Kane" ])
       expect(active_tab).to eq("Inquiry 2")
+      subtexts = response.parsed_body.css("#volunteer-list .volunteer-subtext").map(&:text)
+      expect(subtexts[0]).to include("Inquired Oct 1, 2026")
+      expect(subtexts[1]).to include("Inquired Sep 1, 2026")
+    end
+
+    it "keeps the other tabs alphabetical without inquiry dates" do
+      get volunteers_path
+
+      expect(listed_names).to eq([ "Hana Kimura", "Harry Kane", "Sofia Reyes" ])
+      expect(response.body).not_to include("Inquired")
     end
 
     it "searches by name, and the tab counts follow the search" do

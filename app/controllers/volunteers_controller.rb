@@ -12,6 +12,7 @@ class VolunteersController < ApplicationController
     # Tab counts follow the name search, so each tab shows how many matches are at that status
     @status_counts = matching.reorder(nil).group(:current_funnel_stage).count
     @volunteers = @filters[:status] ? matching.where(current_funnel_stage: @filters[:status]) : matching
+    @volunteers = @volunteers.reorder(inquiry_date: :desc, first_name: :asc, last_name: :asc) if @filters[:status] == "inquiry"
   end
 
   def show

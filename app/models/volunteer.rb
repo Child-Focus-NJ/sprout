@@ -39,6 +39,7 @@ class Volunteer < ApplicationRecord
     end
   }
 
+  before_create :default_inquiry_date
   after_save :cancel_pending_reminders_if_applied
 
   def attended_session?
@@ -47,7 +48,7 @@ class Volunteer < ApplicationRecord
 
   def stage_started_at
     case current_funnel_stage.to_sym
-    when :inquiry then inquiry_date || created_at
+    when :inquiry then inquiry_date
     when :application_eligible then first_session_attended_at
     when :application_sent then application_sent_at
     end
@@ -187,6 +188,10 @@ class Volunteer < ApplicationRecord
 
     registration.update!(status: :rescheduled)
     new_registration.update!(status: :registered) unless new_registration.attended?
+  end
+
+  def default_inquiry_date
+    self.inquiry_date ||= created_at || Time.current
   end
 
   def cancel_pending_reminders_if_applied
