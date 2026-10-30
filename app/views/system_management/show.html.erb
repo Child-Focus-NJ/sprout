@@ -22,6 +22,7 @@
       <%= system_management_tab_link("Volunteer Tags", "tags", @tab) %>
       <%= system_management_tab_link("Employees", "employees", @tab) %>
       <%= system_management_tab_link("Referral Sources", "referral_sources", @tab) %>
+      <%= system_management_tab_link("Note Categories", "note_categories", @tab) %>
     </nav>
 
     <% case @tab %>
@@ -31,6 +32,8 @@
       <%= render "system_management/employees" %>
     <% when "referral_sources" %>
       <%= render "system_management/referral_sources" %>
+    <% when "note_categories" %>
+      <%= render "system_management/note_categories" %>
     <% else %>
       <%= render "system_management/frequencies" %>
     <% end %>

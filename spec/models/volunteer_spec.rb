@@ -184,6 +184,155 @@ RSpec.describe Volunteer, type: :model do
     end
   end
 
+  describe "#add_note_with_outcome!" do
+    let(:admin) { create(:user) }
+    let(:volunteer) { create(:volunteer, current_funnel_stage: :inquiry) }
+    let(:session) { create(:information_session) }
+    let!(:registration) { SessionRegistration.create!(volunteer: volunteer, information_session: session, status: :registered) }
+
+    def category(key)
+      NoteCategory.find_or_create_by!(key: key) { |c| c.name = key.humanize }
+    end
+
+    it "marks a no-show on the chosen session's registration" do
+      note = volunteer.add_note_with_outcome!(content: "Didn't come", user: admin,
+                                              note_category: category("no_show"), information_session: session)
+
+      expect(note.note_category.key).to eq("no_show")
+      expect(registration.reload).to be_no_show
+    end
+
+    it "marks a cancellation on the chosen session's registration" do
+      volunteer.add_note_with_outcome!(content: "Can't make it", user: admin,
+                                       note_category: category("cancelled"), information_session: session)
+
+      expect(registration.reload).to be_cancelled
+    end
+
+    it "records attendance and moves an inquiry to application eligible" do
+      volunteer.add_note_with_outcome!(content: "Came late", user: admin,
+                                       note_category: category("attended_info_session"), information_session: session)
+
+      expect(registration.reload).to be_attended
+      expect(registration.checked_in_at).to eq(session.scheduled_at)
+      expect(volunteer.reload.first_session_attended_at).to eq(session.scheduled_at)
+      expect(volunteer).to be_application_eligible
+    end
+
+    it "doesn't move a volunteer who's further along or inactive back to application eligible" do
+      %i[application_sent applied inactive].each do |stage|
+        volunteer.update!(current_funnel_stage: stage)
+
+        volunteer.add_note_with_outcome!(content: "Came to another session", user: admin,
+                                         note_category: category("attended_info_session"), information_session: session)
+
+        expect(volunteer.reload.current_funnel_stage).to eq(stage.to_s)
+      end
+    end
+
+    it "keeps the check-in time of a session already marked attended" do
+      checked_in_at = Time.zone.parse("2026-10-01 18:05")
+      registration.update!(status: :attended, checked_in_at: checked_in_at)
+
+      volunteer.add_note_with_outcome!(content: "Stayed for the whole session", user: admin,
+                                       note_category: category("attended_info_session"), information_session: session)
+
+      expect(registration.reload.checked_in_at).to eq(checked_in_at)
+    end
+
+    it "won't mark an attended session as a no-show, cancelled, or rescheduled" do
+      registration.update!(status: :attended, checked_in_at: Time.current)
+      later = create(:information_session, scheduled_at: 2.weeks.from_now)
+
+      %w[no_show cancelled rescheduled].each do |key|
+        expect do
+          expect do
+            volunteer.add_note_with_outcome!(content: "Changed my mind", user: admin, note_category: category(key),
+                                             information_session: session, new_information_session: later)
+          end.to raise_error(Volunteer::OutcomeNoteError, /already attended that session, so it can't be marked/)
+        end.not_to change(Note, :count)
+      end
+
+      expect(registration.reload).to be_attended
+      expect(volunteer.session_registrations.find_by(information_session: later)).to be_nil
+    end
+
+    it "moves a reschedule to the new session in the same step" do
+      later = create(:information_session, scheduled_at: 2.weeks.from_now)
+
+      volunteer.add_note_with_outcome!(content: "Moving to the next one", user: admin, note_category: category("rescheduled"),
+                                       information_session: session, new_information_session: later)
+
+      expect(registration.reload).to be_rescheduled
+      expect(volunteer.session_registrations.find_by!(information_session: later)).to be_registered
+    end
+
+    it "deactivates the volunteer for a Deactivated note" do
+      volunteer.add_note_with_outcome!(content: "No longer interested", user: admin, note_category: category("deactivated"))
+
+      expect(volunteer.reload).to be_inactive
+      expect(volunteer.status_changes.last).to have_attributes(to_funnel_stage: "Inactive", user_id: admin.id)
+    end
+
+    it "saves nothing when the session is missing" do
+      expect do
+        expect do
+          volunteer.add_note_with_outcome!(content: "Didn't come", user: admin, note_category: category("no_show"))
+        end.to raise_error(Volunteer::OutcomeNoteError, "Choose the session this note is about")
+      end.not_to change(Note, :count)
+    end
+
+    it "refuses a session the volunteer isn't registered for" do
+      other_session = create(:information_session)
+
+      expect do
+        volunteer.add_note_with_outcome!(content: "Didn't come", user: admin,
+                                         note_category: category("no_show"), information_session: other_session)
+      end.to raise_error(Volunteer::OutcomeNoteError, /isn't registered for that session/)
+    end
+
+    it "rolls back the note and the old registration when a reschedule has no new session" do
+      expect do
+        expect do
+          volunteer.add_note_with_outcome!(content: "Moving", user: admin, note_category: category("rescheduled"),
+                                           information_session: session)
+        end.to raise_error(Volunteer::OutcomeNoteError, "Choose the session they're rescheduling to")
+      end.not_to change(Note, :count)
+      expect(registration.reload).to be_registered
+    end
+
+    it "doesn't reset the new session to registered when the volunteer already attended it" do
+      later = create(:information_session, scheduled_at: 2.weeks.from_now)
+      attended = SessionRegistration.create!(volunteer: volunteer, information_session: later, status: :attended)
+
+      volunteer.add_note_with_outcome!(content: "Moving", user: admin, note_category: category("rescheduled"),
+                                       information_session: session, new_information_session: later)
+
+      expect(attended.reload).to be_attended
+      expect(registration.reload).to be_rescheduled
+    end
+
+    it "won't reschedule to a full session" do
+      later = create(:information_session, scheduled_at: 2.weeks.from_now, capacity: 1)
+      SessionRegistration.create!(volunteer: create(:volunteer), information_session: later, status: :registered)
+
+      expect do
+        volunteer.add_note_with_outcome!(content: "Moving", user: admin, note_category: category("rescheduled"),
+                                         information_session: session, new_information_session: later)
+      end.to raise_error(Volunteer::OutcomeNoteError, "The session they're rescheduling to is full")
+      expect(registration.reload).to be_registered
+      expect(volunteer.session_registrations.find_by(information_session: later)).to be_nil
+    end
+
+    it "refuses to reschedule to the same session" do
+      expect do
+        volunteer.add_note_with_outcome!(content: "Moving", user: admin, note_category: category("rescheduled"),
+                                         information_session: session, new_information_session: session)
+      end.to raise_error(Volunteer::OutcomeNoteError, "Choose a different session to reschedule to")
+      expect(registration.reload).to be_registered
+    end
+  end
+
   describe "associations" do
     it "can be created without a vicinage or referral source" do
       volunteer = build(:volunteer, vicinage: nil, referral_source: nil)

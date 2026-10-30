@@ -58,6 +58,18 @@ sources = [ "Facebook", "Instagram", "Word of Mouth", "Website", "Flyer", "Schoo
   ReferralSource.find_or_create_by!(name: name)
 end
 
+# ── Note Categories ────────────────────────────────────────────────────────────
+{
+  "note" => "Note",
+  "attended_info_session" => "Attended Info Session",
+  "no_show" => "No-show",
+  "rescheduled" => "Rescheduled",
+  "cancelled" => "Cancelled",
+  "deactivated" => "Deactivated"
+}.each do |key, name|
+  NoteCategory.find_or_create_by!(key: key) { |category| category.name = name }
+end
+
 # ── Volunteer Tags ─────────────────────────────────────────────────────────────
 [ "Bilingual", "Available Weekends", "Has Prior Experience", "Flexible Schedule" ].each do |title|
   VolunteerTag.find_or_create_by!(title: title)

@@ -1,5 +1,5 @@
 class VolunteersController < ApplicationController
-  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :sms_template, :send_sms ]
+  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :sms_template, :send_sms, :update_note ]
 
   def index
     @filters = list_filter_params
@@ -69,15 +69,38 @@ class VolunteersController < ApplicationController
 
   def add_note
     volunteer = Volunteer.find(params[:id])
+    note_category = selected_note_category
+    return add_note_with_outcome(volunteer, note_category) if note_category&.updates_records?
+
     note = volunteer.add_staff_note(
       content: params[:note].to_s,
       user: current_user,
-      note_type: :general
+      note_type: :general,
+      note_category: note_category
     )
     if note.persisted?
       redirect_to return_path_for(volunteer), notice: "Note saved for #{volunteer.full_name}"
     else
       redirect_to return_path_for(volunteer), alert: note.errors.full_messages.to_sentence
+    end
+  end
+
+  def update_note
+    note = @volunteer.notes.find(params[:note_id])
+    raise ActiveRecord::RecordNotFound unless note.editable_by?(current_user)
+
+    note.content = params[:note].to_s
+    new_category = selected_note_category
+    if new_category && !note.note_category.updates_records? && !new_category.updates_records?
+      note.note_category = new_category
+    end
+    note.edited_at = Time.current if note.changed?
+
+    if note.save
+      redirect_to volunteer_path(@volunteer, filter: params[:filter].presence), notice: "Note updated"
+    else
+      redirect_to volunteer_path(@volunteer, filter: params[:filter].presence, edit_note_id: note.id),
+                  alert: note.errors.full_messages.to_sentence
     end
   end
 
@@ -98,8 +121,14 @@ class VolunteersController < ApplicationController
       return
     end
 
+    note_category = selected_note_category
+    if note_category&.updates_records?
+      redirect_to list_path, alert: "#{note_category.name} notes update one volunteer's records, so add them from their profile"
+      return
+    end
+
     volunteers.each do |volunteer|
-      volunteer.add_staff_note(content: note_content, user: current_user, note_type: :general)
+      volunteer.add_staff_note(content: note_content, user: current_user, note_type: :general, note_category: note_category)
     end
 
     redirect_to list_path, notice: "Note added to #{helpers.pluralize(volunteers.size, 'volunteer')}"
@@ -181,6 +210,21 @@ class VolunteersController < ApplicationController
 
   private
 
+  def add_note_with_outcome(volunteer, note_category)
+    volunteer.add_note_with_outcome!(
+      content: params[:note].to_s,
+      user: current_user,
+      note_category: note_category,
+      information_session: volunteer.information_sessions.find_by(id: params[:information_session_id].presence),
+      new_information_session: InformationSession.upcoming.find_by(id: params[:new_information_session_id].presence)
+    )
+    redirect_to return_path_for(volunteer), notice: "Note saved for #{volunteer.full_name}"
+  rescue Volunteer::OutcomeNoteError => e
+    redirect_to return_path_for(volunteer), alert: e.message
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to return_path_for(volunteer), alert: e.record.errors.full_messages.to_sentence
+  end
+
   def set_volunteer
     @volunteer = Volunteer.find(params[:id])
   end
@@ -189,6 +233,10 @@ class VolunteersController < ApplicationController
   # profile or the same filtered list
   def return_path_for(volunteer)
     url_from(params[:return_to]) || volunteer_path(volunteer)
+  end
+
+  def selected_note_category
+    NoteCategory.find_by(id: params[:note_category_id].presence)
   end
 
   def selected_volunteers

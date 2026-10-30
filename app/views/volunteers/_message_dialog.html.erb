@@ -1,5 +1,9 @@
 <%# One popup for adding a note or sending an SMS. Buttons made with message_dialog_button
-    fill in which volunteer it's for and open it on the right tab. %>
+    fill in which volunteer it's for and open it on the right tab. On a profile (volunteer given) it
+    also offers the categories that update that volunteer's sessions or status; lists only offer plain ones. %>
+<% volunteer = local_assigns[:volunteer] %>
+<% default_category = NoteCategory.default %>
+<% note_categories = volunteer ? NoteCategory.ordered : NoteCategory.plain.ordered %>
 <dialog id="message-dialog" class="message-dialog" aria-labelledby="message-dialog-title">
   <div class="message-dialog__body">
     <div class="message-dialog__header">
@@ -21,6 +25,32 @@
                   html: { id: "message-dialog-note", class: "message-dialog__panel note-form", role: "tabpanel",
                           aria: { labelledby: "message-dialog-tab-note" }, data: { message_dialog_panel: "note" } } do %>
       <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
+      <label for="dialog-note-category">Category</label>
+      <%= select_tag :note_category_id,
+                     options_for_select(
+                       note_categories.map do |category|
+                         [ category.name, category.id,
+                           { data: { needs_session: category.session_outcome?, needs_new_session: category.rescheduled? } } ]
+                       end,
+                       default_category.id
+                     ),
+                     id: "dialog-note-category", class: "input-large", data: { message_dialog_category: true } %>
+      <% if volunteer %>
+        <div class="message-dialog__session" data-message-dialog-session hidden>
+          <label for="dialog-note-session">Session</label>
+          <%= select_tag :information_session_id,
+                         options_from_collection_for_select(
+                           volunteer.information_sessions.order(scheduled_at: :desc), :id, :label
+                         ),
+                         include_blank: "Select...", id: "dialog-note-session", class: "input-large", disabled: true %>
+        </div>
+        <div class="message-dialog__session" data-message-dialog-new-session hidden>
+          <label for="dialog-note-new-session">Rescheduled to</label>
+          <%= select_tag :new_information_session_id,
+                         options_from_collection_for_select(InformationSession.upcoming, :id, :label),
+                         include_blank: "Select...", id: "dialog-note-new-session", class: "input-large", disabled: true %>
+        </div>
+      <% end %>
       <label for="dialog-note">Note</label>
       <textarea id="dialog-note" name="note" rows="4" maxlength="<%= Note::MAX_CONTENT_LENGTH %>" required data-autogrow
                 placeholder="Type your note here."></textarea>
@@ -104,10 +134,14 @@
       // Start fresh for different recipients so a draft never goes to the wrong person.
       if (openFor !== target.key) {
         dialog.querySelectorAll("textarea").forEach((box) => { box.value = ""; });
+        dialog.querySelectorAll("select").forEach((menu) => {
+          menu.selectedIndex = Math.max(0, [...menu.options].findIndex((option) => option.defaultSelected));
+        });
         dialog.querySelector("[name='consent']").value = "";
         panels.sms.dispatchEvent(new Event("sms-recipient-changed", { bubbles: true }));
         openFor = target.key;
       }
+      showSessionPickers();
 
       title.textContent = `Message ${target.name}`;
       setFormDestination(panels.note, noteUrl, opener.dataset.noteAuthenticityToken);
@@ -189,6 +223,27 @@
       });
     }
 
+    // Session outcome notes ask which session (and for a reschedule, the new one). A picker only
+    // counts toward the form while it's showing.
+    const category = dialog.querySelector("[data-message-dialog-category]");
+    const sessionPickers = {
+      needsSession: dialog.querySelector("[data-message-dialog-session]"),
+      needsNewSession: dialog.querySelector("[data-message-dialog-new-session]")
+    };
+
+    function showSessionPickers() {
+      const option = category.selectedOptions[0];
+      Object.entries(sessionPickers).forEach(([need, picker]) => {
+        if (!picker) return;
+        const shown = option?.dataset[need] === "true";
+        const menu = picker.querySelector("select");
+        picker.hidden = !shown;
+        menu.disabled = !shown;
+        menu.required = shown;
+      });
+    }
+
+    category.addEventListener("change", showSessionPickers);
     tabs.forEach((tab) => tab.addEventListener("click", () => showTab(tab.dataset.messageDialogTab)));
     tabs.forEach((tab) => tab.addEventListener("keydown", (event) => {
       if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;

@@ -114,6 +114,12 @@
           <option value="all" <%= "selected" if @timeline_filter == "all" %>>All activity</option>
           <option value="notes" <%= "selected" if @timeline_filter == "notes" %>>Notes</option>
           <option value="status_changes" <%= "selected" if @timeline_filter == "status_changes" %>>Status changes</option>
+          <optgroup label="Note categories">
+            <% NoteCategory.ordered.each do |category| %>
+              <% category_filter = VolunteerTimeline.note_category_filter(category) %>
+              <option value="<%= category_filter %>" <%= "selected" if @timeline_filter == category_filter %>><%= category.name %></option>
+            <% end %>
+          </optgroup>
         </select>
       <% end %>
     </div>
@@ -131,7 +137,7 @@
       end %>
       <%= tag.div class: css_class, data: { timestamp: entry[:time]&.iso8601 } do %>
         <div class="entry__meta">
-          <strong><%= timeline_entry_label(entry[:kind]) %></strong>
+          <strong><%= entry[:heading] || timeline_entry_label(entry[:kind]) %></strong>
           <% if entry[:status].present? %>
             <span class="delivery-status"><%= entry[:status] %></span>
           <% end %>
@@ -139,21 +145,35 @@
             <time datetime="<%= entry[:time].iso8601 %>"><%= entry[:time].strftime("%m/%d/%Y %H:%M") %></time>
           <% end %>
         </div>
-        <% if entry[:subject].present? %>
-          <div><strong><%= entry[:subject] %></strong></div>
-        <% end %>
-        <div class="content"><%= entry[:text] %></div>
-        <% if entry[:sms_to].present? %>
-          <div>To <%= entry[:sms_to] %></div>
-        <% end %>
-        <% if entry[:external_id].present? %>
-          <div>Mailchimp ID: <%= entry[:external_id] %></div>
-        <% end %>
-        <% if entry[:error_message].present? %>
-          <p><%= entry[:error_message] %></p>
+        <% note = entry[:note] %>
+        <% if note && params[:edit_note_id] == note.id.to_s && note.editable_by?(current_user) %>
+          <%= render "note_edit_form", note: note %>
+        <% else %>
+          <% if entry[:subject].present? %>
+            <div><strong><%= entry[:subject] %></strong></div>
+          <% end %>
+          <div class="content"><%= entry[:text] %></div>
+          <% if entry[:sms_to].present? %>
+            <div>To <%= entry[:sms_to] %></div>
+          <% end %>
+          <% if entry[:external_id].present? %>
+            <div>Mailchimp ID: <%= entry[:external_id] %></div>
+          <% end %>
+          <% if entry[:error_message].present? %>
+            <p><%= entry[:error_message] %></p>
+          <% end %>
         <% end %>
         <% if entry[:byline].present? %>
-          <div class="entry__byline">By <%= entry[:byline] %></div>
+          <div class="entry__byline">
+            By <%= entry[:byline] %>
+            <% if note&.edited? %>
+              <span class="entry__edited">· Edited <time datetime="<%= note.edited_at.iso8601 %>"><%= note.edited_at.strftime("%m/%d/%Y %H:%M") %></time></span>
+            <% end %>
+            <% if note&.editable_by?(current_user) && params[:edit_note_id] != note.id.to_s %>
+              <%= link_to "Edit", volunteer_path(@volunteer, filter: params[:filter].presence, edit_note_id: note.id),
+                    class: "entry__edit-link", aria: { label: "Edit note" } %>
+            <% end %>
+          </div>
         <% end %>
       <% end %>
     <% end %>
@@ -164,5 +184,5 @@
   </section>
 </div>
 
-<%= render "message_dialog" %>
+<%= render "message_dialog", volunteer: @volunteer %>
 </main>
