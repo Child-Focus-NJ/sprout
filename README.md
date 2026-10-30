@@ -41,30 +41,11 @@ Architecture, gem choices, and integration decisions are detailed in `docs/archi
 
 ## Local Setup (Development)
 
-Secrets live in `config/credentials.yml.enc`, unlocked by `config/master.key`. That includes Google sign-in and the Mandrill account used for SMS and email. Do not put those values in a `.env` file.
+Secrets live in `config/credentials.yml.enc`, unlocked by `config/master.key`. Do not put those values in a `.env` file.
 
-Obtain the `master.key` file from a current team member via a secure exchange. Dr. DePasquale can securely share it with you via 1Password. Place the file in the `config/` directory before building the application.
-
-Mailchimp Transactional settings belong under the `mandrill` key. With `config/master.key` in place:
-
-```sh
-bin/rails credentials:edit
-```
-
-```yaml
-mandrill:
-  api_key: your_transactional_key
-  sms_from: "+1..."
-  from_email: your_verified_sender_address
-```
-
-Channel switches are not secrets. Set `SPROUT_SMS_MAILCHIMP_ENABLED=true` and `SPROUT_EMAIL_MAILCHIMP_ENABLED=true` in the environment when that account is ready to send. See `docs/onboarding/mailchimp-integration.md`.
+Obtain the `master.key` file. Place the file in the `config/` directory before building the application.
 
 ### Option A: Docker (recommended)
-Obtain the `master.key` file from a current team member via a secure exchange. Dr. DePasquale can securely share it
-with you via 1Password. Place the file in the `config/` directory before building the application.
-
-One script starts everything — Rails, PostgreSQL, and LocalStack (AWS emulator) — in Docker containers. No local Ruby, Postgres, or AWS tools needed.
 
 **Prerequisites:** [Docker Desktop](https://docs.docker.com/get-docker/)
 
@@ -108,11 +89,8 @@ docker compose exec web bin/rails "tailwindcss:watch[always]"
    ```sh
    bin/rails db:prepare
    ```
-3. **Obtain the `master.key` file**
-   Obtain the `master.key` file from a current team member via a secure exchange. Dr. DePasquale can securely share it
-   with you via 1Password. Place the file in the `config/` directory before building the application.
-
-4. **Run the app**
+   
+3. **Run the app**
    ```sh
    bin/dev
    ```
