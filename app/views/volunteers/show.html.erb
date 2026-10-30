@@ -149,7 +149,19 @@
         <% if note && params[:edit_note_id] == note.id.to_s && note.editable_by?(current_user) %>
           <%= render "note_edit_form", note: note %>
         <% else %>
+          <% if entry[:subject].present? %>
+            <div><strong><%= entry[:subject] %></strong></div>
+          <% end %>
           <div class="content"><%= entry[:text] %></div>
+          <% if entry[:sms_to].present? %>
+            <div>To <%= entry[:sms_to] %></div>
+          <% end %>
+          <% if entry[:external_id].present? %>
+            <div>Mailchimp ID: <%= entry[:external_id] %></div>
+          <% end %>
+          <% if entry[:error_message].present? %>
+            <p><%= entry[:error_message] %></p>
+          <% end %>
         <% end %>
         <% if entry[:byline].present? %>
           <div class="entry__byline">

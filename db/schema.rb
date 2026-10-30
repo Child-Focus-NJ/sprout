@@ -36,9 +36,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_24_130002) do
     t.bigint "communication_template_id"
     t.integer "communication_type", default: 0, null: false
     t.datetime "created_at", null: false
+    t.string "email_to"
+    t.text "error_message"
     t.string "external_id"
+    t.string "purpose"
     t.datetime "sent_at"
     t.bigint "sent_by_user_id"
+    t.string "sms_consent"
+    t.string "sms_to"
     t.integer "status", default: 0, null: false
     t.string "subject"
     t.datetime "updated_at", null: false

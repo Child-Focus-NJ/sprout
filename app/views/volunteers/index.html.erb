@@ -88,9 +88,10 @@
     <% @volunteers.each do |volunteer| %>
       <div class="volunteer-row">
         <input type="checkbox" id="volunteer_<%= volunteer.id %>" name="volunteer_ids[]" value="<%= volunteer.id %>"
+               aria-label="Select <%= volunteer.full_name %>"
                data-bulk-select data-has-phone="<%= volunteer.phone.present? %>" data-name="<%= volunteer.full_name %>">
         <div class="volunteer-meta">
-          <label for="volunteer_<%= volunteer.id %>" class="volunteer-name"><%= volunteer.full_name %></label>
+          <%= link_to volunteer.full_name, volunteer_path(volunteer), class: "volunteer-name" %>
           <div class="volunteer-subtext">
             <span>Contact: <%= volunteer.phone.presence || volunteer.email %></span>
             <% if volunteer.vicinage %>

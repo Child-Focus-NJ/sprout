@@ -4,8 +4,6 @@ param(
 
 $RepoUrl            = "https://github.com/Child-Focus-NJ/sprout.git"
 $RepoDir            = "sprout"
-$GoogleClientId     = ""
-$GoogleClientSecret = ""
 $DockerDesktopPath  = "C:\Program Files\Docker\Docker\Docker Desktop.exe"
 $WslDistro          = "Ubuntu"
 $DockerWaitSeconds  = 25
@@ -51,7 +49,6 @@ else
   git clone '$RepoUrl' '$RepoDir'
   cd '$RepoDir'
 fi
-printf 'GOOGLE_CLIENT_ID=%s\nGOOGLE_CLIENT_SECRET=%s\n' '$GoogleClientId' '$GoogleClientSecret' > .env
 sed -i 's/\r$//' ./bin/dev-docker ./bin/docker-entrypoint-dev 2>/dev/null || true
 chmod +x ./bin/dev-docker
 echo 'Setup complete.'

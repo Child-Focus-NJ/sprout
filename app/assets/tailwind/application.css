@@ -138,6 +138,8 @@
   /* Note / SMS popup */
   .message-dialog {
     @apply m-auto w-[calc(100%-2rem)] max-w-lg rounded-lg border border-gray-300 bg-white p-0 text-gray-900 shadow-xl;
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
   }
 
   .message-dialog::backdrop {
@@ -145,7 +147,7 @@
   }
 
   .message-dialog__body {
-    @apply grid gap-3 p-4;
+    @apply grid grid-cols-1 gap-3 p-4;
   }
 
   .message-dialog__header {
@@ -196,7 +198,17 @@
   }
 
   .message-dialog__panel {
-    @apply m-0 grid gap-1.5;
+    @apply m-0 min-w-0 grid grid-cols-1 gap-1.5;
+  }
+
+  .message-dialog__panel select,
+  .sms-compose-form select {
+    @apply min-h-[44px] min-w-0 w-full max-w-full px-2 py-2;
+  }
+
+  .message-dialog__panel select:focus-visible,
+  .sms-compose-form select:focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-sky-600;
   }
 
   .message-dialog__session {

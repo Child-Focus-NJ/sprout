@@ -55,12 +55,17 @@ class VolunteerTimeline
       }
     end
 
-    @volunteer.communications.each do |comm|
+    @volunteer.communications.includes(:sent_by_user).each do |comm|
       entries << {
         kind: comm.communication_type.to_sym,
         time: comm.sent_at || comm.created_at,
         text: comm.body.to_s,
-        status: comm.status
+        status: comm.status,
+        subject: comm.subject,
+        byline: comm.sent_by_user&.full_name.to_s,
+        sms_to: comm.sms_to,
+        external_id: comm.external_id,
+        error_message: comm.error_message
       }
     end
 

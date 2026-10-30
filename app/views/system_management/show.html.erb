@@ -12,6 +12,9 @@
   <% end %>
 
   <h1 class="page-title">System Management</h1>
+  <% if current_user.admin? %>
+    <p><%= link_to "Application email settings", admin_settings_path(anchor: "application-email"), class: "button-link" %></p>
+  <% end %>
 
   <div class="card">
     <nav class="sys-tabs" aria-label="System item sections">

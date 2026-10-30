@@ -40,9 +40,19 @@ RSpec.describe "Bulk actions on the volunteer list", type: :request do
   end
 
   describe "POST /volunteers/bulk_send_sms" do
+    include_context "Mailchimp SMS enabled"
+    let(:client) { instance_double(Mailchimp::TransactionalClient) }
+
+    before do
+      allow(Mailchimp::TransactionalClient).to receive(:new).and_return(client)
+      allow(client).to receive(:send_sms) do |to:, message:, consent:|
+        { "status" => "sent", "external_id" => "bulk-#{to}", "to" => to }
+      end
+    end
+
     it "texts everyone with a phone number and says how many were skipped" do
       expect do
-        post bulk_send_sms_volunteers_path, params: { volunteer_ids: [ harry.id, sofia.id, nora.id ], message: "See you Thursday" }
+        post bulk_send_sms_volunteers_path, params: { volunteer_ids: [ harry.id, sofia.id, nora.id ], message: "See you Thursday", consent: "onetime" }
       end.to change(Communication.sms, :count).by(2)
 
       expect(response).to redirect_to(volunteers_path)
@@ -51,7 +61,7 @@ RSpec.describe "Bulk actions on the volunteer list", type: :request do
     end
 
     it "sends nothing when nobody selected has a phone number" do
-      post bulk_send_sms_volunteers_path, params: { volunteer_ids: [ nora.id ], message: "Hi" }
+      post bulk_send_sms_volunteers_path, params: { volunteer_ids: [ nora.id ], message: "Hi", consent: "onetime" }
 
       expect(flash[:alert]).to eq("No SMS sent. Skipped 1 with no phone number: Nora Nophone.")
     end
@@ -59,7 +69,7 @@ RSpec.describe "Bulk actions on the volunteer list", type: :request do
     it "names the first few skipped volunteers and counts the rest, so the message stays short" do
       no_phones = %w[Amy Bob Cal Dee Eve].map { |first| create(:volunteer, first_name: first, last_name: "None", phone: nil) }
 
-      post bulk_send_sms_volunteers_path, params: { volunteer_ids: [ harry.id, *no_phones.map(&:id) ], message: "Hi" }
+      post bulk_send_sms_volunteers_path, params: { volunteer_ids: [ harry.id, *no_phones.map(&:id) ], message: "Hi", consent: "onetime" }
 
       expect(flash[:notice]).to eq("SMS sent to 1 volunteer. Skipped 5 with no phone number: Amy None, Bob None, Cal None, and 2 more.")
     end
@@ -73,9 +83,35 @@ RSpec.describe "Bulk actions on the volunteer list", type: :request do
     end
 
     it "returns to the filtered list it was sent from" do
-      post bulk_send_sms_volunteers_path, params: { volunteer_ids: [ harry.id ], message: "Hi", return_to: "/volunteers?q=kane" }
+      post bulk_send_sms_volunteers_path, params: { volunteer_ids: [ harry.id ], message: "Hi", consent: "onetime", return_to: "/volunteers?q=kane" }
 
       expect(response).to redirect_to("/volunteers?q=kane")
+    end
+    it "requires explicit consent for the group before any send" do
+      expect do
+        post bulk_send_sms_volunteers_path, params: { volunteer_ids: [ harry.id, sofia.id ], message: "Hello" }
+      end.not_to change(Communication, :count)
+      expect(flash[:alert]).to include("Select the SMS consent")
+      expect(client).not_to have_received(:send_sms)
+    end
+
+    it "reports sent, queued, uncertain, and rejected attempts separately" do
+      uncertain = create(:volunteer, phone: "2015550103")
+      rejected = create(:volunteer, phone: "2015550104")
+      allow(client).to receive(:send_sms) do |to:, message:, consent:|
+        expect(consent).to eq("onetime")
+        raise Mailchimp::TransactionalClient::UncertainDeliveryError if to == "+12015550103"
+        status = { "+15553334444" => "queued", "+12015550104" => "rejected" }.fetch(to, "sent")
+        { "status" => status, "external_id" => "bulk-#{to}", "to" => to }
+      end
+      post bulk_send_sms_volunteers_path,
+        params: { volunteer_ids: [ harry.id, sofia.id, uncertain.id, rejected.id ], message: "Hello", consent: "onetime" }
+      expect(flash[:notice]).to include("SMS sent to 1 volunteer.", "SMS queued by Mailchimp for 1 volunteer.",
+        "1 SMS could not be confirmed.", "Check Mailchimp activity before resending.", "1 couldn't be sent.")
+      expect(harry.communications.last).to be_sent
+      expect(sofia.communications.last).to be_queued
+      expect(uncertain.communications.last).to be_pending
+      expect(rejected.communications.last).to be_failed
     end
   end
 

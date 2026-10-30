@@ -20,7 +20,8 @@ Given("the volunteer {string} has received {int} SMS messages") do |name, count|
       volunteer: @volunteer,
       communication_type: :sms,
       body: "SMS message #{i + 1}",
-      sent_at: (i + 1).hours.ago
+      sent_at: (i + 1).hours.ago,
+      status: :sent
     )
   end
 end
@@ -31,7 +32,8 @@ Given("an SMS was sent to the volunteer {string}") do |name|
     volunteer: @volunteer,
     communication_type: :sms,
     body: "Test SMS",
-    sent_at: 1.hour.ago
+    sent_at: 1.hour.ago,
+    status: :sent
   )
 end
 
@@ -44,7 +46,12 @@ When("I enter the message {string}") do |message|
 end
 
 Then("the SMS should be sent to the volunteer's phone") do
-  expect(page).to have_content("SMS sent")
+  expect(page).to have_content("SMS sent to Mailchimp")
+  expect(@volunteer.communications.sms.last.external_id).to eq("cucumber-sms-id")
+end
+
+When("I select the volunteer's one-time SMS consent") do
+  select "One informational message", from: "SMS consent provided by the volunteer"
 end
 
 Then("I should see a confirmation message") do
@@ -81,7 +88,7 @@ When("I view the communication history for {string}") do |name|
 end
 
 Then("I should see the SMS delivery status") do
-  expect(page).to have_content("delivered")
+  expect(page).to have_css(".delivery-status", text: "sent")
 end
 
 Then('the status should be one of {string}, {string}, {string}, or {string}') do |s1, s2, s3, s4|
@@ -115,4 +122,68 @@ end
 
 Then("I should be on the volunteers list page") do
   expect(page).to have_current_path(volunteers_path)
+end
+Given("an active SMS template named {string} says {string}") do |name, body|
+  CommunicationTemplate.create!(name: name, body: body, template_type: :sms,
+    funnel_stage: :inquiry, trigger_type: :manual, active: true)
+end
+
+When("I open the volunteer named {string} from the list") do |name|
+  @volunteer = find_or_create_volunteer_by_name(name)
+  within(find(".volunteer-row", text: name)) { click_link name }
+end
+
+When("I choose the SMS template {string}") do |name|
+  select name, from: "SMS template"
+  expect(page).to have_content("Template loaded.")
+end
+
+Then("the message draft should be {string}") do |body|
+  expect(page).to have_field("Message", with: body)
+end
+
+Then("the saved SMS should say {string} and use template {string}") do |body, name|
+  communication = @volunteer.communications.sms.last
+  expect(communication.body).to eq(body)
+  expect(communication.communication_template.name).to eq(name)
+  expect(page).to have_content(body)
+end
+
+Then("the SMS composer should link to the Mailchimp dashboards in new tabs") do
+  expect(page).to have_link("Open Mailchimp dashboard", href: "https://login.mailchimp.com/", target: "_blank")
+  expect(page).to have_link("View Mandrill activity", href: "https://mandrillapp.com/activity", target: "_blank")
+end
+
+When("I close the message dialog") do
+  find("#message-dialog [data-message-dialog-close]").click
+end
+
+Then("the SMS template and consent should be blank") do
+  expect(find("[data-sms-template-picker]").value).to eq("")
+  expect(find("#dialog-sms-consent").value).to eq("")
+end
+
+Then("the SMS for {string} should say {string}") do |name, body|
+  volunteer = find_or_create_volunteer_by_name(name)
+  expect(volunteer.communications.sms.last).to have_attributes(body: body, status: "sent")
+end
+
+Then("{string} should have no SMS records") do |name|
+  expect(find_or_create_volunteer_by_name(name).communications.sms).to be_empty
+end
+
+Then("the SMS template choices should be unavailable") do
+  expect(page).to have_select("SMS template", options: [ "Custom message" ], disabled: true)
+end
+
+Then("the new template should default to active manual SMS") do
+  expect(page).to have_select("Template type", selected: "SMS")
+  expect(page).to have_select("Trigger type", selected: "Manual")
+  expect(page).to have_checked_field("Active")
+end
+
+When("I save this SMS template named {string} with body {string}") do |name, body|
+  fill_in "Name", with: name
+  fill_in "Body", with: body
+  click_button "Create"
 end

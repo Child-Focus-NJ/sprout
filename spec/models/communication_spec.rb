@@ -7,7 +7,7 @@ RSpec.describe Communication, type: :model do
   let(:user) { create(:user) }
 
   describe "SMS locally recorded (sent_at on create)" do
-    it "promotes pending SMS with sent_at to delivered" do
+    it "does not infer delivery from a locally assigned sent time" do
       comm = volunteer.communications.create!(
         communication_type: :sms,
         body: "Hello",
@@ -16,7 +16,7 @@ RSpec.describe Communication, type: :model do
       )
 
       comm.reload
-      expect(comm.delivered?).to be true
+      expect(comm).to be_pending
     end
 
     it "adds a staff note when sent_by_user is present" do

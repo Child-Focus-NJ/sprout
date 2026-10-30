@@ -37,7 +37,7 @@ When('I check in the volunteer {string}') do |identifier|
   else
     @volunteer = find_or_create_volunteer_by_name(identifier)
     click_button "Check in #{@volunteer.full_name}"
-    expect(page).to have_content("Application queued for #{@volunteer.full_name}", wait: 5)
+    expect(page).to have_content("Attendance recorded.", wait: 5)
   end
 end
 
@@ -64,7 +64,7 @@ Then('the attendance should record a date and time') do
 end
 
 Then('an application email should be triggered for {string}') do |email|
-  recipients = ActionMailer::Base.deliveries.flat_map { |m| Array.wrap(m.to) }.compact.map(&:downcase)
+  recipients = Communication.email.sent.where(purpose: "application").pluck(:email_to).map(&:downcase)
   assert_includes recipients, email.downcase
 end
 
