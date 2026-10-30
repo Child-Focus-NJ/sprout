@@ -1,118 +1,100 @@
 source "https://rubygems.org"
 
+# ---------------------------------------------------------------------------
+# Framework
+# ---------------------------------------------------------------------------
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.2", ">= 8.1.3.1"
 
-# The modern asset pipeline for Rails [https://github.com/rails/propshaft]
-gem "propshaft"
-gem "tailwindcss-rails", "~> 4.0"
-# Use PostgreSQL as the database for Active Record
-gem "pg", "~> 1.7"
-# Use the Puma web server [https://github.com/puma/puma]
-gem "puma", ">= 5.0"
-# Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
-gem "importmap-rails"
-# Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]
-gem "turbo-rails"
-# Hotwire's modest JavaScript framework [https://stimulus.hotwired.dev]
-gem "stimulus-rails"
-# Build JSON APIs with ease [https://github.com/rails/jbuilder]
-gem "jbuilder"
-# OmniAuth for Single Sign-On
-gem "omniauth", ">= 2.0.0"
-gem "omniauth-google-oauth2"
+gem "pg", "~> 1.7"                          # PostgreSQL
+gem "puma", ">= 5.0"                        # Web server
+gem "bootsnap", require: false              # Boot-time caching (required in config/boot.rb)
+gem "tzinfo-data", platforms: %i[ windows jruby ] # Windows has no zoneinfo files
 
-# Allows for .env file
-gem "dotenv-rails"
-
-# Dashboard charts (Chart.js, loaded through importmap) [https://chartkick.com]
-gem "chartkick"
-# Group counts by day/week/month in the app's time zone, for chart series [https://github.com/ankane/groupdate]
-gem "groupdate"
-
-# Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
-# gem "bcrypt", "~> 3.1.7"
-
-# Windows does not include zoneinfo files, so bundle the tzinfo-data gem
-gem "tzinfo-data", platforms: %i[ windows jruby ]
-
-# Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
+# Database-backed adapters for Rails.cache, Active Job, and Action Cable
 gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
 
-# Reduces boot times through caching; required in config/boot.rb
-gem "bootsnap", require: false
+# ---------------------------------------------------------------------------
+# Frontend
+# ---------------------------------------------------------------------------
+gem "propshaft"                             # Asset pipeline
+gem "tailwindcss-rails", "~> 4.0"
+gem "importmap-rails"                       # JavaScript with ESM import maps
+gem "turbo-rails"                           # Hotwire page accelerator
+gem "stimulus-rails"                        # Hotwire JavaScript framework
 
-# Deploy this application anywhere as a Docker container [https://kamal-deploy.org]
-gem "kamal", require: false
+# Dashboard charts (Chart.js, loaded through importmap) [https://chartkick.com]
+gem "chartkick"
+# Group counts by day/week/month in the app's time zone, for chart series
+gem "groupdate"
 
-# Add HTTP asset caching/compression and X-Sendfile acceleration to Puma [https://github.com/basecamp/thruster/]
-gem "thruster", require: false
+# ---------------------------------------------------------------------------
+# Authentication
+# ---------------------------------------------------------------------------
+gem "omniauth", ">= 2.0.0"                  # Single Sign-On
+gem "omniauth-google-oauth2"
 
-# Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 1.2"
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+gem "dotenv-rails"                          # Load .env files
 
-# HTTP client for API Gateway calls and external APIs
-gem "httparty"
+# ---------------------------------------------------------------------------
+# Integrations & file handling
+# ---------------------------------------------------------------------------
+gem "httparty"                              # HTTP client for API Gateway calls and external APIs
 
 # AWS SDK (SQS for async Lambda triggers, S3 for report storage)
-gem "aws-sdk-sqs", "~> 1.122"
 gem "aws-sdk-s3", "~> 1.235"
+gem "aws-sdk-sqs", "~> 1.122"
 
-# Excel generation for data exports (admin full-data export, reporting)
-gem "caxlsx"
+gem "caxlsx"                                # Excel generation for data exports (admin full-data export, reporting)
+gem "prawn"                                 # PDF generation for report exports
+gem "roo"                                   # Spreadsheet import (volunteer import)
+gem "image_processing", "~> 1.2"            # Active Storage variants
 
+# ---------------------------------------------------------------------------
+# Deployment
+# ---------------------------------------------------------------------------
+gem "kamal", require: false                 # Deploy as a Docker container
+gem "thruster", require: false              # HTTP caching/compression and X-Sendfile for Puma
+
+# ---------------------------------------------------------------------------
+# Development & test
+# ---------------------------------------------------------------------------
 group :development, :test do
-  # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
-
-  # Audits gems for known security defects (use config/bundler-audit.yml to ignore issues)
-  gem "bundler-audit", require: false
-
-  # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
-  gem "brakeman", "~> 8.1.0", require: false
-
-  # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
-  gem "rubocop-rails-omakase", require: false
-
   gem "factory_bot_rails"
 
-  # reads excel files
-  gem "roo"
-
-  # writes excel filese
-  gem "write_xlsx"
-
-  # reads pdf
-  gem "pdf-reader"
-
-  # pdf generator
-  gem "prawn"
+  # Code quality & security
+  gem "brakeman", "~> 8.1.0", require: false  # Static security analysis
+  gem "bundler-audit", require: false         # Audits gems for known vulnerabilities (config/bundler-audit.yml)
+  gem "rubocop-rails-omakase", require: false # Omakase Ruby styling
 end
 
 group :development do
-  # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
 end
 
 group :test do
-  # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
-  # require: false — do not load during Bundler.require when running RSpec; Cucumber loads these from features/support/env.rb
+  # RSpec
+  gem "rspec-rails", "~> 8.0"
+  gem "shoulda-matchers", "~> 6.0"
+  gem "database_cleaner-active_record"
+  gem "simplecov", require: false
+  gem "warden"                              # Warden::Test::Helpers (login_as) in RSpec and Cucumber
+  gem "webmock"                             # Stubs the raw Net::HTTP calls ExternalVmsSync makes to the external VMS
+
+  # Build and inspect exported files in specs and features
+  gem "pdf-reader"
+  gem "rubyXL"
+
+  # Cucumber / browser testing
+  # require: false so these are not loaded by Bundler.require under RSpec;
+  # Cucumber loads them from features/support/env.rb
   gem "capybara", require: false
   gem "cucumber-rails", require: false
   gem "selenium-webdriver", require: false
-  gem "cucumber", require: false
-  gem "warden"
-  gem "rspec-rails", "~> 8.0"
-  gem "simplecov", require: false
-  gem "database_cleaner-active_record"
-  gem "rubyXL"
-  gem "shoulda-matchers", "~> 6.0", group: :test
-
-  # Stubs the raw Net::HTTP calls ExternalVmsSync makes to the external VMS
-  gem "webmock"
 end
-
-
-gem "rspec-expectations", "~> 3.13"
