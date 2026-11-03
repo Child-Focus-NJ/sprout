@@ -583,7 +583,8 @@
     @apply inline-flex items-center gap-1 rounded-full border py-0.5 pl-2.5 pr-1 font-medium;
   }
 
-  .volunteer-filter-chip--vicinage {
+  .volunteer-filter-chip--vicinage,
+  .volunteer-filter-chip--source {
     @apply border-gray-300 bg-white text-gray-800;
   }
 

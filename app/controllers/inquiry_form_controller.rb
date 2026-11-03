@@ -174,6 +174,6 @@ class InquiryFormController < ApplicationController
 
   def load_select_options
     @vicinages = Vicinage.numerical
-    @referral_sources = ReferralSource.active.alphabetical
+    @referral_sources = ReferralSource.active.menu_order
   end
 end

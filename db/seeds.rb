@@ -47,14 +47,14 @@ end
 end
 
 # ── Referral Sources ───────────────────────────────────────────────────────────
-# Also created by db/migrate (SeedNjCountiesAndReferralSources) for
+# Also created by db/migrate (UpdateInquirySourceOptions) for
 # environments that replay real pending migrations. But as of Rails 8,
 # db:migrate against a *fresh/empty* database implicitly loads db/schema.rb
 # first and marks migrations at/below that version as applied WITHOUT running
 # their code (rails/rails#53899) — so that migration alone isn't reliable on
 # a brand-new database. find_or_create_by! here makes this self-healing
 # regardless of which path Rails takes.
-sources = [ "Facebook", "Instagram", "Word of Mouth", "Website", "Flyer", "School", "Other" ].map do |name|
+sources = [ "Tabling Event", "Church Presentation", "Idealist", "Website", "Word of Mouth", "Other" ].map do |name|
   ReferralSource.find_or_create_by!(name: name)
 end
 
