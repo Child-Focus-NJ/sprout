@@ -76,6 +76,25 @@ RSpec.describe "Inquiry form submission", type: :request do
       end
     end
 
+    context "when a deactivated volunteer inquires again" do
+      let!(:volunteer) { create(:volunteer, email: "jane@childfocusnj.org", current_funnel_stage: :inactive) }
+
+      it "reactivates them and handles it as a new inquiry instead of a duplicate" do
+        expect { post inquiry_form_path, params: valid_params }.not_to change(Volunteer, :count)
+
+        expect(volunteer.reload).to be_inquiry
+        expect(InquiryFormSubmission.last.volunteer).to eq(volunteer)
+        expect(Communication.email.last.email_to).to eq("jane@childfocusnj.org")
+
+        follow_redirect!
+        expect(response.body).to include("Thanks! Your inquiry has been submitted.")
+      end
+
+      it "doesn't push a second inquiry to the external VMS" do
+        expect { post inquiry_form_path, params: valid_params }.not_to have_enqueued_job(VmsPushInquiryJob)
+      end
+    end
+
     # US1: Missing required fields shows validation errors
     context "with missing email" do
       let(:params_missing_email) do
