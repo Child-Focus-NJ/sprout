@@ -40,6 +40,17 @@ Feature: Status Management
     And I should see a status change entry for "Application sent" to "Applied"
     And the volunteer's application submitted date should be set
 
+  Scenario: Deactivated volunteer is reactivated when they inquire again
+    Given I am on the volunteer "Jane Doe" profile page
+    And the volunteer has status "Inactive"
+    And I am on the inquiry form page
+    When I submit a valid inquiry for "jane-doe@childfocusnj.org"
+    Then I should see a submission confirmation
+    Given I am on the volunteer "Jane Doe" profile page
+    Then the volunteer should have status "Inquiry"
+    And I should see "Reactivated"
+    And I should see "Inactive → Inquiry"
+
   Scenario: Status options include required funnel stages
     Given I am on the volunteer "Jane Doe" profile page
     When I open the status change dropdown
