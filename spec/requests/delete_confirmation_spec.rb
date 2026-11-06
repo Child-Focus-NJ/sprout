@@ -53,24 +53,24 @@ RSpec.describe "Delete confirmations", type: :request do
       expect(response.body).to include("Yes, remove")
     end
 
-    it "shows an in-page confirmation step before removing a referral source" do
+    it "shows an in-page confirmation step before removing an inquiry source" do
       source = ReferralSource.find_or_create_by!(name: "Community Fair") { |rs| rs.active = true }
 
       get system_management_path(tab: "referral_sources", confirm_remove_referral_source_id: source.id)
 
       expect(response).to be_successful
-      expect(response.body).to include("Are you sure you want to remove this referral source?")
+      expect(response.body).to include("Are you sure you want to remove this inquiry source?")
       expect(response.body).to include("Yes, remove")
     end
 
-    it "shows an in-page confirmation step before removing an employee" do
+    it "shows an in-page confirmation step before deactivating an employee" do
       other = create(:user, first_name: "Joel", last_name: "Savitz", role: :user)
 
-      get system_management_path(tab: "employees", confirm_remove_user_id: other.id)
+      get system_management_path(tab: "employees", confirm_deactivate_user_id: other.id)
 
       expect(response).to be_successful
-      expect(response.body).to include("Are you sure you want to remove this user?")
-      expect(response.body).to include("Yes, remove")
+      expect(response.body).to include("Are you sure you want to deactivate this user?")
+      expect(response.body).to include("Yes, deactivate")
     end
   end
 

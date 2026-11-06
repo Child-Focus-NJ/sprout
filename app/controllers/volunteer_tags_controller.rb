@@ -1,5 +1,5 @@
 class VolunteerTagsController < ApplicationController
-  before_action :require_admin!
+  restrict_to_feature :volunteer_tags
 
   def create
     VolunteerTag.create!(title: params[:title])

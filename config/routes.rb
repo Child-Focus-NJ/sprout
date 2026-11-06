@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   namespace :admin do
     resource :data_export, only: [ :create ], controller: "data_exports"
     resources :campaigns, only: [ :index ]
+    resource :usage_report, only: [ :show ], controller: "usage_reports"
 
     resources :communication_templates do
       member do
@@ -29,6 +30,8 @@ Rails.application.routes.draw do
   resources :volunteers do
     collection do
       post :bulk_add_note
+      post :bulk_send_sms
+      post :bulk_send_application
     end
 
     member do
@@ -36,10 +39,12 @@ Rails.application.routes.draw do
       post :send_application
       patch :mark_submitted
       get :sms
+      get :sms_template
       post :send_sms
       get :email
       post :send_email
       post :add_note
+      patch "notes/:note_id", to: "volunteers#update_note", as: "update_note"
     end
   end
   resource :inquiry_form, controller: "inquiry_form"
@@ -58,8 +63,9 @@ Rails.application.routes.draw do
   resource :external_vms_sync, only: [ :show, :create ], controller: "external_vms_syncs"
   resources :reminder_frequencies, only: [ :create, :update, :destroy ]
   resources :volunteer_tags, only: [ :create, :update, :destroy ]
-  resources :users, only: [ :create, :update, :destroy ]
+  resources :users, only: [ :create, :update ]
   resources :referral_sources, only: [ :create, :update, :destroy ]
+  resources :note_categories, only: [ :create, :update, :destroy ]
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.

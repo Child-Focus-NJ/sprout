@@ -4,17 +4,17 @@ require "rails_helper"
 
 RSpec.describe InquiryFormSubmission, type: :model do
   describe "associations" do
-    it "associates a county and referral source" do
-      county = create(:nj_county)
+    it "associates a vicinage and referral source" do
+      vicinage = create(:vicinage)
       source = create(:referral_source)
-      submission = create(:inquiry_form_submission, nj_county: county, referral_source: source)
+      submission = create(:inquiry_form_submission, vicinage: vicinage, referral_source: source)
 
-      expect(submission.nj_county).to eq(county)
+      expect(submission.vicinage).to eq(vicinage)
       expect(submission.referral_source).to eq(source)
     end
 
-    it "can be created without a county or referral source" do
-      submission = build(:inquiry_form_submission, nj_county: nil, referral_source: nil)
+    it "can be created without a vicinage or referral source" do
+      submission = build(:inquiry_form_submission, vicinage: nil, referral_source: nil)
       expect(submission).to be_valid
     end
 

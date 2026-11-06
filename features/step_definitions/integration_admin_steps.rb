@@ -257,7 +257,7 @@ Then('I should not see {string} on the page') do |name|
   expect(page).to have_no_content(name, wait: 5)
 end
 
-Given('a referral source named {string} exists') do |name|
+Given('an inquiry source named {string} exists') do |name|
   ReferralSource.find_or_create_by!(name: name) { |source| source.active = true }
 end
 

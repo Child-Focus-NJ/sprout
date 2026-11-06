@@ -39,6 +39,11 @@ RSpec.describe "Inquiry form submission", type: :request do
         end.to change(InquiryFormSubmission, :count).by(1)
       end
 
+      it "gives the new volunteer an inquiry date" do
+        post inquiry_form_path, params: valid_params
+        expect(Volunteer.last.inquiry_date).to be_within(1.minute).of(Time.current)
+      end
+
       it "creates a Volunteer record with inquiry status" do
         expect do
           post inquiry_form_path, params: valid_params

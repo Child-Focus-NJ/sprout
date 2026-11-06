@@ -7,7 +7,7 @@ RSpec.describe "Application email settings", type: :request do
 
   before { login_as(admin, scope: :user) }
 
-  it "links to settings from Admin and displays the current link" do
+  it "links to settings from Admin and displays the current application link" do
     SystemSetting.set("application_url", "https://example.org/apply")
     get system_management_path
     expect(response.body).to include("Application email settings", "#{admin_settings_path}#application-email")

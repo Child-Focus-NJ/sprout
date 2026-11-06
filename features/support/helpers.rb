@@ -16,3 +16,13 @@ module VolunteerHelpers
 end
 
 World(VolunteerHelpers)
+
+module DashboardHelpers
+  # The awaiting submission list starts collapsed on the dashboard, so open it before looking inside
+  def open_awaiting_submission
+    panel = find("#awaiting-submission")
+    panel.find("summary").click unless panel.matches_css?("[open]")
+  end
+end
+
+World(DashboardHelpers)

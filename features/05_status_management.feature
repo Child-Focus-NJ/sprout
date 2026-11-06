@@ -15,6 +15,15 @@ Feature: Status Management
     And I should see a status change entry for "Inquiry" to "Application eligible"
     And the status change should include a timestamp
 
+  Scenario: Status changes appear in the profile timeline
+    Given I am on the volunteer "Jane Doe" profile page
+    And the volunteer has status "Inquiry"
+    When I change the status to "Application eligible"
+    And I press "Update status"
+    And I filter the timeline to show only status changes
+    Then the timeline should only show status changes
+    And I should see "Inquiry → Application eligible"
+
   Scenario: Status updates automatically when volunteer attends session
     Given I am on the sign-in page for session "March 2025 Info Session"
     And the volunteer "Jane Doe" is registered for this session

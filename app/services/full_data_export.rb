@@ -7,9 +7,10 @@ class FullDataExport
   # list of models to export
   MODELS = [
     ReferralSource,
-    NjCounty,
+    Vicinage,
     ReminderFrequency,
     VolunteerTag,
+    NoteCategory,
     SystemSetting,
     User,
     Volunteer,

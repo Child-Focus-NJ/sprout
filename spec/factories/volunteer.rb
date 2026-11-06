@@ -5,8 +5,8 @@ FactoryBot.define do
     first_name { "Test" }
     last_name { "Volunteer" }
 
-    trait :with_county do
-      association :nj_county
+    trait :with_vicinage do
+      association :vicinage
     end
 
     trait :with_referral_source do

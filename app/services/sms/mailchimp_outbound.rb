@@ -3,18 +3,30 @@
 module Sms
   class MailchimpOutbound
     MAX_MESSAGE_LENGTH = 320
-    CONSENT_TYPES = %w[onetime recurring recurring-no-confirm].freeze
+    CONSENT_TYPES = Mailchimp::TransactionalClient::CONSENT_TYPES
 
     class Error < StandardError; end
+    class UncertainDeliveryError < Error; end
     class MissingPhoneError < Error; end
     class InvalidPhoneError < Error; end
     class BlankMessageError < Error; end
     class MessageTooLongError < Error; end
     class MissingConsentError < Error; end
     class ConfigurationError < Error; end
+    class InvalidTemplateError < Error; end
 
-    def self.deliver!(volunteer:, body:, sent_by_user:, consent: nil)
-      message = body.to_s.strip
+    def self.template!(id)
+      CommunicationTemplate.active.sms.find_by(id: id) ||
+        raise(InvalidTemplateError, "Choose an active SMS template or write a custom message")
+    end
+
+    def self.deliver!(volunteer:, body:, sent_by_user:, consent: nil, template_id: nil, personalize: false)
+      template = template!(template_id) if template_id.present?
+      message = if template && personalize
+        CommunicationTemplate.new(body: body).render_body(volunteer).strip
+      else
+        body.to_s.strip
+      end
       raise BlankMessageError, "Message cannot be blank" if message.blank?
       if message.length > MAX_MESSAGE_LENGTH
         raise MessageTooLongError, "Message is too long (max #{MAX_MESSAGE_LENGTH} characters)"
@@ -30,7 +42,7 @@ module Sms
       end
 
       communication = volunteer.communications.create!(
-        communication_type: :sms, body: message, sent_by_user: sent_by_user,
+        communication_type: :sms, body: message, sent_by_user: sent_by_user, communication_template: template,
         status: :pending, sms_to: phone, sms_consent: consent
       )
       send_message!(communication)
@@ -83,7 +95,7 @@ module Sms
     rescue Mailchimp::TransactionalClient::UncertainDeliveryError
       message = "SMS delivery could not be confirmed. Check Mailchimp activity before resending."
       communication.update!(error_message: message)
-      raise Error, message
+      raise UncertainDeliveryError, message
     rescue Mailchimp::TransactionalClient::Error
       message = "SMS could not be sent. Check Mailchimp configuration."
       communication.update!(status: :failed, error_message: message)

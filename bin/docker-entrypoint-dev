@@ -16,7 +16,7 @@ fi
 # Run migrations
 bin/rails db:migrate
 
-# Idempotent: creates missing reference data (counties, referral sources,
+# Idempotent: creates missing reference data (vicinages, referral sources,
 # demo users/volunteers) without duplicating existing rows. Needed
 # explicitly because db:migrate alone doesn't guarantee migration code ran
 # on a freshly created database (see db/seeds.rb for details).

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_18_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_30_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -36,18 +36,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_090000) do
     t.bigint "communication_template_id"
     t.integer "communication_type", default: 0, null: false
     t.datetime "created_at", null: false
-    t.string "email_to"
-    t.text "error_message"
     t.string "external_id"
-    t.string "purpose"
     t.datetime "sent_at"
     t.bigint "sent_by_user_id"
-    t.string "sms_consent"
-    t.string "sms_to"
     t.integer "status", default: 0, null: false
     t.string "subject"
     t.datetime "updated_at", null: false
     t.bigint "volunteer_id", null: false
+    t.string "sms_to"
+    t.string "sms_consent"
+    t.text "error_message"
+    t.string "email_to"
+    t.string "purpose"
     t.index ["communication_template_id"], name: "index_communications_on_communication_template_id"
     t.index ["sent_at"], name: "index_communications_on_sent_at"
     t.index ["sent_by_user_id"], name: "index_communications_on_sent_by_user_id"
@@ -88,6 +88,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_090000) do
     t.index ["volunteer_id"], name: "index_external_sync_logs_on_volunteer_id"
   end
 
+  create_table "features", force: :cascade do |t|
+    t.boolean "admin_only", default: true, null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_features_on_key", unique: true
+  end
+
   create_table "information_sessions", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.integer "capacity"
@@ -110,7 +119,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_090000) do
     t.string "email"
     t.string "first_name"
     t.string "last_name"
-    t.bigint "nj_county_id"
     t.string "other_info"
     t.string "phone"
     t.bigint "preferred_session_id"
@@ -120,20 +128,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_090000) do
     t.bigint "referral_source_id"
     t.string "source"
     t.datetime "updated_at", null: false
+    t.bigint "vicinage_id"
     t.bigint "volunteer_id"
-    t.index ["nj_county_id"], name: "index_inquiry_form_submissions_on_nj_county_id"
     t.index ["preferred_session_id"], name: "index_inquiry_form_submissions_on_preferred_session_id"
     t.index ["processed"], name: "index_inquiry_form_submissions_on_processed"
     t.index ["referral_source_id"], name: "index_inquiry_form_submissions_on_referral_source_id"
     t.index ["source"], name: "index_inquiry_form_submissions_on_source"
+    t.index ["vicinage_id"], name: "index_inquiry_form_submissions_on_vicinage_id"
     t.index ["volunteer_id"], name: "index_inquiry_form_submissions_on_volunteer_id"
   end
 
-  create_table "nj_counties", force: :cascade do |t|
+  create_table "note_categories", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "key"
     t.datetime "created_at", null: false
-    t.string "name"
     t.datetime "updated_at", null: false
-    t.index ["name"], name: "index_nj_counties_on_name", unique: true
+    t.index ["key"], name: "index_note_categories_on_key", unique: true
+    t.index ["name"], name: "index_note_categories_on_name", unique: true
   end
 
   create_table "notes", force: :cascade do |t|
@@ -143,6 +154,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_090000) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.bigint "volunteer_id", null: false
+    t.bigint "note_category_id", null: false
+    t.datetime "edited_at"
+    t.index ["note_category_id"], name: "index_notes_on_note_category_id"
     t.index ["user_id"], name: "index_notes_on_user_id"
     t.index ["volunteer_id"], name: "index_notes_on_volunteer_id"
   end
@@ -189,6 +203,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_090000) do
     t.index ["status"], name: "index_session_registrations_on_status"
     t.index ["volunteer_id", "information_session_id"], name: "idx_session_registrations_volunteer_session", unique: true
     t.index ["volunteer_id"], name: "index_session_registrations_on_volunteer_id"
+  end
+
+  create_table "sign_in_logs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "ip_address"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["created_at"], name: "index_sign_in_logs_on_created_at"
+    t.index ["user_id"], name: "index_sign_in_logs_on_user_id"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -352,6 +375,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_090000) do
     t.index ["google_uid"], name: "index_users_on_google_uid"
   end
 
+  create_table "vicinages", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name"
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_vicinage_on_name", unique: true
+  end
+
   create_table "volunteer_tags", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "title"
@@ -370,9 +400,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_090000) do
     t.string "first_name", null: false
     t.datetime "first_session_attended_at"
     t.integer "inactive_reason"
-    t.datetime "inquiry_date"
+    t.datetime "inquiry_date", null: false
     t.string "last_name", null: false
-    t.bigint "nj_county_id"
     t.string "phone"
     t.integer "preferred_contact_method", default: 0, null: false
     t.datetime "reactivated_at"
@@ -380,15 +409,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_090000) do
     t.bigint "referral_source_id"
     t.bigint "referred_by_volunteer_id"
     t.datetime "updated_at", null: false
+    t.bigint "vicinage_id"
     t.integer "weeks_at_inactivation"
     t.index ["became_inactive_at"], name: "index_volunteers_on_became_inactive_at"
     t.index ["current_funnel_stage"], name: "index_volunteers_on_current_funnel_stage"
     t.index ["email"], name: "index_volunteers_on_email", unique: true
     t.index ["external_id"], name: "index_volunteers_on_external_id"
     t.index ["inquiry_date"], name: "index_volunteers_on_inquiry_date"
-    t.index ["nj_county_id"], name: "index_volunteers_on_nj_county_id"
     t.index ["referral_source_id"], name: "index_volunteers_on_referral_source_id"
     t.index ["referred_by_volunteer_id"], name: "index_volunteers_on_referred_by_volunteer_id"
+    t.index ["vicinage_id"], name: "index_volunteers_on_vicinage_id"
   end
 
   add_foreign_key "communications", "communication_templates"
@@ -398,15 +428,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_090000) do
   add_foreign_key "external_sync_logs", "volunteers"
   add_foreign_key "information_sessions", "users", column: "created_by_user_id"
   add_foreign_key "inquiry_form_submissions", "information_sessions", column: "preferred_session_id"
-  add_foreign_key "inquiry_form_submissions", "nj_counties"
   add_foreign_key "inquiry_form_submissions", "referral_sources"
+  add_foreign_key "inquiry_form_submissions", "vicinages"
   add_foreign_key "inquiry_form_submissions", "volunteers"
+  add_foreign_key "notes", "note_categories"
   add_foreign_key "notes", "users"
   add_foreign_key "notes", "volunteers"
   add_foreign_key "scheduled_reminders", "communication_templates"
   add_foreign_key "scheduled_reminders", "volunteers"
   add_foreign_key "session_registrations", "information_sessions"
   add_foreign_key "session_registrations", "volunteers"
+  add_foreign_key "sign_in_logs", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
@@ -416,7 +448,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_090000) do
   add_foreign_key "status_changes", "users"
   add_foreign_key "status_changes", "volunteers"
   add_foreign_key "system_settings", "users", column: "updated_by_user_id"
-  add_foreign_key "volunteers", "nj_counties"
   add_foreign_key "volunteers", "referral_sources"
+  add_foreign_key "volunteers", "vicinages"
   add_foreign_key "volunteers", "volunteers", column: "referred_by_volunteer_id"
 end

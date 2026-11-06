@@ -9,6 +9,8 @@
 
 # Ignore all environment files.
 /.env*
+!/.env.example
+!/.env.production.example
 
 # Ignore all logfiles and tempfiles.
 /log/*

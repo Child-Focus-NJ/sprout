@@ -37,7 +37,8 @@ RSpec.describe VolunteerTimeline do
       expect(kinds).to include(:note, :sms, :info_session)
 
       texts = entries.map { |e| e[:text] }
-      expect(texts).to include("Called volunteer", "See you Saturday", "Info session: Spring Orientation")
+      expect(texts).to include("Called volunteer", "See you Saturday",
+                               a_string_matching(/\ARegistered – \w{3} \d{1,2} session \(Spring Orientation\)\z/))
     end
 
     it "includes scheduled reminders with reminder copy in the feed" do
@@ -105,6 +106,56 @@ RSpec.describe VolunteerTimeline do
       entries = described_class.entries_for(volunteer.reload, filter: VolunteerTimeline::FILTER_NOTES)
       expect(entries.map { |e| e[:kind] }).to eq([ :note ])
       expect(entries.first[:text]).to eq("Manual note")
+    end
+
+    it "includes status changes with who made them" do
+      travel_to(Time.zone.parse("2024-05-01 09:00")) do
+        volunteer.change_status!(:application_eligible, user: user)
+      end
+
+      entry = described_class.entries_for(volunteer.reload, filter: VolunteerTimeline::FILTER_ALL)
+                             .find { |e| e[:kind] == :status_change }
+      expect(entry[:text]).to eq("Inquiry → Application eligible")
+      expect(entry[:byline]).to eq("Pat Admin")
+      expect(entry[:time]).to eq(Time.zone.parse("2024-05-01 09:00"))
+    end
+
+    it "when filter is status_changes, returns only status changes" do
+      volunteer.add_staff_note!(content: "Manual note", user: user, note_type: :general)
+      volunteer.change_status!(:application_eligible, user: user)
+      volunteer.change_status!(:application_sent, user: user)
+
+      entries = described_class.entries_for(volunteer.reload, filter: VolunteerTimeline::FILTER_STATUS_CHANGES)
+      expect(entries.map { |e| e[:kind] }).to eq([ :status_change, :status_change ])
+    end
+
+    it "uses each note's category as its heading" do
+      no_show = NoteCategory.create!(key: "no_show", name: "No-show")
+      volunteer.add_staff_note!(content: "Didn't come", user: user, note_category: no_show)
+      volunteer.add_staff_note!(content: "Plain one", user: user)
+
+      headings = described_class.entries_for(volunteer.reload, filter: VolunteerTimeline::FILTER_ALL)
+                                .select { |e| e[:kind] == :note }.to_h { |e| [ e[:text], e[:heading] ] }
+      expect(headings).to eq("Didn't come" => "No-show", "Plain one" => "Note")
+    end
+
+    it "when filtered to a note category, returns only notes in it" do
+      no_show = NoteCategory.create!(key: "no_show", name: "No-show")
+      volunteer.add_staff_note!(content: "Didn't come", user: user, note_category: no_show)
+      volunteer.add_staff_note!(content: "Plain one", user: user)
+      volunteer.change_status!(:application_eligible, user: user)
+
+      entries = described_class.entries_for(volunteer.reload, filter: described_class.note_category_filter(no_show))
+      expect(entries.map { |e| e[:text] }).to eq([ "Didn't come" ])
+    end
+
+    it "shows what happened at each session" do
+      session = create(:information_session, name: "Fall Orientation", scheduled_at: Time.zone.parse("2030-10-14 18:00"))
+      SessionRegistration.create!(volunteer: volunteer, information_session: session, status: :no_show)
+
+      entry = described_class.entries_for(volunteer.reload, filter: VolunteerTimeline::FILTER_ALL)
+                             .find { |e| e[:kind] == :info_session }
+      expect(entry[:text]).to eq("No-show – Oct 14 session (Fall Orientation)")
     end
 
     it "treats blank filter like all activity" do

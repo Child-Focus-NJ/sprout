@@ -1,0 +1,84 @@
+<div class="volunteer-page">
+  <h1 class="page-title">Usage Report</h1>
+
+  <section class="dashboard-stats" aria-label="Usage numbers">
+    <div class="stat-tile" id="stat-sign-ins">
+      <p class="stat-tile__label">Sign-ins</p>
+      <p class="stat-tile__value"><%= number_with_delimiter(@metrics.total_sign_ins) %></p>
+      <p class="stat-tile__context">
+        <%= number_with_delimiter(@metrics.sign_ins_this_month) %> this month · <%= number_with_delimiter(@metrics.unique_sign_in_users) %> unique
+      </p>
+    </div>
+
+    <div class="stat-tile" id="stat-data-volume">
+      <p class="stat-tile__label">Volunteers</p>
+      <p class="stat-tile__value"><%= number_with_delimiter(@metrics.total_volunteers) %></p>
+      <p class="stat-tile__context">
+        <%= number_with_delimiter(@metrics.total_information_sessions) %> info sessions · <%= number_with_delimiter(@metrics.total_notes) %> notes
+      </p>
+    </div>
+
+    <div class="stat-tile" id="stat-communications">
+      <% by_type = @metrics.communications_by_type %>
+      <p class="stat-tile__label">Communications sent</p>
+      <p class="stat-tile__value"><%= number_with_delimiter(@metrics.total_communications) %></p>
+      <p class="stat-tile__context">
+        <%= number_with_delimiter(by_type.fetch("email", 0)) %> email · <%= number_with_delimiter(by_type.fetch("sms", 0)) %> SMS
+      </p>
+    </div>
+
+    <div class="stat-tile" id="stat-employees">
+      <% by_role = @metrics.employees_by_role %>
+      <p class="stat-tile__label">Employees</p>
+      <p class="stat-tile__value"><%= number_with_delimiter(@metrics.total_active_employees) %></p>
+      <p class="stat-tile__context">
+        <%= number_with_delimiter(by_role.fetch("admin", 0)) %> admin · <%= number_with_delimiter(by_role.fetch("user", 0)) %> user
+      </p>
+    </div>
+  </section>
+
+  <div class="dashboard-charts">
+    <div class="card status-panel" id="recent-sign-ins">
+      <h2 class="section-heading">Recent sign-ins</h2>
+      <% recent_sign_ins = @metrics.recent_sign_ins %>
+      <ul class="volunteer-list">
+        <% recent_sign_ins.each do |log| %>
+          <li class="volunteer-row">
+            <div class="volunteer-meta">
+              <span class="volunteer-name"><%= log.user.display_name %></span>
+              <div class="volunteer-subtext">
+                <span><%= log.user.email %></span>
+              </div>
+            </div>
+            <span class="help-text ml-auto"><%= log.created_at.strftime("%b %-d, %Y %-l:%M %p") %></span>
+          </li>
+        <% end %>
+      </ul>
+      <% if recent_sign_ins.empty? %>
+        <p class="subtle">No sign-ins recorded yet.</p>
+      <% end %>
+    </div>
+
+    <div class="card status-panel" id="recent-communications">
+      <h2 class="section-heading">Recent communications</h2>
+      <% recent_communications = @metrics.recent_communications %>
+      <ul class="volunteer-list">
+        <% recent_communications.each do |comm| %>
+          <li class="volunteer-row">
+            <div class="volunteer-meta">
+              <span class="volunteer-name"><%= comm.volunteer.full_name %></span>
+              <div class="volunteer-subtext">
+                <span><%= comm.communication_type.humanize %></span>
+                <span><%= comm.status.humanize %></span>
+              </div>
+            </div>
+            <span class="help-text ml-auto"><%= comm.created_at.strftime("%b %-d, %Y %-l:%M %p") %></span>
+          </li>
+        <% end %>
+      </ul>
+      <% if recent_communications.empty? %>
+        <p class="subtle">No communications recorded yet.</p>
+      <% end %>
+    </div>
+  </div>
+</div>

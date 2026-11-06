@@ -5,7 +5,6 @@ require "httparty"
 module Aws
   class LambdaClient
     class LambdaError < StandardError; end
-    class UncertainDeliveryError < LambdaError; end
 
     def initialize
       @base_url = nil
@@ -23,20 +22,17 @@ module Aws
       post("/volunteer-management-system/sync", { volunteer_id: volunteer_id })
     end
 
-    def send_email(to:, subject:, text_body:)
+    def send_email(to:, subject:, html_body:, from_email: nil)
       post("/mailchimp/send-email", {
         to: to,
         subject: subject,
-        text_body: text_body
+        html_body: html_body,
+        from_email: from_email
       })
-    rescue JSON::ParserError, IOError, SystemCallError, Timeout::Error, SocketError, OpenSSL::SSL::SSLError
-      raise UncertainDeliveryError, "Email delivery could not be confirmed"
     end
 
-    def send_sms(to:, message:, consent:)
-      post("/mailchimp/send-sms", { to: to, message: message, consent: consent })
-    rescue JSON::ParserError, IOError, SystemCallError, Timeout::Error, SocketError, OpenSSL::SSL::SSLError
-      raise UncertainDeliveryError, "SMS delivery could not be confirmed"
+    def send_sms(to:, message:)
+      post("/mailchimp/send-sms", { to: to, message: message })
     end
 
     def upsert_mailchimp_member(email:, first_name:, last_name:, tags: [])
@@ -59,21 +55,22 @@ module Aws
     end
 
     def resolve_api_gateway_url
-      return ENV["API_GATEWAY_URL"].strip if ENV["API_GATEWAY_URL"].present?
+      # In production, API_GATEWAY_URL is set directly as a full URL.
+      # In local dev, the API ID is dynamic so we read it from a file
+      # written by the LocalStack bootstrap script. The file may not
+      # exist immediately if the bootstrap is still running, so we
+      # retry briefly to handle the startup race condition.
+      return ENV["API_GATEWAY_URL"] if ENV["API_GATEWAY_URL"]
 
       url_file = ENV["API_GATEWAY_URL_FILE"]
-      raise LambdaError, "Set API_GATEWAY_URL or API_GATEWAY_URL_FILE" if url_file.blank?
+      raise "Set API_GATEWAY_URL or API_GATEWAY_URL_FILE" unless url_file
 
-      # Wait for LocalStack bootstrap.
       3.times do
-        if File.file?(url_file)
-          url = File.read(url_file).strip
-          return url if url.present?
-        end
+        return File.read(url_file).strip if File.exist?(url_file)
         sleep 2
       end
 
-      raise LambdaError, "API Gateway URL file is unavailable (LocalStack bootstrap may have failed)"
+      raise "API Gateway URL file #{url_file} not found (LocalStack bootstrap may have failed)"
     end
 
     def post(path, body)
@@ -84,14 +81,13 @@ module Aws
         timeout: 30
       )
 
+      parsed = JSON.parse(response.body)
+
       unless response.success?
-        if %w[/mailchimp/send-sms /mailchimp/send-email].include?(path) && [ 500, 502, 504 ].include?(response.code)
-          raise UncertainDeliveryError, "Delivery could not be confirmed"
-        end
-        raise LambdaError, "Lambda #{path} returned #{response.code}"
+        raise LambdaError, "Lambda #{path} returned #{response.code}: #{parsed}"
       end
 
-      JSON.parse(response.body)
+      parsed
     end
   end
 end

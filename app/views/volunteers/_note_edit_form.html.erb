@@ -1,0 +1,21 @@
+<%# Inline edit for a note on the timeline. A note that updated a session or the status keeps its
+    category, so only plain notes can move between plain categories. %>
+<%= form_with url: update_note_volunteer_path(@volunteer, note_id: note.id), method: :patch, local: true,
+              html: { class: "note-form note-edit-form", id: "edit-note-#{note.id}" } do %>
+  <%= hidden_field_tag :filter, params[:filter], id: nil if params[:filter].present? %>
+  <% if note.note_category.updates_records? %>
+    <p class="subtle">Category: <%= note.note_category.name %></p>
+  <% else %>
+    <label for="edit-note-category-<%= note.id %>">Category</label>
+    <%= select_tag :note_category_id,
+                   options_from_collection_for_select(NoteCategory.plain.ordered, :id, :name, note.note_category_id),
+                   id: "edit-note-category-#{note.id}", class: "input-large" %>
+  <% end %>
+  <label for="edit-note-<%= note.id %>">Note</label>
+  <textarea id="edit-note-<%= note.id %>" name="note" rows="4" maxlength="<%= Note::MAX_CONTENT_LENGTH %>" required
+            data-autogrow><%= note.content %></textarea>
+  <div class="note-form__footer">
+    <%= link_to "Cancel", volunteer_path(@volunteer, filter: params[:filter].presence), class: "button-link" %>
+    <button type="submit" class="btn-note">Save Changes</button>
+  </div>
+<% end %>

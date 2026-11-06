@@ -5,6 +5,17 @@ RSpec.describe "Admin communication templates", type: :request do
 
   before { login_as(admin, scope: :user) }
 
+  describe "GET /admin/communication_templates/new?template_type=sms" do
+    it "starts an active, manual SMS template when opened from the SMS composer" do
+      get new_admin_communication_template_path, params: { template_type: "sms" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.at_css("#communication_template_template_type option[selected]")["value"]).to eq("sms")
+      expect(response.parsed_body.at_css("#communication_template_trigger_type option[selected]")["value"]).to eq("manual")
+      expect(response.parsed_body.at_css("#communication_template_active")["checked"]).to be_present
+    end
+  end
+
   describe "GET /admin/communication_templates/:id/edit" do
     it "renders the edit form pre-filled with the template's values" do
       template = CommunicationTemplate.create!(name: "Welcome", subject: "Hi", body: "Hi there", funnel_stage: :inquiry)
@@ -12,7 +23,7 @@ RSpec.describe "Admin communication templates", type: :request do
       get edit_admin_communication_template_path(template)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Edit Email Template")
+      expect(response.body).to include("Edit Message Template")
       expect(response.body).to include("Welcome")
     end
   end

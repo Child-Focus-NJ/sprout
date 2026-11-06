@@ -1,5 +1,5 @@
 class ReminderFrequenciesController < ApplicationController
-  before_action :require_admin!
+  restrict_to_feature :reminder_frequencies
 
   def create
     ReminderFrequency.create!(title: params[:title])

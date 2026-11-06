@@ -1,4 +1,4 @@
-<h2 class="section-heading">Referral Sources</h2>
+<h2 class="section-heading">Inquiry Sources</h2>
 
 <ul id="referral-source-list" class="volunteer-list mb-3">
   <% @referral_sources.each do |source| %>
@@ -12,7 +12,7 @@
             Active
           </label>
           <div class="inline-form">
-            <button type="submit" class="button-primary">Save Referral Source</button>
+            <button type="submit" class="button-primary">Save Inquiry Source</button>
             <%= link_to "Cancel", system_management_path(tab: "referral_sources"), class: "button-link" %>
           </div>
         <% end %>
@@ -24,7 +24,7 @@
         <div class="volunteer-actions">
           <% if params[:confirm_remove_referral_source_id] == source.id.to_s %>
             <div class="delete-confirm-inline">
-              <span class="delete-confirm-inline__message">Are you sure you want to remove this referral source?</span>
+              <span class="delete-confirm-inline__message">Are you sure you want to remove this inquiry source?</span>
               <%= button_to "Yes, remove", referral_source_path(source), method: :delete, class: "btn-delete" %>
               <%= link_to "Cancel", system_management_path(tab: "referral_sources"), class: "button-link" %>
             </div>
@@ -42,17 +42,17 @@
 
 <% unless params[:edit_referral_source_id].present? %>
   <details class="mt-2">
-    <summary class="button-link cursor-pointer select-none">Add Referral Source</summary>
+    <summary class="button-link cursor-pointer select-none">Add Inquiry Source</summary>
     <div class="mt-3">
       <%= form_with url: referral_sources_path, local: true, class: "grid gap-3 max-w-md" do %>
         <input type="text" name="name" id="referral_source_name"
-               placeholder="New referral source"
+               placeholder="New inquiry source"
                class="input-large">
         <label class="inline-flex items-center gap-2">
           <%= check_box_tag :active, "1", true %>
           Active
         </label>
-        <button type="submit" class="button-primary">Save Referral Source</button>
+        <button type="submit" class="button-primary">Save Inquiry Source</button>
       <% end %>
     </div>
   </details>

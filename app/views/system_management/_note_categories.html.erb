@@ -1,0 +1,59 @@
+<h2 class="section-heading">Note Categories</h2>
+<p class="help-text">
+  Built-in categories can be renamed but not removed, since they update session records or a volunteer's status.
+  Notes in a removed category become plain notes.
+</p>
+
+<ul id="note-category-list" class="volunteer-list mb-3">
+  <% @note_categories.each do |category| %>
+    <li class="volunteer-row">
+      <% if params[:edit_note_category_id] == category.id.to_s %>
+        <%= form_with url: note_category_path(category), method: :patch, local: true, class: "grid gap-3 max-w-md" do %>
+          <input type="text" name="name" id="note_category_name" value="<%= category.name %>"
+                 class="input-large">
+          <div class="inline-form">
+            <button type="submit" class="button-primary">Save Note Category</button>
+            <%= link_to "Cancel", system_management_path(tab: "note_categories"), class: "button-link" %>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="volunteer-meta">
+          <span class="volunteer-name"><%= category.name %></span>
+          <% if category.built_in? %>
+            <span class="help-text">Built-in</span>
+          <% end %>
+        </div>
+        <div class="volunteer-actions">
+          <% if params[:confirm_remove_note_category_id] == category.id.to_s && !category.built_in? %>
+            <div class="delete-confirm-inline">
+              <span class="delete-confirm-inline__message">Are you sure you want to remove this note category?</span>
+              <%= button_to "Yes, remove", note_category_path(category), method: :delete, class: "btn-delete" %>
+              <%= link_to "Cancel", system_management_path(tab: "note_categories"), class: "button-link" %>
+            </div>
+          <% else %>
+            <%= link_to "Edit", system_management_path(tab: "note_categories", edit_note_category_id: category.id),
+                  class: "button-link" %>
+            <% unless category.built_in? %>
+              <%= link_to "Remove", system_management_path(tab: "note_categories", confirm_remove_note_category_id: category.id),
+                    class: "btn-delete" %>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    </li>
+  <% end %>
+</ul>
+
+<% unless params[:edit_note_category_id].present? %>
+  <details class="mt-2">
+    <summary class="button-link cursor-pointer select-none">Add Note Category</summary>
+    <div class="mt-3">
+      <%= form_with url: note_categories_path, local: true, class: "grid gap-3 max-w-md" do %>
+        <input type="text" name="name" id="note_category_name"
+               placeholder="New note category"
+               class="input-large">
+        <button type="submit" class="button-primary">Save Note Category</button>
+      <% end %>
+    </div>
+  </details>
+<% end %>

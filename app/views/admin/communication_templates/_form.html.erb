@@ -46,7 +46,8 @@
         <%= f.select :template_type,
                      CommunicationTemplate.template_types.keys.map { |type| [type.upcase, type] },
                      {},
-                     class: "input-large w-full max-w-none" %>
+                     class: "input-large w-full max-w-none", aria: { describedby: "template-type-help" } %>
+        <p id="template-type-help" class="help-text mb-0">Only active SMS templates appear in the SMS composer.</p>
       </div>
 
       <div class="space-y-1 md:col-span-2">
@@ -79,7 +80,7 @@
           <%= f.check_box :active %>
           Active
         </label>
-        <p class="help-text mb-0">Inactive templates are kept for reference but never sent automatically.</p>
+        <p class="help-text mb-0">Inactive templates stay saved but are unavailable for sending.</p>
       </div>
     </div>
 

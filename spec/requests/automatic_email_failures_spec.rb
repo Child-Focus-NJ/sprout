@@ -17,7 +17,7 @@ RSpec.describe "Automatic email failures", type: :request do
     end.to change(InquiryFormSubmission, :count).by(1)
     expect(response).to redirect_to(new_inquiry_form_path)
     expect(flash[:notice]).to include("inquiry has been submitted")
-    expect(flash[:alert]).to include("Email could not be sent")
+    expect(flash[:alert]).to be_nil
     expect(Volunteer.find_by!(email: "jane@example.org").communications.last).to be_failed
   end
 
@@ -32,10 +32,15 @@ RSpec.describe "Automatic email failures", type: :request do
       end
       post check_in_information_session_path(information_session), params: { volunteer_id: volunteer.id }
       expect(response).to redirect_to(volunteer_path(volunteer))
-      expect(flash[:notice]).to eq("Attendance recorded.")
-      expect(flash[:alert]).to include("Attendance recorded.")
+      expect(flash[:notice]).to be_nil
+      expect(flash[:alert]).to start_with("Attendance recorded. ")
+      expect(flash[:alert].scan("Attendance recorded.").size).to eq(1)
       expect(volunteer.reload).to have_attributes(current_funnel_stage: "application_eligible", application_sent_at: nil)
       expect(volunteer.session_registrations.last).to be_attended
+
+      expected_message = flash[:alert]
+      follow_redirect!
+      expect(response.parsed_body.at_css("[data-flash-banner] .flash-banner__text").text).to eq(expected_message)
     end
   end
 

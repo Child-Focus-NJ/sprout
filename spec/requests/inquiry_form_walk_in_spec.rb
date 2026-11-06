@@ -30,6 +30,7 @@ RSpec.describe "Inquiry form walk-in check-in", type: :request do
 
       volunteer = Volunteer.find_by!(email: "walkin-new@childfocusnj.org")
       expect(volunteer.email).to eq("walkin-new@childfocusnj.org")
+      expect(volunteer.inquiry_date).to be_within(1.minute).of(Time.current)
       expect(response).to redirect_to(volunteer_path(volunteer))
 
       registration = SessionRegistration.find_by!(volunteer: volunteer, information_session: information_session)

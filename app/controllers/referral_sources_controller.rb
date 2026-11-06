@@ -1,19 +1,19 @@
 class ReferralSourcesController < ApplicationController
-  before_action :require_admin!
+  restrict_to_feature :referral_sources
 
   def create
     ReferralSource.create!(name: params[:name], active: active_from_params(default: true))
-    redirect_to system_management_path(tab: "referral_sources"), notice: "Referral source added."
+    redirect_to system_management_path(tab: "referral_sources"), notice: "Inquiry source added."
   end
 
   def update
     ReferralSource.find(params[:id]).update!(name: params[:name], active: active_from_params(default: false))
-    redirect_to system_management_path(tab: "referral_sources"), notice: "Referral source updated."
+    redirect_to system_management_path(tab: "referral_sources"), notice: "Inquiry source updated."
   end
 
   def destroy
     ReferralSource.find(params[:id]).destroy
-    redirect_to system_management_path(tab: "referral_sources"), notice: "Referral source removed."
+    redirect_to system_management_path(tab: "referral_sources"), notice: "Inquiry source removed."
   end
 
   private

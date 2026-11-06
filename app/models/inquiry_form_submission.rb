@@ -1,7 +1,7 @@
 class InquiryFormSubmission < ApplicationRecord
   belongs_to :volunteer, optional: true
   belongs_to :preferred_session, class_name: "InformationSession", optional: true
-  belongs_to :nj_county, optional: true
+  belongs_to :vicinage, optional: true
   belongs_to :referral_source, optional: true
 
   scope :unprocessed, -> { where(processed: false) }

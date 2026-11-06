@@ -1,4 +1,4 @@
-## 🌱 Sprout – Volunteer Management System
+## Sprout – Volunteer Management System
 
 **Sprout** is a Ruby on Rails application that replaces spreadsheet-based workflows with a centralized system for managing the full volunteer lifecycle.
 
@@ -6,7 +6,7 @@ Sprout supports the journey from initial inquiry through information session att
 
 ---
 
-## 👥 Team
+## Team
 
 Working under **Dr. Peter DePasquale**
 
@@ -15,7 +15,7 @@ Working under **Dr. Peter DePasquale**
 
 ---
 
-## 🚀 Core Capabilities
+## Core Capabilities
 
 - **Volunteer funnel tracking:** Inquiry → info session registered → attended → application eligible → applied → inactive, with a status history timeline.
 - **Public inquiry form:** Tablet- and mobile-friendly public form that creates/links volunteers and starts them in the funnel.
@@ -25,24 +25,27 @@ Working under **Dr. Peter DePasquale**
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Language:** Ruby (3.4.5)
 - **Framework:** Ruby on Rails 8.1.2
 - **Database:** PostgreSQL
 - **Cloud Services:** AWS
 - **App Deployment:** Heroku
+- **External APIs:** Mailchimp
 - **Styling:** Tailwind CSS via `tailwindcss-rails`
 
 Architecture, gem choices, and integration decisions are detailed in `docs/architecture-and-tech-stack.md` and `docs/feature-specifications.md`.
 
 ---
 
-## ⚙️ Local Setup (Development)
+## Local Setup (Development)
+
+Secrets live in `config/credentials.yml.enc`, unlocked by `config/master.key`. Do not put those values in a `.env` file.
+
+Obtain the `master.key` file. Place the file in the `config/` directory before building the application.
 
 ### Option A: Docker (recommended)
-
-One script starts everything — Rails, PostgreSQL, and LocalStack (AWS emulator) — in Docker containers. No local Ruby, Postgres, or AWS tools needed.
 
 **Prerequisites:** [Docker Desktop](https://docs.docker.com/get-docker/)
 
@@ -66,6 +69,15 @@ To reset everything (database, LocalStack state):
 bin/dev-docker --reset
 ```
 
+**Styles missing after pulling a branch?** The container builds Tailwind CSS once at startup and doesn't watch for changes, so new classes won't show until you rebuild. With the containers running:
+```sh
+docker compose exec web bin/rails tailwindcss:build
+```
+Then refresh the page. To rebuild automatically while you work, keep this running in a second terminal instead:
+```sh
+docker compose exec web bin/rails "tailwindcss:watch[always]"
+```
+
 ### Option B: Local Ruby (without AWS services)
 
 1. **Install dependencies**
@@ -77,12 +89,28 @@ bin/dev-docker --reset
    ```sh
    bin/rails db:prepare
    ```
-
-3. **Run the server**
+   
+3. **Run the app**
    ```sh
-   bin/rails server
+   bin/dev
    ```
+   This starts the Rails server along with a Tailwind CSS watcher and the background job worker. Running `bin/rails server` on its own skips the CSS build, so new styles won't show up.
 
 Note: AWS integrations (Zoom, Mailchimp, VMS) won't work without LocalStack or real AWS credentials.
 
 For more implementation details, see [docs/](https://github.com/Child-Focus-NJ/sprout/tree/main/docs).
+
+### App version
+
+The page footer displays Sprout's version from the root `VERSION` file. Update this file when releasing a new version, then restart the app to load the change.
+
+### Sign-in access
+
+Sign-in is through Google. `db:seed` creates the default admin (`sprout@passaiccountycasa.org`) and the launch admins in every environment; admins add everyone else on the Employees tab of the Admin page.
+
+The `ALLOW_ALL_DOMAINS` environment variable controls whether anyone else can get in:
+
+- **Unset or `true` (default):** emails an admin has added can sign in, and so can any `@passaiccountycasa.org` Google account, which gets a regular user account the first time it signs in.
+- **Any other value (e.g. `false`):** whitelist only. Only emails an admin has added can sign in, and no accounts are created automatically.
+
+To try whitelist-only sign-in locally, add `ALLOW_ALL_DOMAINS=false` to your `.env`.

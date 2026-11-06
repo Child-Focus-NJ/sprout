@@ -298,9 +298,10 @@ class ExternalVmsSync
       first_name: required_record_value(record, "first_name"),
       last_name: required_record_value(record, "last_name"),
       phone: normalized_phone(record),
-      inquiry_date: parsed_inquiry_date(record),
       external_synced_at: Time.current
     }
+    inquiry_date = parsed_inquiry_date(record)
+    attributes[:inquiry_date] = inquiry_date if inquiry_date
     attributes[:current_funnel_stage] = :inquiry if volunteer.new_record?
     external_id = record["encrypted_id"].presence || record["inquiry_id"].presence
     attributes[:external_id] = external_id if external_id.present?

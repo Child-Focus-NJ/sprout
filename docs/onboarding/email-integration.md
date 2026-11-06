@@ -2,9 +2,9 @@
 
 Staff can use **Send Email** from the volunteer list or profile to compose a subject and plain-text message. Inquiry confirmations, attendance application emails, and **Send Application** use the same delivery service:
 
-`Rails → Aws::LambdaClient → API Gateway → mailchimp_realtime Lambda → Mailchimp Transactional`
+`Rails → Email::MailchimpOutbound → Mailchimp::TransactionalClient → Mailchimp Transactional (Mandrill)`
 
-The Lambda calls `https://mandrillapp.com/api/1.4/messages/send` with the configured `from_email`, one recipient, subject, and text. It validates the recipient, status, and provider ID in the response. The payload follows [Mailchimp's OpenAPI schema](https://github.com/mailchimp/mailchimp-client-lib-codegen/blob/main/spec/transactional.openapi.json). Provider credentials stay in the Lambda environment.
+The client calls `https://mandrillapp.com/api/1.4/messages/send` with `mandrill.from_email`, one recipient, subject, and text. It validates the recipient, status, and provider ID in the response. The payload follows [Mailchimp's OpenAPI schema](https://github.com/mailchimp/mailchimp-client-lib-codegen/blob/main/spec/transactional.openapi.json).
 
 ## Application link
 
@@ -18,15 +18,15 @@ The application email contains a brief introduction and the configured link. Exi
 
 ## Provider configuration
 
-Run the database migration, and set these values in your untracked `.env` for local Docker development:
+Run the database migration. Store the Mailchimp Transactional key and verified From address in the encrypted credentials (`config/credentials.yml.enc`, unlocked by `config/master.key`):
 
-```dotenv
-SPROUT_EMAIL_MAILCHIMP_ENABLED=true
-MAILCHIMP_API_KEY=your_transactional_api_key
-MAILCHIMP_EMAIL_FROM=your_verified_sender_address
+```yaml
+mandrill:
+  api_key: your_transactional_key
+  from_email: your_verified_sender_address
 ```
 
-These are placeholders. Use a Mailchimp Transactional key and an address on your verified/authenticated sending domain. See [Mailchimp's first email guide](https://mailchimp.com/developer/transactional/guides/send-first-email/) for account setup. SMS configuration remains independent.
+Do not put those values in a `.env` file. Turn local sending on by setting `SPROUT_EMAIL_MAILCHIMP_ENABLED=true` for the web process. See [Mailchimp's first email guide](https://mailchimp.com/developer/transactional/guides/send-first-email/) for account setup. SMS configuration remains independent.
 
 ```bash
 docker compose up -d db
