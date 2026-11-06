@@ -37,6 +37,12 @@ module VolunteersHelper
 
   MESSAGE_DIALOG_LABELS = { note: "Add Note", sms: "Send SMS" }.freeze
 
+  def sms_template_options
+    CommunicationTemplate.active.sms.order(:name).map do |template|
+      [ template.name, template.id, { data: { body: template.body } } ]
+    end
+  end
+
   # Icons from Heroicons (https://heroicons.com, by Tailwind Labs, MIT license), 24px outline set:
   # "pencil-square" for notes and "device-phone-mobile" for SMS. Same set as the list's search and filter icons.
   MESSAGE_ICON_PATHS = {
@@ -71,6 +77,11 @@ module VolunteersHelper
         volunteer_name: volunteer.full_name,
         note_url: add_note_volunteer_path(volunteer),
         sms_url: send_sms_volunteer_path(volunteer),
+        note_authenticity_token: form_authenticity_token(form_options: { action: add_note_volunteer_path(volunteer), method: "post" }),
+        sms_authenticity_token: form_authenticity_token(form_options: { action: send_sms_volunteer_path(volunteer), method: "post" }),
+        sms_template_url: sms_template_volunteer_path(volunteer),
+        sms_compose_url: sms_volunteer_path(volunteer),
+        phone: volunteer.phone,
         has_phone: !no_phone
       }
     )
@@ -86,7 +97,9 @@ module VolunteersHelper
         message_dialog_open: tab,
         message_dialog_bulk: true,
         note_url: bulk_add_note_volunteers_path,
-        sms_url: bulk_send_sms_volunteers_path
+        sms_url: bulk_send_sms_volunteers_path,
+        note_authenticity_token: form_authenticity_token(form_options: { action: bulk_add_note_volunteers_path, method: "post" }),
+        sms_authenticity_token: form_authenticity_token(form_options: { action: bulk_send_sms_volunteers_path, method: "post" })
       }
     )
   end

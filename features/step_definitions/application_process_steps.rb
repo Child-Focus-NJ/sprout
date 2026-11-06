@@ -2,8 +2,10 @@ When("I mark the application as submitted") do
   click_button "Mark as Submitted"
 end
 
-Then("the application email should be queued for the volunteer {string}") do |name|
-  expect(page).to have_content("Application queued for #{name}")
+Then("the application email should be sent for the volunteer {string}") do |name|
+  expect(page).to have_content("Application email sent to Mailchimp")
+  volunteer = find_or_create_volunteer_by_name(name)
+  expect(volunteer.communications.email.where(purpose: "application").last).to be_sent
 end
 
 Then("the volunteer status should change to {string}") do |status|
