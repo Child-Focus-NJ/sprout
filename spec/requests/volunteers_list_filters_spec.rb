@@ -8,7 +8,7 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
   let(:union) { create(:vicinage, name: "Union") }
 
   let!(:harry) { create(:volunteer, first_name: "Harry", last_name: "Kane", current_funnel_stage: :inquiry, vicinage: union, inquiry_date: Date.new(2026, 9, 1)) }
-  let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura", current_funnel_stage: :application_eligible, vicinage: union, inquiry_date: Date.new(2026, 8, 15)) }
+  let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura", current_funnel_stage: :application_eligible, vicinage: union, inquiry_date: Date.new(2026, 8, 15), first_session_attended_at: Date.new(2026, 8, 20)) }
   let!(:sofia) { create(:volunteer, first_name: "Sofia", last_name: "Reyes", current_funnel_stage: :inquiry, vicinage: passaic, inquiry_date: Date.new(2026, 10, 1)) }
 
   before { login_as(user, scope: :user) }
@@ -139,6 +139,56 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
       expect(response.parsed_body.at_css("input#vicinage_id_all[checked]")).to be_present
     end
 
+    it "filters by when volunteers moved into their current status, and the tab counts follow the dates" do
+      get volunteers_path, params: { status_from: "2026-08-25", status_to: "2026-09-30" }
+
+      expect(listed_names).to eq([ "Harry Kane" ])
+      expect(tabs.first(3)).to eq([ "All 1", "Inquiry 1", "Application eligible 0" ])
+      expect(response.parsed_body.at_css(".volunteer-filter-chip--date").text.squish).to include("Status date: Aug 25, 2026 – Sep 30, 2026")
+    end
+
+    it "includes volunteers who moved on the from and to dates themselves" do
+      get volunteers_path, params: { status_from: "2026-09-01", status_to: "2026-10-01" }
+
+      expect(listed_names).to eq([ "Harry Kane", "Sofia Reyes" ])
+    end
+
+    it "filters with only a from date or only a to date" do
+      get volunteers_path, params: { status_from: "2026-09-15" }
+      expect(listed_names).to eq([ "Sofia Reyes" ])
+      expect(response.parsed_body.at_css(".volunteer-filter-chip--date").text.squish).to include("Status date: from Sep 15, 2026")
+
+      get volunteers_path, params: { status_to: "2026-08-31" }
+      expect(listed_names).to eq([ "Hana Kimura" ])
+      expect(response.parsed_body.at_css(".volunteer-filter-chip--date").text.squish).to include("Status date: until Aug 31, 2026")
+    end
+
+    it "counts the date range as one filter, and its chip removes only the dates" do
+      get volunteers_path, params: { status: "inquiry", vicinage_id: union.id, status_from: "2026-08-01", status_to: "2026-09-30" }
+      page = response.parsed_body
+
+      expect(page.at_css(".volunteer-filter-menu__badge").text.strip).to eq("2")
+      expect(page.at_css('a[aria-label="Remove status date filter"]')["href"]).to eq(volunteers_path(status: "inquiry", vicinage_id: union.id))
+      expect(page.at_css('a[aria-label="Remove vicinage filter"]')["href"]).to eq(volunteers_path(status: "inquiry", status_from: "2026-08-01", status_to: "2026-09-30"))
+    end
+
+    it "keeps the dates when switching tabs or searching" do
+      get volunteers_path, params: { status: "inquiry", status_from: "2026-08-01", status_to: "2026-09-30" }
+      page = response.parsed_body
+
+      tab = ->(label) { page.css("#volunteer-status-tabs a").find { |link| link.text.squish.start_with?("#{label} ") } }
+      expect(tab.call("Applied")["href"]).to eq(volunteers_path(status_from: "2026-08-01", status_to: "2026-09-30", status: "applied"))
+      expect(page.at_css("form.volunteer-search input#status_from")["value"]).to eq("2026-08-01")
+      expect(page.at_css("form.volunteer-search input#status_to")["value"]).to eq("2026-09-30")
+    end
+
+    it "ignores dates that aren't real dates instead of hiding everyone" do
+      get volunteers_path, params: { status_from: "not-a-date", status_to: "2026-02-30" }
+
+      expect(listed_names.size).to eq(3)
+      expect(response.parsed_body.at_css("#volunteer-active-filters")).to be_nil
+    end
+
     it "still shows the vicinage on each volunteer that has one" do
       get volunteers_path
 
@@ -178,6 +228,13 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
       get volunteer_path(harry)
 
       expect(back_link_href).to eq(volunteers_path(q: "ha", status: "inquiry", vicinage_id: union.id))
+    end
+
+    it "returns to the same status dates" do
+      get volunteers_path, params: { status: "inquiry", status_from: "2026-09-01", status_to: "2026-09-30" }
+      get volunteer_path(harry)
+
+      expect(back_link_href).to eq(volunteers_path(status: "inquiry", status_from: "2026-09-01", status_to: "2026-09-30"))
     end
 
     it "still returns there after an action on the profile" do

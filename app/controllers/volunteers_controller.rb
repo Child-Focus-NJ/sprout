@@ -9,6 +9,8 @@ class VolunteersController < ApplicationController
     matching = Volunteer.includes(:vicinage).order(:first_name, :last_name)
     matching = matching.name_matching(@filters[:q]) if @filters[:q]
     matching = matching.where(vicinage_id: @filters[:vicinage_id]) if @filters[:vicinage_id]
+    matching = matching.where(stage_started_at: @filters[:status_from].beginning_of_day..) if @filters[:status_from]
+    matching = matching.where(stage_started_at: ..@filters[:status_to].end_of_day) if @filters[:status_to]
     # Tab counts follow the name search, so each tab shows how many matches are at that status
     @status_counts = matching.reorder(nil).group(:current_funnel_stage).count
     @volunteers = @filters[:status] ? matching.where(current_funnel_stage: @filters[:status]) : matching
@@ -256,7 +258,7 @@ class VolunteersController < ApplicationController
     url_from(params[:return_to]) || volunteers_path(list_filter_params)
   end
 
-  # Search/filter values for the volunteers list. Unknown statuses and vicinages are
+  # Search/filter values for the volunteers list. Unknown statuses, vicinages and dates are
   # dropped so a stale or hand-edited URL shows the full list instead of nothing.
   def list_filter_params
     vicinage_param = params[:vicinage_id].to_s.presence
@@ -265,8 +267,16 @@ class VolunteersController < ApplicationController
     {
       q: params[:q].to_s.strip.presence,
       status: params[:status].presence_in(Volunteer.current_funnel_stages.keys),
-      vicinage_id: vicinage_id
+      vicinage_id: vicinage_id,
+      status_from: filter_date(params[:status_from]),
+      status_to: filter_date(params[:status_to])
     }.compact
+  end
+
+  def filter_date(value)
+    Date.iso8601(value.to_s)
+  rescue Date::Error
+    nil
   end
 
   def volunteer_params
