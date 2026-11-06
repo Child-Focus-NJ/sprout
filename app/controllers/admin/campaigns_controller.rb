@@ -2,7 +2,7 @@
 
 module Admin
   class CampaignsController < ApplicationController
-    before_action :require_admin!
+    restrict_to_feature :admin_campaigns
 
     def index
       client = Mailchimp::MarketingClient.new
