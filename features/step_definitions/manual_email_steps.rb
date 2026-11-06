@@ -4,7 +4,7 @@ When("I compose an email with subject {string} and message {string}") do |subjec
 end
 
 Then("the email history should show {string} and {string}") do |subject, message|
-  within("#communications") do
+  within(".timeline .email-entry") do
     expect(page).to have_content(subject)
     expect(page).to have_content(message)
     expect(page).to have_content("cucumber-email-id")
