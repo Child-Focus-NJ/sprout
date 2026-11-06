@@ -131,7 +131,11 @@ class InquiryFormController < ApplicationController
       processed_at: Time.current
     )
     VmsPushInquiryJob.perform_later(volunteer.id)
-    InquiryMailer.confirmation(email).deliver_now
+    begin
+      Email::VolunteerNotifications.inquiry!(volunteer: volunteer)
+    rescue Email::MailchimpOutbound::Error => e
+      Rails.logger.error("[InquiryForm] confirmation email failed for volunteer #{volunteer.id}: #{e.class}: #{e.message}")
+    end
 
     redirect_to new_inquiry_form_path, notice: "Thanks! Your inquiry has been submitted."
   end
@@ -170,6 +174,6 @@ class InquiryFormController < ApplicationController
 
   def load_select_options
     @vicinages = Vicinage.numerical
-    @referral_sources = ReferralSource.active.alphabetical
+    @referral_sources = ReferralSource.active.menu_order
   end
 end

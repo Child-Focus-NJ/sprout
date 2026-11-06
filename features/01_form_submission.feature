@@ -6,6 +6,7 @@ Feature: Form Submission
   Background:
     Given I am a signed-in system administrator
 
+  @email_send
   Scenario: Successful submission creates a new inquiry and shows confirmation
     Given I am on the inquiry form page
     When I submit a valid inquiry for "jane@childfocusnj.org"

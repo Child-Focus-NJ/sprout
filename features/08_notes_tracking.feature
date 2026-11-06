@@ -1,3 +1,4 @@
+@csrf
 Feature: Notes and Communication Tracking
   As a system administrator
   I want to track all communications with notes

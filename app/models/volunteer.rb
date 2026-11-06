@@ -39,6 +39,7 @@ class Volunteer < ApplicationRecord
     end
   }
 
+  before_create :default_inquiry_date
   after_save :cancel_pending_reminders_if_applied
 
   def attended_session?
@@ -47,7 +48,7 @@ class Volunteer < ApplicationRecord
 
   def stage_started_at
     case current_funnel_stage.to_sym
-    when :inquiry then inquiry_date || created_at
+    when :inquiry then inquiry_date
     when :application_eligible then first_session_attended_at
     when :application_sent then application_sent_at
     end
@@ -75,12 +76,34 @@ class Volunteer < ApplicationRecord
   end
 
   # Staff-authored or system-captured notes (profile form, bulk list, communication callbacks).
-  def add_staff_note(content:, user:, note_type: :general)
-    notes.create(content: content.to_s, user: user, note_type: note_type)
+  def add_staff_note(content:, user:, note_type: :general, note_category: nil)
+    notes.create(content: content.to_s, user: user, note_type: note_type, note_category: note_category)
   end
 
-  def add_staff_note!(content:, user:, note_type: :general)
-    notes.create!(content: content.to_s, user: user, note_type: note_type)
+  def add_staff_note!(content:, user:, note_type: :general, note_category: nil)
+    notes.create!(content: content.to_s, user: user, note_type: note_type, note_category: note_category)
+  end
+
+  class OutcomeNoteError < StandardError; end
+
+  def add_note_with_outcome!(content:, user:, note_category:, information_session: nil, new_information_session: nil)
+    ActiveRecord::Base.transaction do
+      note = add_staff_note!(content: content, user: user, note_category: note_category)
+      registration = registration_for_outcome!(information_session, note_category) if note_category.session_outcome?
+
+      case note_category.key
+      when "attended_info_session"
+        record_attendance!(registration, user: user)
+      when "no_show", "cancelled"
+        registration.update!(status: note_category.key)
+      when "rescheduled"
+        reschedule_registration!(registration, new_information_session)
+      when NoteCategory::DEACTIVATED_KEY
+        change_status!(:inactive, user: user)
+      end
+
+      note
+    end
   end
 
   def change_status!(new_stage, user: nil, trigger: :manual)
@@ -107,16 +130,16 @@ class Volunteer < ApplicationRecord
     registration.save!
 
     update!(first_session_attended_at: Time.current) unless first_session_attended_at.present?
-    change_status!(:application_eligible, user: user, trigger: :event)
+    change_status!(:application_eligible, user: user, trigger: :event) unless application_sent? || applied?
   end
 
   # Staff action or automation: move to application_sent and record send time (idempotent on duplicate send).
-  def record_application_sent!(user:)
+  def record_application_sent!(user:, sent_at: Time.current)
     return false if application_sent_at.present?
 
     ActiveRecord::Base.transaction do
-      change_status!(:application_sent, user: user)
-      update!(application_sent_at: Time.current)
+      change_status!(:application_sent, user: user) unless applied? || inactive?
+      update!(application_sent_at: sent_at)
     end
     true
   end
@@ -129,6 +152,47 @@ class Volunteer < ApplicationRecord
   end
 
   private
+
+  def registration_for_outcome!(information_session, note_category)
+    raise OutcomeNoteError, "Choose the session this note is about" if information_session.nil?
+
+    registration = session_registrations.find_by(information_session: information_session) ||
+      raise(OutcomeNoteError, "#{full_name} isn't registered for that session")
+    if registration.attended? && note_category.key != "attended_info_session"
+      raise OutcomeNoteError, "#{full_name} already attended that session, so it can't be marked #{note_category.name}"
+    end
+
+    registration
+  end
+
+  def record_attendance!(registration, user:)
+    attended_at = registration.information_session.scheduled_at
+    registration.update!(status: :attended, checked_in_at: registration.checked_in_at || attended_at)
+    update!(first_session_attended_at: attended_at) if first_session_attended_at.blank?
+    change_status!(:application_eligible, user: user, trigger: :event) if inquiry?
+  end
+
+  def reschedule_registration!(registration, new_information_session)
+    raise OutcomeNoteError, "Choose the session they're rescheduling to" if new_information_session.nil?
+    if new_information_session == registration.information_session
+      raise OutcomeNoteError, "Choose a different session to reschedule to"
+    end
+
+    raise OutcomeNoteError, "The session they're rescheduling to isn't active" unless new_information_session.active?
+
+    new_registration = session_registrations.find_or_initialize_by(information_session: new_information_session)
+    holds_spot = new_registration.persisted? && (new_registration.registered? || new_registration.attended?)
+    if !holds_spot && new_information_session.spots_remaining&.<=(0)
+      raise OutcomeNoteError, "The session they're rescheduling to is full"
+    end
+
+    registration.update!(status: :rescheduled)
+    new_registration.update!(status: :registered) unless new_registration.attended?
+  end
+
+  def default_inquiry_date
+    self.inquiry_date ||= created_at || Time.current
+  end
 
   def cancel_pending_reminders_if_applied
     return unless saved_change_to_current_funnel_stage? && applied?
