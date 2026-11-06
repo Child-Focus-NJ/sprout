@@ -1,7 +1,7 @@
 class SystemManagementController < ApplicationController
   restrict_to_feature :system_management
 
-  TABS = %w[frequencies tags employees referral_sources].freeze
+  TABS = %w[frequencies tags employees referral_sources note_categories].freeze
 
   def show
     @tab = TABS.include?(params[:tab]) ? params[:tab] : "frequencies"
@@ -9,6 +9,7 @@ class SystemManagementController < ApplicationController
     @reminder_frequencies = ReminderFrequency.order(:title)
     @volunteer_tags = VolunteerTag.order(:title)
     @referral_sources = ReferralSource.order(:name)
+    @note_categories = NoteCategory.ordered
     @recent_syncs = ExternalSyncLog
                       .completed
                       .where("completed_at > ?", 24.hours.ago)

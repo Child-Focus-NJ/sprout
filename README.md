@@ -1,4 +1,4 @@
-## 🌱 Sprout – Volunteer Management System
+## Sprout – Volunteer Management System
 
 **Sprout** is a Ruby on Rails application that replaces spreadsheet-based workflows with a centralized system for managing the full volunteer lifecycle.
 
@@ -6,7 +6,7 @@ Sprout supports the journey from initial inquiry through information session att
 
 ---
 
-## 👥 Team
+## Team
 
 Working under **Dr. Peter DePasquale**
 
@@ -15,7 +15,7 @@ Working under **Dr. Peter DePasquale**
 
 ---
 
-## 🚀 Core Capabilities
+## Core Capabilities
 
 - **Volunteer funnel tracking:** Inquiry → info session registered → attended → application eligible → applied → inactive, with a status history timeline.
 - **Public inquiry form:** Tablet- and mobile-friendly public form that creates/links volunteers and starts them in the funnel.
@@ -25,26 +25,27 @@ Working under **Dr. Peter DePasquale**
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Language:** Ruby (3.4.5)
 - **Framework:** Ruby on Rails 8.1.2
 - **Database:** PostgreSQL
 - **Cloud Services:** AWS
 - **App Deployment:** Heroku
+- **External APIs:** Mailchimp
 - **Styling:** Tailwind CSS via `tailwindcss-rails`
 
 Architecture, gem choices, and integration decisions are detailed in `docs/architecture-and-tech-stack.md` and `docs/feature-specifications.md`.
 
 ---
 
-## ⚙️ Local Setup (Development)
+## Local Setup (Development)
+
+Secrets live in `config/credentials.yml.enc`, unlocked by `config/master.key`. Do not put those values in a `.env` file.
+
+Obtain the `master.key` file. Place the file in the `config/` directory before building the application.
 
 ### Option A: Docker (recommended)
-Obtain the `master.key` file from a current team member via a secure exchange. Dr. DePasquale can securely share it
-with you via 1Password. Place the file in the `config/` directory before building the application.
-
-One script starts everything — Rails, PostgreSQL, and LocalStack (AWS emulator) — in Docker containers. No local Ruby, Postgres, or AWS tools needed.
 
 **Prerequisites:** [Docker Desktop](https://docs.docker.com/get-docker/)
 
@@ -88,11 +89,8 @@ docker compose exec web bin/rails "tailwindcss:watch[always]"
    ```sh
    bin/rails db:prepare
    ```
-3. **Obtain the `master.key` file**
-   Obtain the `master.key` file from a current team member via a secure exchange. Dr. DePasquale can securely share it
-   with you via 1Password. Place the file in the `config/` directory before building the application.
-
-4. **Run the app**
+   
+3. **Run the app**
    ```sh
    bin/dev
    ```
