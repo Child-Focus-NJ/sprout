@@ -36,13 +36,8 @@ class ApiStack(Stack):
         )
 
         # /mailchimp
+        # Email is sent by Rails through Mandrill. This API has no send-email route.
         mailchimp = api.root.add_resource("mailchimp")
-
-        send_email = mailchimp.add_resource("send-email")
-        send_email.add_method(
-            "POST",
-            apigw.LambdaIntegration(lambdas.mailchimp_realtime_fn),
-        )
 
         send_sms = mailchimp.add_resource("send-sms")
         send_sms.add_method(

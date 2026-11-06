@@ -63,7 +63,7 @@ AWS infrastructure for Sprout, a Rails 8.1 volunteer management system. The desi
 | Scheduling | EventBridge (single nightly cron rule) | Native cron, triggers mailchimp_batch Lambda |
 | Lambda runtime | Ruby 3.4.5 | Same language as Rails app, team familiarity |
 | Repo structure | Monorepo | Single repo: Rails app + infra/ + lambdas/ |
-| Email/SMS sending | All through mailchimp_realtime Lambda | MailChimp/Mandrill is the organization's comms platform; Rails orchestrates, Lambda sends |
+| Email sending | Rails calls Mandrill directly | No Lambda email route. SMS, audience members, and tags remain on mailchimp_realtime |
 
 ---
 
@@ -75,8 +75,7 @@ AWS infrastructure for Sprout, a Rails 8.1 volunteer management system. The desi
 |---|---|---|
 | `zoom_meeting` | `POST /zoom/meeting` | Create Zoom meeting via Zoom API, return meeting ID + join URL |
 | `volunteer_management_system_sync` | `POST /volunteer-management-system/sync` | Push volunteer data to Volunteer Management System API, return sync result |
-| `mailchimp_realtime` | `POST /mailchimp/send-email` | Send transactional email via Mandrill API |
-| | `POST /mailchimp/send-sms` | Send SMS via Mandrill Transactional SMS API |
+| `mailchimp_realtime` | `POST /mailchimp/send-sms` | Send SMS via Mandrill Transactional SMS API |
 | | `POST /mailchimp/member` | Add/update MailChimp audience member |
 | | `POST /mailchimp/tags` | Update member tags by funnel stage |
 

@@ -43,7 +43,7 @@ docker compose up -d --force-recreate localstack
 docker compose up -d web
 ```
 
-Wait for `Sprout LocalStack Bootstrap Complete` in LocalStack logs. The web entrypoint runs migrations. Rails sends email itself. The `mailchimp_realtime` Lambda handler is a stub and is not called for Send Email or Send Application, so the `MailchimpApiKey` and `MailchimpEmailFrom` stack parameters do not turn sending on. Set `SPROUT_EMAIL_MAILCHIMP_ENABLED=true` on the web process.
+Wait for `Sprout LocalStack Bootstrap Complete` in LocalStack logs. The web entrypoint runs migrations. Rails sends email itself through Mandrill. There is no Lambda email route. Set `SPROUT_EMAIL_MAILCHIMP_ENABLED=true` on the web process.
 
 ## Outcomes
 

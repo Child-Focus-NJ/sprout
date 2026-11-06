@@ -80,15 +80,11 @@ class LambdaStack(Stack):
 
         mailchimp_api_key = CfnParameter(
             self, "MailchimpApiKey", type="String", no_echo=True, default="",
-            description="Unused by the mailchimp_realtime stub. Rails sends email with encrypted Mandrill credentials.",
+            description="Mailchimp key for the realtime Lambda SMS and audience actions. Rails email uses encrypted Mandrill credentials instead.",
         )
         mailchimp_sms_from = CfnParameter(
             self, "MailchimpSmsFrom", type="String", default="",
             description="Approved Mailchimp SMS sending number or sender ID",
-        )
-        mailchimp_email_from = CfnParameter(
-            self, "MailchimpEmailFrom", type="String", default="",
-            description="Unused until the Lambda send-email action exists. Rails reads mandrill.from_email from encrypted credentials.",
         )
 
         self.mailchimp_realtime_fn = _lambda.Function(
@@ -107,7 +103,6 @@ class LambdaStack(Stack):
                 **common_env,
                 "MAILCHIMP_API_KEY": mailchimp_api_key.value_as_string,
                 "MAILCHIMP_SMS_FROM": mailchimp_sms_from.value_as_string,
-                "MAILCHIMP_EMAIL_FROM": mailchimp_email_from.value_as_string,
             },
             vpc=self._vpc,
             vpc_subnets=self._vpc_subnets,
