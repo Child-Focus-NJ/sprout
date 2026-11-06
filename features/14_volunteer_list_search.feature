@@ -1,15 +1,15 @@
-Feature: Search the volunteers list and filter it by status and vicinage
+Feature: Search the volunteers list and filter it by status, vicinage and inquiry source
   As a staff member
-  I want to search volunteers by name, switch between status tabs and filter by vicinage
+  I want to search volunteers by name, switch between status tabs and filter by vicinage or inquiry source
   So that I can find one volunteer or a group without scrolling the whole list
 
   Background:
     Given I am a signed-in system administrator
     And the volunteers list contains:
-      | name        | status               | vicinage |
-      | Harry Kane  | inquiry              | Union    |
-      | Hana Kimura | application_eligible | Union    |
-      | Sofia Reyes | inquiry              | Passaic    |
+      | name        | status               | vicinage | inquired   | source        |
+      | Harry Kane  | inquiry              | Union    | 2026-09-01 | Tabling Event |
+      | Hana Kimura | application_eligible | Union    | 2026-08-15 | Tabling Event |
+      | Sofia Reyes | inquiry              | Passaic  | 2026-10-01 | Idealist      |
 
   Scenario: Search volunteers by name
     Given I am on the volunteers list page
@@ -48,6 +48,16 @@ Feature: Search the volunteers list and filter it by status and vicinage
     When I click the "All" status tab
     Then I should see only these volunteers in the list: "Harry Kane, Hana Kimura"
 
+  Scenario: Filter by inquiry source
+    Given I am on the volunteers list page
+    When I open the volunteer filters
+    And I choose the inquiry source "Tabling Event"
+    And I apply the volunteer filters
+    Then I should see only these volunteers in the list: "Harry Kane, Hana Kimura"
+    And the "All" status tab should be selected with 2 volunteers
+    And the filter button should show 1 active filters
+    And I should see "Inquiry source: Tabling Event"
+
   Scenario: Back from a profile returns to the same tab, search and vicinage
     Given I am on the volunteers list page
     When I click the "Inquiry" status tab
@@ -61,6 +71,13 @@ Feature: Search the volunteers list and filter it by status and vicinage
     And the "Inquiry" status tab should be selected with 1 volunteers
     And I should see "Vicinage: Union"
     And the volunteer search should contain "ha"
+
+  Scenario: The Inquiry tab lists the newest inquiries first with their dates
+    Given I am on the volunteers list page
+    When I click the "Inquiry" status tab
+    Then I should see these volunteers in order: "Sofia Reyes, Harry Kane"
+    And I should see "Inquired Oct 1, 2026"
+    And I should see "Inquired Sep 1, 2026"
 
   Scenario: Filter popup closes when clicking away
     Given I am on the volunteers list page

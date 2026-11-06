@@ -12,13 +12,17 @@
   <% end %>
 
   <h1 class="page-title">System Management</h1>
+  <% if current_user.admin? %>
+    <p><%= link_to "Application email settings", admin_settings_path(anchor: "application-email"), class: "button-link" %></p>
+  <% end %>
 
   <div class="card">
     <nav class="sys-tabs" aria-label="System item sections">
       <%= system_management_tab_link("Reminder Frequencies", "frequencies", @tab) %>
       <%= system_management_tab_link("Volunteer Tags", "tags", @tab) %>
       <%= system_management_tab_link("Employees", "employees", @tab) %>
-      <%= system_management_tab_link("Referral Sources", "referral_sources", @tab) %>
+      <%= system_management_tab_link("Inquiry Sources", "referral_sources", @tab) %>
+      <%= system_management_tab_link("Note Categories", "note_categories", @tab) %>
     </nav>
 
     <% case @tab %>
@@ -28,6 +32,8 @@
       <%= render "system_management/employees" %>
     <% when "referral_sources" %>
       <%= render "system_management/referral_sources" %>
+    <% when "note_categories" %>
+      <%= render "system_management/note_categories" %>
     <% else %>
       <%= render "system_management/frequencies" %>
     <% end %>

@@ -14,7 +14,7 @@ RSpec.describe "Note / SMS popup", type: :request do
   end
 
   describe "volunteer profile" do
-    it "opens the popup from Add Note and Send SMS instead of a note box and an SMS page" do
+    it "opens the popup and provides a route to the full SMS composer" do
       get volunteer_path(with_phone)
 
       note_button = page_html.at_css("#actions button[data-message-dialog-open='note']")
@@ -28,7 +28,8 @@ RSpec.describe "Note / SMS popup", type: :request do
 
       expect(page_html.at_css("dialog#message-dialog")).to be_present
       expect(page_html.at_css("#add-note-form")).to be_nil
-      expect(response.body).not_to include("/sms\"")
+      expect(sms_button["data-sms-compose-url"]).to eq(sms_volunteer_path(with_phone))
+      expect(page_html.at_css("[data-sms-compose-link]").text).to eq("Open full SMS page")
     end
 
     it "greys out Send SMS when the volunteer has no phone number" do
