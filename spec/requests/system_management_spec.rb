@@ -39,7 +39,7 @@ RSpec.describe "SystemManagement", type: :request do
         expect(response.body).not_to match(/<ul id="employee-list">.*#{admin.full_name}.*<\/ul>/m)
     end
 
-    it "shows referral sources" do
+    it "shows inquiry sources" do
       ReferralSource.create!(name: "Website")
       get system_management_path(tab: "referral_sources")
       expect(response.body).to include("Website")
@@ -50,7 +50,7 @@ RSpec.describe "SystemManagement", type: :request do
       expect(response.body).to include("Reminder Frequencies")
       expect(response.body).to include("Volunteer Tags")
       expect(response.body).to include("Employees")
-      expect(response.body).to include("Referral Sources")
+      expect(response.body).to include("Inquiry Sources")
       expect(response.body).to include("Note Categories")
     end
 
