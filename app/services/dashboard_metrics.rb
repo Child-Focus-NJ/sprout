@@ -3,10 +3,6 @@
 # Headline numbers for the dashboard, the rules live here so the Reporting
 # page can reuse the same definitions later
 class DashboardMetrics
-  # Volunteers added through the inquiry form have no inquiry_date, so fall back to
-  # when they were created
-  INQUIRED_AT_SQL = "COALESCE(volunteers.inquiry_date, volunteers.created_at)"
-
   ATTENDANCE_WINDOW_DAYS = 90
   # Check-in is the only attendance the app records, so a registration still marked
   # registered after its session counts as a miss
@@ -53,7 +49,7 @@ class DashboardMetrics
   end
 
   def inquiries_by_month(months: 12)
-    Volunteer.group_by_month(Arel.sql(INQUIRED_AT_SQL), range: inquiry_window(months)).count
+    Volunteer.group_by_month(:inquiry_date, range: inquiry_window(months)).count
   end
 
   # Everyone who inquired in the same 12 months as the inquiries chart, counted at each
@@ -63,7 +59,7 @@ class DashboardMetrics
   def conversion_funnel
     @conversion_funnel ||= begin
       window = inquiry_window(12)
-      cohort = Volunteer.where("#{INQUIRED_AT_SQL} BETWEEN ? AND ?", window.begin, window.end)
+      cohort = Volunteer.where(inquiry_date: window)
       applied = cohort.where.not(application_submitted_at: nil).or(cohort.where(current_funnel_stage: :applied))
       sent = applied.or(cohort.where.not(application_sent_at: nil)).or(cohort.where(current_funnel_stage: :application_sent))
       attended = sent.or(cohort.where.not(first_session_attended_at: nil))
