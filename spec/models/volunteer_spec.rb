@@ -389,17 +389,34 @@ RSpec.describe Volunteer, type: :model do
       expect(volunteer.days_in_current_stage).to eq(90)
     end
 
-    it "returns nil when the stage has no start timestamp yet" do
-      volunteer = create(:volunteer, current_funnel_stage: :application_eligible, first_session_attended_at: nil)
-      expect(volunteer.days_in_current_stage).to be_nil
+    it "anchors the applied and inactive stages on when they applied or became inactive" do
+      applied = create(:volunteer, current_funnel_stage: :applied, application_submitted_at: 20.days.ago)
+      inactive = create(:volunteer, current_funnel_stage: :inactive, became_inactive_at: 30.days.ago)
+
+      expect(applied.days_in_current_stage).to eq(20)
+      expect(inactive.days_in_current_stage).to eq(30)
     end
 
-    it "returns nil for terminal stages (applied, inactive)" do
-      applied = create(:volunteer, current_funnel_stage: :applied)
-      inactive = create(:volunteer, current_funnel_stage: :inactive)
+    it "starts the clock when the volunteer is added if their stage has no date yet" do
+      volunteer = create(:volunteer, current_funnel_stage: :application_eligible, first_session_attended_at: nil)
 
-      expect(applied.days_in_current_stage).to be_nil
-      expect(inactive.days_in_current_stage).to be_nil
+      expect(volunteer.stage_started_at).to be_within(1.second).of(volunteer.created_at)
+      expect(volunteer.days_in_current_stage).to eq(0)
+    end
+
+    it "restarts the clock whenever the status changes" do
+      volunteer = create(:volunteer, current_funnel_stage: :inquiry, inquiry_date: 45.days.ago)
+
+      travel_to 2.days.from_now do
+        volunteer.change_status!(:application_sent)
+        expect(volunteer.reload.stage_started_at).to be_within(1.second).of(Time.current)
+      end
+    end
+
+    it "keeps the clock when other details change" do
+      volunteer = create(:volunteer, current_funnel_stage: :inquiry, inquiry_date: 45.days.ago)
+
+      expect { volunteer.update!(phone: "9735550100") }.not_to change { volunteer.reload.stage_started_at }
     end
   end
 end
