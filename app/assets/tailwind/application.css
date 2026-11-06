@@ -206,6 +206,42 @@
     @apply min-h-[44px] min-w-0 w-full max-w-full px-2 py-2;
   }
 
+  .email-compose-card {
+    @apply p-4 sm:p-5;
+  }
+
+  .email-compose {
+    @apply grid gap-4;
+  }
+
+  .email-compose__field {
+    @apply grid gap-1.5 min-w-0;
+  }
+
+  .email-compose__field label {
+    @apply font-semibold text-gray-800;
+  }
+
+  .email-compose .input-large {
+    @apply max-w-none;
+  }
+
+  .email-compose__body {
+    @apply box-border min-h-80 w-full max-w-none px-3 py-3 text-base leading-7;
+  }
+
+  .email-compose__body:invalid {
+    @apply border-gray-400 ring-0;
+  }
+
+  .email-compose__body:user-invalid {
+    @apply border-red-500 ring-1 ring-red-200;
+  }
+
+  .email-compose__body:focus {
+    @apply outline-none border-sky-500 ring-2 ring-sky-200;
+  }
+
   .message-dialog__panel select:focus-visible,
   .sms-compose-form select:focus-visible {
     @apply outline outline-2 outline-offset-2 outline-sky-600;
@@ -583,7 +619,8 @@
     @apply inline-flex items-center gap-1 rounded-full border py-0.5 pl-2.5 pr-1 font-medium;
   }
 
-  .volunteer-filter-chip--vicinage {
+  .volunteer-filter-chip--vicinage,
+  .volunteer-filter-chip--source {
     @apply border-gray-300 bg-white text-gray-800;
   }
 

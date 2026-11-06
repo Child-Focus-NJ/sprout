@@ -90,6 +90,7 @@ Feature: Bulk actions on the volunteer list
     And I click "Send SMS" in the bulk toolbar
     Then the popup should say "5 of the 7 selected have no phone number and will be skipped for SMS: Extra Volunteer 0, Extra Volunteer 1, Extra Volunteer 2, and 2 more."
 
+  @email_send
   Scenario: Send the application to the selected volunteers
     When I visit the volunteers list
     And I select all volunteers

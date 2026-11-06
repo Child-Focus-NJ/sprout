@@ -1,15 +1,24 @@
 <main class="volunteer-page">
-<% active_filter_count = @filters.slice(:vicinage_id).size %>
+<% active_filter_count = @filters.slice(:vicinage_id, :referral_source_id).size %>
 <% filtered_vicinage = @vicinages.detect { |vicinage| vicinage.id == @filters[:vicinage_id] } %>
+<% filtered_source = @inquiry_sources.detect { |source| source.id == @filters[:referral_source_id] } %>
 
 <h1 class="page-title">Volunteers</h1>
 
-<% if filtered_vicinage %>
+<% if active_filter_count.positive? %>
   <div class="volunteer-active-filters" id="volunteer-active-filters">
-    <span class="volunteer-filter-chip volunteer-filter-chip--vicinage">
-      Vicinage: <%= filtered_vicinage.name %>
-      <%= link_to "×", volunteers_path(@filters.except(:vicinage_id)), aria: { label: "Remove vicinage filter" } %>
-    </span>
+    <% if filtered_vicinage %>
+      <span class="volunteer-filter-chip volunteer-filter-chip--vicinage">
+        Vicinage: <%= filtered_vicinage.name %>
+        <%= link_to "×", volunteers_path(@filters.except(:vicinage_id)), aria: { label: "Remove vicinage filter" } %>
+      </span>
+    <% end %>
+    <% if filtered_source %>
+      <span class="volunteer-filter-chip volunteer-filter-chip--source">
+        Inquiry source: <%= filtered_source.name %>
+        <%= link_to "×", volunteers_path(@filters.except(:referral_source_id)), aria: { label: "Remove inquiry source filter" } %>
+      </span>
+    <% end %>
   </div>
 <% end %>
 
@@ -59,8 +68,22 @@
           </div>
         </fieldset>
 
+        <fieldset>
+          <legend>Inquiry source</legend>
+          <div class="volunteer-filter-options">
+            <label class="volunteer-filter-option">
+              <%= radio_button_tag :referral_source_id, "", filtered_source.nil?, id: "referral_source_id_all" %> All sources
+            </label>
+            <% @inquiry_sources.each do |source| %>
+              <label class="volunteer-filter-option">
+                <%= radio_button_tag :referral_source_id, source.id, source == filtered_source %> <%= source.name %>
+              </label>
+            <% end %>
+          </div>
+        </fieldset>
+
         <div class="volunteer-filter-menu__actions">
-          <%= link_to "Clear", volunteers_path(@filters.except(:vicinage_id)), class: "button-link" %>
+          <%= link_to "Clear", volunteers_path(@filters.except(:vicinage_id, :referral_source_id)), class: "button-link" %>
           <button type="submit" class="button-primary">Apply</button>
         </div>
       </div>
@@ -107,15 +130,16 @@
           <%= link_to "View profile", volunteer_path(volunteer), class: "button-link profile-link" %>
           <%= message_dialog_button(volunteer, :note) %>
           <%= message_dialog_button(volunteer, :sms) %>
+          <%= link_to "Send Email", email_volunteer_path(volunteer), class: "button-link" %>
         </div>
       </div>
     <% end %>
 
     <% if @volunteers.empty? %>
       <p class="volunteer-list-empty">
-        <% if @filters[:q] || @filters[:vicinage_id] %>
+        <% if @filters[:q] || active_filter_count.positive? %>
           No volunteers match your search.
-          <%= link_to (@filters[:vicinage_id] ? "Clear filters" : "Clear search"), volunteers_path(@filters.slice(:status)) %>
+          <%= link_to (active_filter_count.positive? ? "Clear filters" : "Clear search"), volunteers_path(@filters.slice(:status)) %>
         <% elsif @filters[:status] %>
           No volunteers are at <%= VolunteersHelper::STATUS_BADGE_LABELS.fetch(@filters[:status]) %> right now.
         <% else %>
@@ -167,7 +191,7 @@
     selectAll.addEventListener("change", () => selectEvery(selectAll.checked));
     toolbar.querySelector("[data-bulk-clear]").addEventListener("click", () => selectEvery(false));
 
-    // Sending the application moves people to "Application sent", so double-check first
+    // Sending the application emails the link, so double-check first
     document.getElementById("volunteer-bulk-form").addEventListener("submit", (event) => {
       const checked = checkedCount();
       if (!confirm(`Send the application to ${checked} selected volunteer${checked === 1 ? "" : "s"}?`)) {

@@ -46,8 +46,8 @@
                                      { include_blank: "Select..." }, { class: "input-large" } %>
         </div>
         <div>
-          <%= form.label :referral_source_id, "How did you hear?" %>
-          <%= form.collection_select :referral_source_id, ReferralSource.active.alphabetical, :id, :name,
+          <%= form.label :referral_source_id, "Inquiry source" %>
+          <%= form.collection_select :referral_source_id, ReferralSource.choices_for(@volunteer.referral_source_id), :id, :name,
                                      { include_blank: "Select..." }, { class: "input-large" } %>
         </div>
         <% normalized_phone = @volunteer.phone.to_s.gsub(/\D/, "") %>
@@ -80,6 +80,7 @@
       <div class="action-toolbar">
         <%= message_dialog_button(@volunteer, :note, css_class: "btn-note") %>
         <%= message_dialog_button(@volunteer, :sms) %>
+        <%= link_to "Send Email", email_volunteer_path(@volunteer), class: "button-link" %>
         <%= form_with url: send_application_volunteer_path(@volunteer), method: :post, html: { class: "inline-action-form" } do %>
           <button type="submit">Send Application</button>
         <% end %>

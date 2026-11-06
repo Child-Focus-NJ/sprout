@@ -9,6 +9,7 @@ Rails.application.routes.draw do
 
   namespace :admin do
     resource :data_export, only: [ :create ], controller: "data_exports"
+    resources :campaigns, only: [ :index ]
     resource :usage_report, only: [ :show ], controller: "usage_reports"
 
     resources :communication_templates do
@@ -40,6 +41,8 @@ Rails.application.routes.draw do
       get :sms
       get :sms_template
       post :send_sms
+      get :email
+      post :send_email
       post :add_note
       patch "notes/:note_id", to: "volunteers#update_note", as: "update_note"
     end
