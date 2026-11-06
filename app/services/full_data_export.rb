@@ -10,6 +10,7 @@ class FullDataExport
     Vicinage,
     ReminderFrequency,
     VolunteerTag,
+    NoteCategory,
     SystemSetting,
     User,
     Volunteer,
