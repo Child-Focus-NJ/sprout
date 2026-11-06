@@ -3,6 +3,7 @@
 require "rails_helper"
 
 RSpec.describe "Information session sign-in", type: :request do
+  include_context "Mailchimp email provider"
   let(:user) { create(:user) }
   let(:information_session) { create(:information_session) }
   let(:volunteer) { create(:volunteer, current_funnel_stage: :inquiry) }
@@ -25,7 +26,7 @@ RSpec.describe "Information session sign-in", type: :request do
   end
 
   describe "POST /information_sessions/:id/check_in" do
-    it "records attendance for a pre-registered volunteer and queues the application email" do
+    it "records attendance for a pre-registered volunteer and sends the application email" do
       SessionRegistration.create!(
         volunteer: volunteer,
         information_session: information_session,
@@ -34,11 +35,11 @@ RSpec.describe "Information session sign-in", type: :request do
 
       expect do
         post check_in_information_session_path(information_session), params: { volunteer_id: volunteer.id }
-      end.to change { ActionMailer::Base.deliveries.size }.by(1)
+      end.to change { Communication.email.sent.count }.by(1)
 
       expect(response).to redirect_to(volunteer_path(volunteer))
       volunteer.reload
-      expect(volunteer.application_eligible?).to be true
+      expect(volunteer.application_sent?).to be true
       expect(volunteer.first_session_attended_at).to be_present
 
       registration = SessionRegistration.find_by!(volunteer: volunteer, information_session: information_session)
@@ -55,11 +56,11 @@ RSpec.describe "Information session sign-in", type: :request do
 
       expect do
         post check_in_information_session_path(information_session), params: { email: volunteer.email }
-      end.to change { ActionMailer::Base.deliveries.size }.by(1)
+      end.to change { Communication.email.sent.count }.by(1)
 
       expect(response).to redirect_to(volunteer_path(volunteer))
       volunteer.reload
-      expect(volunteer.application_eligible?).to be true
+      expect(volunteer.application_sent?).to be true
       registration = SessionRegistration.find_by!(volunteer: volunteer, information_session: information_session)
       expect(registration.checked_in_at).to be_present
     end
@@ -74,7 +75,7 @@ RSpec.describe "Information session sign-in", type: :request do
 
       expect do
         post check_in_information_session_path(information_session), params: { email: volunteer.email }
-      end.not_to change { ActionMailer::Base.deliveries.size }
+      end.not_to change { Communication.email.sent.count }
 
       expect(response).to redirect_to(volunteer_path(volunteer))
     end
