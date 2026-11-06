@@ -27,8 +27,8 @@ Handles the lifecycle after a volunteer attends an info session:
 
 | Change | Description |
 |---|---|
-| Application email on check-in | Sends email when volunteer attends info session |
-| Send application | Staff triggers application email and sets `application_sent_at` |
+| Application email on check-in | Sends through Mailchimp when email sending and the application link are configured |
+| Send application | Staff sends the configured link; a confirmed send sets `application_sent_at` |
 | Mark as submitted | Sets `application_submitted_at` and moves volunteer to `applied` |
 | Application dashboard | Admin view of volunteers awaiting submission (ordered by oldest first) |
 | Reminder interval setting | Admin-configurable interval stored in `SystemSetting` |
@@ -61,15 +61,18 @@ Handles the lifecycle after a volunteer attends an info session:
 ### Check-in → Application Email
 - Volunteer is checked in at info session
 - System marks attendance + sets `application_eligible`
-- Application email is immediately sent
+- The current application link from Admin settings is sent through Mailchimp
+- A confirmed send advances the volunteer to `application_sent`; queued or uncertain attempts do not set a sent date
+- Missing configuration or provider failures preserve attendance and display an error
 
 ---
 
 ### Send Application (Manual)
 - Staff clicks "Send Application"
-- Sets `application_sent_at`
-- Prevents duplicate sending
-- Volunteer moves to `application_sent`
+- Requires an application link configured under **Admin → Application email settings**
+- Sets `application_sent_at` and moves to `application_sent` only after Mailchimp returns `sent`
+- Blocks duplicate application sends for pending, queued, or previously sent attempts
+- A definite failure may be retried after its cause is fixed
 
 ---
 
@@ -95,6 +98,8 @@ Handles the lifecycle after a volunteer attends an info session:
 
 
 ---
+
+See [Email integration](email-integration.md) for configuration, outcomes, and live testing requirements.
 
 ## Testing
 
