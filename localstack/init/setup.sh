@@ -224,11 +224,6 @@ echo "  POST /volunteer-management-system/sync -> sprout-volunteer-management-sy
 # --- /mailchimp ---
 MAILCHIMP_ID=$(create_resource "$ROOT_ID" "mailchimp")
 
-# POST /mailchimp/send-email -> sprout-mailchimp-realtime
-MC_SEND_EMAIL_ID=$(create_resource "$MAILCHIMP_ID" "send-email")
-create_post_integration "$MC_SEND_EMAIL_ID" "sprout-mailchimp-realtime"
-echo "  POST /mailchimp/send-email -> sprout-mailchimp-realtime"
-
 # POST /mailchimp/send-sms -> sprout-mailchimp-realtime
 MC_SEND_SMS_ID=$(create_resource "$MAILCHIMP_ID" "send-sms")
 create_post_integration "$MC_SEND_SMS_ID" "sprout-mailchimp-realtime"
@@ -291,7 +286,6 @@ echo "  Base URL: http://localhost:4566/restapis/$API_ID/local/_user_request_"
 echo "  Endpoints:"
 echo "    POST /zoom/meeting          -> sprout-zoom-meeting"
 echo "    POST /volunteer-management-system/sync -> sprout-volunteer-management-system-sync"
-echo "    POST /mailchimp/send-email  -> sprout-mailchimp-realtime"
 echo "    POST /mailchimp/send-sms    -> sprout-mailchimp-realtime"
 echo "    POST /mailchimp/member      -> sprout-mailchimp-realtime"
 echo "    POST /mailchimp/tags        -> sprout-mailchimp-realtime"

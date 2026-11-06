@@ -22,15 +22,6 @@ module Aws
       post("/volunteer-management-system/sync", { volunteer_id: volunteer_id })
     end
 
-    def send_email(to:, subject:, html_body:, from_email: nil)
-      post("/mailchimp/send-email", {
-        to: to,
-        subject: subject,
-        html_body: html_body,
-        from_email: from_email
-      })
-    end
-
     def send_sms(to:, message:)
       post("/mailchimp/send-sms", { to: to, message: message })
     end

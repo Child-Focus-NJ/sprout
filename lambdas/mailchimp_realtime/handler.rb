@@ -5,20 +5,21 @@ require_relative "../shared/logger"
 
 # Lambda handler for real-time MailChimp/Mandrill operations (sync — API Gateway).
 #
+# Sprout sends email from Rails through Mailchimp::TransactionalClient.
+# This handler has no email action and must not report an email as sent.
+#
 # Routes requests based on event["path"] to the appropriate action:
-#   POST /mailchimp/send-email  — Send transactional email via Mandrill
 #   POST /mailchimp/send-sms    — Send SMS via Mandrill Transactional SMS
 #   POST /mailchimp/member      — Add or update a MailChimp audience member
 #   POST /mailchimp/tags        — Update member tags by funnel stage
 #
 # TODO: Authenticate with MailChimp/Mandrill API using API key
-# TODO: Implement send-email action (Mandrill messages/send endpoint)
 # TODO: Implement send-sms action (Mandrill transactional SMS endpoint)
 # TODO: Implement member action (MailChimp lists/members endpoint — PUT for upsert)
 # TODO: Implement tags action (MailChimp lists/members/{id}/tags endpoint)
 # TODO: Validate request payloads for each action
 
-ACTIONS = %w[send-email send-sms member tags].freeze
+ACTIONS = %w[send-sms member tags].freeze
 
 def handler(event:, context:)
   Shared::Log.logger.info("mailchimp_realtime invoked — request_id=#{context.aws_request_id}")

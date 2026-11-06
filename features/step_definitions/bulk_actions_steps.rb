@@ -30,7 +30,7 @@ When("I click {string} in the bulk toolbar") do |label|
   within("#bulk-toolbar") { click_on label }
 end
 
-# Send Application asks the browser to confirm before it moves anyone to "Application sent"
+# Send Application asks the browser to confirm before it emails the application link
 When("I send the application to the selected volunteers") do
   accept_confirm { within("#bulk-toolbar") { click_on "Send Application" } }
 end

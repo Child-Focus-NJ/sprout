@@ -1,0 +1,68 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+RSpec.describe "Admin campaigns", type: :request do
+  let(:admin) { create(:user, role: :admin) }
+
+  before { login_as(admin, scope: :user) }
+
+  describe "GET /admin/campaigns" do
+    it "lists campaigns from the Marketing API" do
+      client = instance_double(Mailchimp::MarketingClient)
+      allow(Mailchimp::MarketingClient).to receive(:new).and_return(client)
+      allow(client).to receive(:list_campaigns).and_return(
+        "total_items" => 1,
+        "campaigns" => [
+          {
+            "id" => "87c3c5ef3e",
+            "status" => "save",
+            "type" => "regular",
+            "create_time" => "2026-09-24T02:21:54+00:00",
+            "settings" => { "title" => "Sprout Testing - 9/23/26", "subject_line" => "CASA Volunteers..." }
+          }
+        ]
+      )
+
+      get admin_campaigns_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Sprout Testing - 9/23/26")
+      expect(response.body).to include("save")
+    end
+
+    it "shows an error when Marketing API is not configured" do
+      allow(Mailchimp::MarketingClient).to receive(:new)
+        .and_raise(Mailchimp::MarketingClient::ConfigurationError, "MAILCHIMP_MARKETING_API_KEY is not set")
+
+      get admin_campaigns_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Could not load campaigns")
+      expect(response.body).to include("MAILCHIMP_MARKETING_API_KEY is not set")
+    end
+
+    it "shows an error when Mailchimp cannot be reached" do
+      allow(Mailchimp::MarketingClient).to receive(:new).and_raise(
+        Mailchimp::MarketingClient::ApiError,
+        "Mailchimp Marketing API /campaigns could not be reached (Timeout::Error)"
+      )
+
+      get admin_campaigns_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Could not load campaigns")
+      expect(response.body).to include("could not be reached")
+    end
+
+    it "shows the campaigns link to admins and hides it from other staff" do
+      get volunteers_path
+      expect(response.body).to include("Campaigns")
+      expect(response.body).to include(admin_campaigns_path)
+
+      login_as(create(:user), scope: :user)
+      get volunteers_path
+      expect(response.body).not_to include(admin_campaigns_path)
+    end
+  end
+end

@@ -130,6 +130,7 @@
           <%= link_to "View profile", volunteer_path(volunteer), class: "button-link profile-link" %>
           <%= message_dialog_button(volunteer, :note) %>
           <%= message_dialog_button(volunteer, :sms) %>
+          <%= link_to "Send Email", email_volunteer_path(volunteer), class: "button-link" %>
         </div>
       </div>
     <% end %>
@@ -190,7 +191,7 @@
     selectAll.addEventListener("change", () => selectEvery(selectAll.checked));
     toolbar.querySelector("[data-bulk-clear]").addEventListener("click", () => selectEvery(false));
 
-    // Sending the application moves people to "Application sent", so double-check first
+    // Sending the application emails the link, so double-check first
     document.getElementById("volunteer-bulk-form").addEventListener("submit", (event) => {
       const checked = checkedCount();
       if (!confirm(`Send the application to ${checked} selected volunteer${checked === 1 ? "" : "s"}?`)) {

@@ -116,6 +116,8 @@ RSpec.describe "Bulk actions on the volunteer list", type: :request do
   end
 
   describe "POST /volunteers/bulk_send_application" do
+    include_context "Mailchimp email provider"
+
     it "sends the application to inquiry and eligible volunteers and skips the rest" do
       sofia.update!(current_funnel_stage: :application_eligible)
       already_sent = create(:volunteer, current_funnel_stage: :application_sent, application_sent_at: 3.days.ago)
@@ -126,10 +128,56 @@ RSpec.describe "Bulk actions on the volunteer list", type: :request do
            params: { volunteer_ids: [ harry, sofia, already_sent, applied, inactive ].map(&:id) }
 
       expect(flash[:notice]).to eq("Application sent to 2 volunteers. Skipped 3 who already had one, applied, or are inactive.")
+      expect(email_client).to have_received(:send_email).with(hash_including(to: harry.email)).once
+      expect(email_client).to have_received(:send_email).with(hash_including(to: sofia.email)).once
+      expect(email_client).to have_received(:send_email).twice
       expect(harry.reload).to be_application_sent
+      expect(harry.communications.email.where(purpose: "application").last).to be_sent
       expect(sofia.reload.application_sent_at).to be_present
       expect(applied.reload).to be_applied
+      expect(applied.communications).to be_empty
       expect(inactive.reload).to be_inactive
+    end
+
+    it "reports queued, unconfirmed, and rejected emails and does not mark those volunteers sent" do
+      queued = create(:volunteer, first_name: "Quinn", last_name: "Queue")
+      rejected = create(:volunteer, first_name: "Rita", last_name: "Reject")
+      uncertain = create(:volunteer, first_name: "Uma", last_name: "Unsure")
+      allow(email_client).to receive(:send_email) do |to:, subject:, text_body:|
+        case to
+        when queued.email then { "status" => "queued", "external_id" => "queued-id", "to" => to }
+        when rejected.email then { "status" => "rejected", "external_id" => "rejected-id", "to" => to, "reject_reason" => "hard-bounce" }
+        when uncertain.email then raise Mailchimp::TransactionalClient::UncertainDeliveryError
+        else { "status" => "sent", "external_id" => "sent-id", "to" => to }
+        end
+      end
+
+      post bulk_send_application_volunteers_path,
+           params: { volunteer_ids: [ harry.id, queued.id, rejected.id, uncertain.id ] }
+
+      expect(flash[:notice]).to include(
+        "Application sent to 1 volunteer.",
+        "Application email queued by Mailchimp for 1 volunteer.",
+        "1 application email could not be confirmed. Check Mailchimp activity before resending.",
+        "1 couldn't be sent."
+      )
+      expect(harry.reload).to be_application_sent
+      expect(queued.reload.application_sent_at).to be_nil
+      expect(rejected.reload).to be_inquiry
+      expect(uncertain.reload.application_sent_at).to be_nil
+      expect(email_client).to have_received(:send_email).exactly(4).times
+    end
+
+    it "sends nothing when the application link is not configured" do
+      SystemSetting.set("application_url", "")
+
+      expect do
+        post bulk_send_application_volunteers_path, params: { volunteer_ids: [ harry.id ] }
+      end.not_to change(Communication, :count)
+
+      expect(flash[:alert]).to include("Set the application link")
+      expect(harry.reload).to be_inquiry
+      expect(email_client).not_to have_received(:send_email)
     end
 
     it "keeps the list filters on the way back" do

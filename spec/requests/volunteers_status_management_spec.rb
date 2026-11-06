@@ -3,6 +3,7 @@
 require "rails_helper"
 
 RSpec.describe "Volunteer status management", type: :request do
+  include_context "Mailchimp email provider"
   let(:user) { create(:user) }
   let(:volunteer) { create(:volunteer, current_funnel_stage: :inquiry, email: "status-spec@childfocusnj.org") }
 

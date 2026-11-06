@@ -1,5 +1,5 @@
 class VolunteersController < ApplicationController
-  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :sms_template, :send_sms, :update_note ]
+  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :sms_template, :send_sms, :update_note, :email, :send_email ]
 
   def index
     @filters = list_filter_params
@@ -106,6 +106,24 @@ class VolunteersController < ApplicationController
     end
   end
 
+  def email
+    @subject = ""
+    @message = ""
+  end
+
+  def send_email
+    communication = Email::MailchimpOutbound.deliver!(
+      volunteer: @volunteer, subject: params[:subject], body: params[:message], sent_by_user: current_user
+    )
+    notice = communication.queued? ? "Email queued by Mailchimp" : "Email sent to Mailchimp"
+    redirect_to volunteer_path(@volunteer), notice: notice
+  rescue Email::MailchimpOutbound::Error => e
+    @subject = params[:subject].to_s
+    @message = params[:message].to_s
+    flash.now[:alert] = e.message
+    render :email, status: :unprocessable_entity
+  end
+
   def bulk_add_note
     volunteers = selected_volunteers
     note_content = params[:note].to_s
@@ -175,8 +193,8 @@ class VolunteersController < ApplicationController
     redirect_to list_path, (sent.zero? && queued.zero? ? :alert : :notice) => summary.join(" ")
   end
 
-  # Sends the application to selected volunteers who are still at inquiry or eligible and haven't
-  # had one yet. Anyone else is skipped so a bulk send never moves someone back a step.
+  # Emails the application to selected volunteers who are still at inquiry or eligible and haven't
+  # had one yet. Anyone else is skipped. A volunteer is marked sent only after Mailchimp accepts.
   def bulk_send_application
     volunteers = selected_volunteers
     list_path = bulk_return_path
@@ -185,11 +203,24 @@ class VolunteersController < ApplicationController
     ready, skipped = volunteers.partition do |volunteer|
       volunteer.application_sent_at.nil? && (volunteer.inquiry? || volunteer.application_eligible?)
     end
-    ready.each { |volunteer| volunteer.record_application_sent!(user: current_user) }
 
-    summary = [ ready.empty? ? "No applications sent." : "Application sent to #{helpers.pluralize(ready.size, 'volunteer')}." ]
+    sent = queued = uncertain = failed = 0
+    ready.each do |volunteer|
+      communication = Email::VolunteerNotifications.application!(volunteer: volunteer, sent_by_user: current_user)
+      communication.queued? ? queued += 1 : sent += 1
+    rescue Email::MailchimpOutbound::ConfigurationError => e
+      return redirect_to(list_path, alert: e.message)
+    rescue Email::MailchimpOutbound::Error
+      latest = volunteer.communications.email.where(purpose: "application").order(:id).last
+      latest&.pending? ? uncertain += 1 : failed += 1
+    end
+
+    summary = [ sent.zero? ? "No applications sent." : "Application sent to #{helpers.pluralize(sent, 'volunteer')}." ]
+    summary << "Application email queued by Mailchimp for #{helpers.pluralize(queued, 'volunteer')}." if queued.positive?
+    summary << "#{helpers.pluralize(uncertain, 'application email')} could not be confirmed. Check Mailchimp activity before resending." if uncertain.positive?
     summary << "Skipped #{skipped.size} who already had one, applied, or are inactive." if skipped.any?
-    redirect_to list_path, (ready.empty? ? :alert : :notice) => summary.join(" ")
+    summary << "#{failed} couldn't be sent." if failed.positive?
+    redirect_to list_path, (sent.zero? && queued.zero? ? :alert : :notice) => summary.join(" ")
   end
 
   def update_status
@@ -198,11 +229,11 @@ class VolunteersController < ApplicationController
   end
 
   def send_application
-    if @volunteer.record_application_sent!(user: current_user)
-      redirect_to volunteer_path(@volunteer), notice: "Application email queued for #{@volunteer.full_name}"
-    else
-      redirect_to volunteer_path(@volunteer), alert: "Application was already sent"
-    end
+    communication = Email::VolunteerNotifications.application!(volunteer: @volunteer, sent_by_user: current_user)
+    notice = communication.queued? ? "Application email queued by Mailchimp" : "Application email sent to Mailchimp"
+    redirect_to volunteer_path(@volunteer), notice: notice
+  rescue Email::MailchimpOutbound::Error => e
+    redirect_to volunteer_path(@volunteer), alert: e.message
   end
 
   def mark_submitted
