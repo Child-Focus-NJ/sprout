@@ -27,7 +27,7 @@ Working under **Dr. Peter DePasquale**
 
 ## Tech Stack
 
-- **Language:** Ruby (3.4.5)
+- **Language:** Ruby 3.4.12
 - **Framework:** Ruby on Rails 8.1.4
 - **Database:** PostgreSQL
 - **Cloud Services:** AWS
