@@ -1,17 +1,20 @@
 class VolunteersController < ApplicationController
-  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :send_sms ]
+  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :sms_template, :send_sms, :update_note ]
 
   def index
     @filters = list_filter_params
     session[:volunteer_list_filters] = @filters
     @vicinages = Vicinage.numerical
+    @inquiry_sources = ReferralSource.active.menu_order
 
     matching = Volunteer.includes(:vicinage).order(:first_name, :last_name)
     matching = matching.name_matching(@filters[:q]) if @filters[:q]
     matching = matching.where(vicinage_id: @filters[:vicinage_id]) if @filters[:vicinage_id]
+    matching = matching.where(referral_source_id: @filters[:referral_source_id]) if @filters[:referral_source_id]
     # Tab counts follow the name search, so each tab shows how many matches are at that status
     @status_counts = matching.reorder(nil).group(:current_funnel_stage).count
     @volunteers = @filters[:status] ? matching.where(current_funnel_stage: @filters[:status]) : matching
+    @volunteers = @volunteers.reorder(inquiry_date: :desc, first_name: :asc, last_name: :asc) if @filters[:status] == "inquiry"
   end
 
   def show
@@ -38,28 +41,68 @@ class VolunteersController < ApplicationController
     redirect_to volunteers_path, notice: "#{name} was deleted."
   end
 
+  def sms
+  end
+
+  def sms_template
+    template = Sms::MailchimpOutbound.template!(params[:template_id])
+    render json: { body: template.render_body(@volunteer) }
+  rescue Sms::MailchimpOutbound::InvalidTemplateError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
   def send_sms
-    Sms::MailchimpOutbound.deliver!(
+    communication = Sms::MailchimpOutbound.deliver!(
       volunteer: @volunteer,
       body: params[:message],
-      sent_by_user: current_user
+      sent_by_user: current_user,
+      consent: params[:consent],
+      template_id: params[:template_id]
     )
-    redirect_to return_path_for(@volunteer), notice: "SMS sent to #{@volunteer.full_name}"
+    notice = communication.queued? ? "SMS queued by Mailchimp" : "SMS sent to Mailchimp"
+    redirect_to return_path_for(@volunteer), notice: notice
   rescue Sms::MailchimpOutbound::Error => e
-    redirect_to return_path_for(@volunteer), alert: e.message
+    @message = params[:message].to_s
+    @consent = params[:consent].to_s
+    @template_id = params[:template_id].to_s
+    flash.now[:alert] = e.message
+    render :sms, status: :unprocessable_entity
   end
 
   def add_note
     volunteer = Volunteer.find(params[:id])
+    note_category = selected_note_category
+    return add_note_with_outcome(volunteer, note_category) if note_category&.updates_records?
+
     note = volunteer.add_staff_note(
       content: params[:note].to_s,
       user: current_user,
-      note_type: :general
+      note_type: :general,
+      note_category: note_category
     )
     if note.persisted?
       redirect_to return_path_for(volunteer), notice: "Note saved for #{volunteer.full_name}"
     else
       redirect_to return_path_for(volunteer), alert: note.errors.full_messages.to_sentence
+    end
+  end
+
+  def update_note
+    note = @volunteer.notes.find(params[:note_id])
+    raise ActiveRecord::RecordNotFound unless note.editable_by?(current_user)
+
+    note.content = params[:note].to_s
+    new_category = selected_note_category
+    if new_category && !note.note_category.updates_records? && !new_category.updates_records?
+      note.note_category = new_category
+    end
+    note.edited_at = Time.current if note.changed?
+
+    if note.save
+      redirect_to volunteer_path(@volunteer, filter: params[:filter].presence), notice: "Note updated"
+    else
+      redirect_to volunteer_path(@volunteer, filter: params[:filter].presence, edit_note_id: note.id),
+                  alert: note.errors.full_messages.to_sentence
     end
   end
 
@@ -80,8 +123,14 @@ class VolunteersController < ApplicationController
       return
     end
 
+    note_category = selected_note_category
+    if note_category&.updates_records?
+      redirect_to list_path, alert: "#{note_category.name} notes update one volunteer's records, so add them from their profile"
+      return
+    end
+
     volunteers.each do |volunteer|
-      volunteer.add_staff_note(content: note_content, user: current_user, note_type: :general)
+      volunteer.add_staff_note(content: note_content, user: current_user, note_type: :general, note_category: note_category)
     end
 
     redirect_to list_path, notice: "Note added to #{helpers.pluralize(volunteers.size, 'volunteer')}"
@@ -95,22 +144,35 @@ class VolunteersController < ApplicationController
     return redirect_to(list_path, alert: "Select at least one volunteer") if volunteers.empty?
 
     no_phone = volunteers.where("COALESCE(TRIM(volunteers.phone), '') = ''")
-    sent = failed = 0
+    sent = queued = uncertain = failed = 0
     volunteers.where("COALESCE(TRIM(volunteers.phone), '') <> ''").find_each do |volunteer|
-      Sms::MailchimpOutbound.deliver!(volunteer: volunteer, body: params[:message], sent_by_user: current_user)
-      sent += 1
-    rescue Sms::MailchimpOutbound::BlankMessageError, Sms::MailchimpOutbound::MessageTooLongError => e
+      communication = Sms::MailchimpOutbound.deliver!(
+        volunteer: volunteer, body: params[:message], sent_by_user: current_user, consent: params[:consent],
+        template_id: params[:template_id], personalize: true
+      )
+      communication.queued? ? queued += 1 : sent += 1
+    rescue Sms::MailchimpOutbound::MessageTooLongError => e
+      return redirect_to(list_path, alert: e.message) if params[:template_id].blank?
+
+      failed += 1
+    rescue Sms::MailchimpOutbound::BlankMessageError,
+           Sms::MailchimpOutbound::MissingConsentError, Sms::MailchimpOutbound::ConfigurationError,
+           Sms::MailchimpOutbound::InvalidTemplateError => e
       # Same message for everyone, so stop at the first one
       return redirect_to(list_path, alert: e.message)
+    rescue Sms::MailchimpOutbound::UncertainDeliveryError
+      uncertain += 1
     rescue Sms::MailchimpOutbound::Error
       failed += 1
     end
 
     summary = [ sent.zero? ? "No SMS sent." : "SMS sent to #{helpers.pluralize(sent, 'volunteer')}." ]
+    summary << "SMS queued by Mailchimp for #{helpers.pluralize(queued, 'volunteer')}." if queued.positive?
+    summary << "#{uncertain} SMS could not be confirmed. Check Mailchimp activity before resending." if uncertain.positive?
     skipped = no_phone.count
     summary << "Skipped #{skipped} with no phone number: #{some_names(no_phone, skipped)}." if skipped.positive?
     summary << "#{failed} couldn't be sent." if failed.positive?
-    redirect_to list_path, (sent.zero? ? :alert : :notice) => summary.join(" ")
+    redirect_to list_path, (sent.zero? && queued.zero? ? :alert : :notice) => summary.join(" ")
   end
 
   # Sends the application to selected volunteers who are still at inquiry or eligible and haven't
@@ -150,6 +212,21 @@ class VolunteersController < ApplicationController
 
   private
 
+  def add_note_with_outcome(volunteer, note_category)
+    volunteer.add_note_with_outcome!(
+      content: params[:note].to_s,
+      user: current_user,
+      note_category: note_category,
+      information_session: volunteer.information_sessions.find_by(id: params[:information_session_id].presence),
+      new_information_session: InformationSession.upcoming.find_by(id: params[:new_information_session_id].presence)
+    )
+    redirect_to return_path_for(volunteer), notice: "Note saved for #{volunteer.full_name}"
+  rescue Volunteer::OutcomeNoteError => e
+    redirect_to return_path_for(volunteer), alert: e.message
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to return_path_for(volunteer), alert: e.record.errors.full_messages.to_sentence
+  end
+
   def set_volunteer
     @volunteer = Volunteer.find(params[:id])
   end
@@ -158,6 +235,10 @@ class VolunteersController < ApplicationController
   # profile or the same filtered list
   def return_path_for(volunteer)
     url_from(params[:return_to]) || volunteer_path(volunteer)
+  end
+
+  def selected_note_category
+    NoteCategory.find_by(id: params[:note_category_id].presence)
   end
 
   def selected_volunteers
@@ -177,16 +258,19 @@ class VolunteersController < ApplicationController
     url_from(params[:return_to]) || volunteers_path(list_filter_params)
   end
 
-  # Search/filter values for the volunteers list. Unknown statuses and vicinages are
-  # dropped so a stale or hand-edited URL shows the full list instead of nothing.
+  # Search/filter values for the volunteers list. Unknown statuses, vicinages and inquiry sources
+  # are dropped so a stale or hand-edited URL shows the full list instead of nothing.
   def list_filter_params
     vicinage_param = params[:vicinage_id].to_s.presence
     vicinage_id = vicinage_param && Vicinage.where(id: vicinage_param).pick(:id)
+    source_param = params[:referral_source_id].to_s.presence
+    referral_source_id = source_param && ReferralSource.active.where(id: source_param).pick(:id)
 
     {
       q: params[:q].to_s.strip.presence,
       status: params[:status].presence_in(Volunteer.current_funnel_stages.keys),
-      vicinage_id: vicinage_id
+      vicinage_id: vicinage_id,
+      referral_source_id: referral_source_id
     }.compact
   end
 

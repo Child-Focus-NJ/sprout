@@ -139,5 +139,34 @@ RSpec.describe ExternalVmsSync do
       expect { described_class.new.sync! }.to change(Volunteer, :count).by(1)
       expect(Volunteer.find_by(email: "jane@example.com")).to be_present
     end
+
+    it "keeps an existing volunteer's inquiry date when the VMS record has none" do
+      volunteer = create(:volunteer, email: "jane@example.com", inquiry_date: Date.new(2026, 8, 1))
+      stub_request(:post, "#{base_url}/Inquiry/_Index?active=active").to_return(
+        status: 200,
+        body: {
+          "Data" => [ { "FirstName" => "Jane", "LastName" => "Smith", "Email" => "jane@example.com", "EncryptedID" => "abc" } ],
+          "Total" => 1
+        }.to_json
+      )
+
+      described_class.new.sync!
+
+      expect(volunteer.reload.inquiry_date.to_date).to eq(Date.new(2026, 8, 1))
+    end
+
+    it "gives a new volunteer an inquiry date when the VMS record has none" do
+      stub_request(:post, "#{base_url}/Inquiry/_Index?active=active").to_return(
+        status: 200,
+        body: {
+          "Data" => [ { "FirstName" => "Jane", "LastName" => "Smith", "Email" => "jane@example.com", "EncryptedID" => "abc" } ],
+          "Total" => 1
+        }.to_json
+      )
+
+      described_class.new.sync!
+
+      expect(Volunteer.find_by(email: "jane@example.com").inquiry_date).to be_within(1.minute).of(Time.current)
+    end
   end
 end
