@@ -191,7 +191,7 @@
     selectAll.addEventListener("change", () => selectEvery(selectAll.checked));
     toolbar.querySelector("[data-bulk-clear]").addEventListener("click", () => selectEvery(false));
 
-    // Sending the application moves people to "Application sent", so double-check first
+    // Sending the application emails the link, so double-check first
     document.getElementById("volunteer-bulk-form").addEventListener("submit", (event) => {
       const checked = checkedCount();
       if (!confirm(`Send the application to ${checked} selected volunteer${checked === 1 ? "" : "s"}?`)) {

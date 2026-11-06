@@ -10,7 +10,7 @@ The client calls `https://mandrillapp.com/api/1.4/messages/send` with `mandrill.
 
 1. Sign in as an administrator and open **Admin → Application email settings**.
 2. Enter the application URL in **Application link** and save it.
-3. Use **Send Application** on a volunteer profile, or check in a volunteer for an information session.
+3. Use **Send Application** on a volunteer profile or from the volunteer list, or check in a volunteer for an information session. The list action emails each eligible volunteer. It records the application as sent only after Mailchimp accepts the message.
 
 The URL is stored in `SystemSetting` and read for each new application email. Updating it requires no code change or restart. Blank values are allowed until the application is ready; application sending then displays a configuration error. Only complete HTTP or HTTPS URLs without embedded credentials are accepted. The saved setting records which administrator last updated it.
 
@@ -28,13 +28,22 @@ mandrill:
 
 Do not put those values in a `.env` file. Turn local sending on by setting `SPROUT_EMAIL_MAILCHIMP_ENABLED=true` for the web process. See [Mailchimp's first email guide](https://mailchimp.com/developer/transactional/guides/send-first-email/) for account setup. SMS configuration remains independent.
 
+The campaigns page uses the Marketing API, which is a different product from Mandrill. A working transactional setup does not configure it. Store that key, including its datacenter suffix such as `-us2`, separately:
+
+```yaml
+mailchimp:
+  marketing_api_key: your_marketing_key-us2
+```
+
+`MAILCHIMP_MARKETING_API_KEY` is the environment fallback for the web process. It is not `MAILCHIMP_API_KEY` and it is not the Mandrill key.
+
 ```bash
 docker compose up -d db
 docker compose up -d --force-recreate localstack
 docker compose up -d web
 ```
 
-Wait for `Sprout LocalStack Bootstrap Complete` in LocalStack logs. The web entrypoint runs migrations. For CDK deployments, provide `MailchimpApiKey` and `MailchimpEmailFrom`; configure `SPROUT_EMAIL_MAILCHIMP_ENABLED` and the gateway URL on Rails separately.
+Wait for `Sprout LocalStack Bootstrap Complete` in LocalStack logs. The web entrypoint runs migrations. Rails sends email itself. The `mailchimp_realtime` Lambda handler is a stub and is not called for Send Email or Send Application, so the `MailchimpApiKey` and `MailchimpEmailFrom` stack parameters do not turn sending on. Set `SPROUT_EMAIL_MAILCHIMP_ENABLED=true` on the web process.
 
 ## Outcomes
 

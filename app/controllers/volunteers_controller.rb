@@ -193,8 +193,8 @@ class VolunteersController < ApplicationController
     redirect_to list_path, (sent.zero? && queued.zero? ? :alert : :notice) => summary.join(" ")
   end
 
-  # Sends the application to selected volunteers who are still at inquiry or eligible and haven't
-  # had one yet. Anyone else is skipped so a bulk send never moves someone back a step.
+  # Emails the application to selected volunteers who are still at inquiry or eligible and haven't
+  # had one yet. Anyone else is skipped. A volunteer is marked sent only after Mailchimp accepts.
   def bulk_send_application
     volunteers = selected_volunteers
     list_path = bulk_return_path
@@ -203,11 +203,24 @@ class VolunteersController < ApplicationController
     ready, skipped = volunteers.partition do |volunteer|
       volunteer.application_sent_at.nil? && (volunteer.inquiry? || volunteer.application_eligible?)
     end
-    ready.each { |volunteer| volunteer.record_application_sent!(user: current_user) }
 
-    summary = [ ready.empty? ? "No applications sent." : "Application sent to #{helpers.pluralize(ready.size, 'volunteer')}." ]
+    sent = queued = uncertain = failed = 0
+    ready.each do |volunteer|
+      communication = Email::VolunteerNotifications.application!(volunteer: volunteer, sent_by_user: current_user)
+      communication.queued? ? queued += 1 : sent += 1
+    rescue Email::MailchimpOutbound::ConfigurationError => e
+      return redirect_to(list_path, alert: e.message)
+    rescue Email::MailchimpOutbound::Error
+      latest = volunteer.communications.email.where(purpose: "application").order(:id).last
+      latest&.pending? ? uncertain += 1 : failed += 1
+    end
+
+    summary = [ sent.zero? ? "No applications sent." : "Application sent to #{helpers.pluralize(sent, 'volunteer')}." ]
+    summary << "Application email queued by Mailchimp for #{helpers.pluralize(queued, 'volunteer')}." if queued.positive?
+    summary << "#{helpers.pluralize(uncertain, 'application email')} could not be confirmed. Check Mailchimp activity before resending." if uncertain.positive?
     summary << "Skipped #{skipped.size} who already had one, applied, or are inactive." if skipped.any?
-    redirect_to list_path, (ready.empty? ? :alert : :notice) => summary.join(" ")
+    summary << "#{failed} couldn't be sent." if failed.positive?
+    redirect_to list_path, (sent.zero? && queued.zero? ? :alert : :notice) => summary.join(" ")
   end
 
   def update_status

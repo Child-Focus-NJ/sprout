@@ -10,7 +10,7 @@
       <h2 class="section-heading">Could not load campaigns</h2>
       <p class="help-text mb-0"><%= @mailchimp_error %></p>
       <p class="subtle mt-2 mb-0">
-        Ensure <code>MAILCHIMP_API_KEY</code> is set in <code>.env</code> and restart the app.
+        Set <code>mailchimp.marketing_api_key</code> in the encrypted credentials, or <code>MAILCHIMP_MARKETING_API_KEY</code> on the web process, then restart. This is separate from the Mandrill key used to send email.
       </p>
     </section>
   <% elsif @campaigns.any? %>

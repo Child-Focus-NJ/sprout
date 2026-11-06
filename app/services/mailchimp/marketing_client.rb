@@ -4,17 +4,31 @@ require "httparty"
 
 module Mailchimp
   # Direct Mailchimp Marketing API client (no Lambda / API Gateway).
+  # This key is not the Mandrill transactional key used to send email.
   class MarketingClient
     class Error < StandardError; end
     class ConfigurationError < Error; end
     class ApiError < Error; end
 
-    def initialize(api_key: ENV["MAILCHIMP_API_KEY"])
+    def self.api_key
+      from_env = ENV["MAILCHIMP_MARKETING_API_KEY"].presence
+      from_credentials = credentials_value
+      Rails.env.test? ? (from_env || from_credentials) : (from_credentials || from_env)
+    end
+
+    def self.credentials_value
+      Rails.application.credentials.dig(:mailchimp, :marketing_api_key)
+    rescue ActiveSupport::EncryptedFile::MissingKeyError, ActiveSupport::MessageEncryptor::InvalidMessage
+      nil
+    end
+    private_class_method :credentials_value
+
+    def initialize(api_key: self.class.api_key)
       @api_key = api_key.to_s.strip
-      raise ConfigurationError, "MAILCHIMP_API_KEY is not set" if @api_key.blank?
+      raise ConfigurationError, "MAILCHIMP_MARKETING_API_KEY is not set" if @api_key.blank?
 
       @datacenter = @api_key.split("-").last
-      raise ConfigurationError, "MAILCHIMP_API_KEY is missing a datacenter suffix (e.g. -us2)" if @datacenter.blank? || !@datacenter.match?(/\A[a-z]+\d+\z/)
+      raise ConfigurationError, "MAILCHIMP_MARKETING_API_KEY is missing a datacenter suffix (e.g. -us2)" if @datacenter.blank? || !@datacenter.match?(/\A[a-z]+\d+\z/)
 
       @base_uri = "https://#{@datacenter}.api.mailchimp.com/3.0"
     end
@@ -52,6 +66,8 @@ module Mailchimp
       end
 
       parsed
+    rescue JSON::ParserError, IOError, SystemCallError, Timeout::Error, SocketError, OpenSSL::SSL::SSLError => e
+      raise ApiError, "Mailchimp Marketing API #{path} could not be reached (#{e.class})"
     end
 
     def parse_json(body)
