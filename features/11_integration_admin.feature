@@ -64,9 +64,9 @@ Feature: Integration & Administration
             Given I click the "Volunteer Tags" tab
             Then the "Remove" button for "VIP" should require confirmation
 
-        Scenario: Removing a referral source requires confirmation
-            Given a referral source named "Website" exists
-            And I click the "Referral Sources" tab
+        Scenario: Removing an inquiry source requires confirmation
+            Given an inquiry source named "Website" exists
+            And I click the "Inquiry Sources" tab
             Then the "Remove" button for "Website" should require confirmation
 
         Scenario: Importing historical data
@@ -91,11 +91,11 @@ Feature: Integration & Administration
             And I have clicked the "Save Employee" button
             Then "Kevra Scholl" should appear on the page
 
-        Scenario: Adding a referral source
-            Given I click the "Referral Sources" tab
-            And I have clicked the "Add Referral Source" button
+        Scenario: Adding an inquiry source
+            Given I click the "Inquiry Sources" tab
+            And I have clicked the "Add Inquiry Source" button
             And I enter "Radio" in the "referral_source_name" field
-            And I have clicked the "Save Referral Source" button
+            And I have clicked the "Save Inquiry Source" button
             Then I should see "Radio" on the frequency list
 
         @javascript

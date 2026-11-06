@@ -1,7 +1,8 @@
 <main class="volunteer-page">
 <% date_filtered = @filters.key?(:status_from) || @filters.key?(:status_to) %>
-<% active_filter_count = @filters.slice(:vicinage_id).size + (date_filtered ? 1 : 0) %>
+<% active_filter_count = @filters.slice(:vicinage_id, :referral_source_id).size + (date_filtered ? 1 : 0) %>
 <% filtered_vicinage = @vicinages.detect { |vicinage| vicinage.id == @filters[:vicinage_id] } %>
+<% filtered_source = @inquiry_sources.detect { |source| source.id == @filters[:referral_source_id] } %>
 
 <h1 class="page-title">Volunteers</h1>
 
@@ -11,6 +12,12 @@
       <span class="volunteer-filter-chip volunteer-filter-chip--vicinage">
         Vicinage: <%= filtered_vicinage.name %>
         <%= link_to "×", volunteers_path(@filters.except(:vicinage_id)), aria: { label: "Remove vicinage filter" } %>
+      </span>
+    <% end %>
+    <% if filtered_source %>
+      <span class="volunteer-filter-chip volunteer-filter-chip--source">
+        Inquiry source: <%= filtered_source.name %>
+        <%= link_to "×", volunteers_path(@filters.except(:referral_source_id)), aria: { label: "Remove inquiry source filter" } %>
       </span>
     <% end %>
     <% if date_filtered %>
@@ -69,6 +76,20 @@
         </fieldset>
 
         <fieldset>
+          <legend>Inquiry source</legend>
+          <div class="volunteer-filter-options">
+            <label class="volunteer-filter-option">
+              <%= radio_button_tag :referral_source_id, "", filtered_source.nil?, id: "referral_source_id_all" %> All sources
+            </label>
+            <% @inquiry_sources.each do |source| %>
+              <label class="volunteer-filter-option">
+                <%= radio_button_tag :referral_source_id, source.id, source == filtered_source %> <%= source.name %>
+              </label>
+            <% end %>
+          </div>
+        </fieldset>
+
+        <fieldset>
           <legend>Status date</legend>
           <p class="volunteer-filter-hint">When they moved into their current status</p>
           <div class="volunteer-filter-options">
@@ -82,7 +103,7 @@
         </fieldset>
 
         <div class="volunteer-filter-menu__actions">
-          <%= link_to "Clear", volunteers_path(@filters.except(:vicinage_id, :status_from, :status_to)), class: "button-link" %>
+          <%= link_to "Clear", volunteers_path(@filters.except(:vicinage_id, :referral_source_id, :status_from, :status_to)), class: "button-link" %>
           <button type="submit" class="button-primary">Apply</button>
         </div>
       </div>

@@ -7,6 +7,7 @@ Given("the volunteers list contains:") do |table|
       email: "#{row['name'].parameterize}@childfocusnj.org",
       current_funnel_stage: row["status"],
       vicinage: Vicinage.find_or_create_by!(name: row["vicinage"]),
+      referral_source: ReferralSource.find_or_create_by!(name: row["source"]),
       inquiry_date: row["inquired"]
     )
   end
@@ -31,6 +32,10 @@ end
 
 When("I choose the vicinage {string}") do |vicinage|
   within(".volunteer-filter-menu__panel") { choose vicinage }
+end
+
+When("I choose the inquiry source {string}") do |source|
+  within(".volunteer-filter-menu__panel") { choose source }
 end
 
 When("I set the status date from {string} to {string}") do |from, to|

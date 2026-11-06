@@ -5,10 +5,12 @@ class VolunteersController < ApplicationController
     @filters = list_filter_params
     session[:volunteer_list_filters] = @filters
     @vicinages = Vicinage.numerical
+    @inquiry_sources = ReferralSource.active.menu_order
 
     matching = Volunteer.includes(:vicinage).order(:first_name, :last_name)
     matching = matching.name_matching(@filters[:q]) if @filters[:q]
     matching = matching.where(vicinage_id: @filters[:vicinage_id]) if @filters[:vicinage_id]
+    matching = matching.where(referral_source_id: @filters[:referral_source_id]) if @filters[:referral_source_id]
     matching = matching.where(stage_started_at: @filters[:status_from].beginning_of_day..) if @filters[:status_from]
     matching = matching.where(stage_started_at: ..@filters[:status_to].end_of_day) if @filters[:status_to]
     # Tab counts follow the name search, so each tab shows how many matches are at that status
@@ -258,16 +260,19 @@ class VolunteersController < ApplicationController
     url_from(params[:return_to]) || volunteers_path(list_filter_params)
   end
 
-  # Search/filter values for the volunteers list. Unknown statuses, vicinages and dates are
-  # dropped so a stale or hand-edited URL shows the full list instead of nothing.
+  # Search/filter values for the volunteers list. Unknown statuses, vicinages, inquiry sources and
+  # dates are dropped so a stale or hand-edited URL shows the full list instead of nothing.
   def list_filter_params
     vicinage_param = params[:vicinage_id].to_s.presence
     vicinage_id = vicinage_param && Vicinage.where(id: vicinage_param).pick(:id)
+    source_param = params[:referral_source_id].to_s.presence
+    referral_source_id = source_param && ReferralSource.active.where(id: source_param).pick(:id)
 
     {
       q: params[:q].to_s.strip.presence,
       status: params[:status].presence_in(Volunteer.current_funnel_stages.keys),
       vicinage_id: vicinage_id,
+      referral_source_id: referral_source_id,
       status_from: filter_date(params[:status_from]),
       status_to: filter_date(params[:status_to])
     }.compact

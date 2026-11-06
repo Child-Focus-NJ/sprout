@@ -46,8 +46,8 @@
                                      { include_blank: "Select..." }, { class: "input-large" } %>
         </div>
         <div>
-          <%= form.label :referral_source_id, "How did you hear?" %>
-          <%= form.collection_select :referral_source_id, ReferralSource.active.alphabetical, :id, :name,
+          <%= form.label :referral_source_id, "Inquiry source" %>
+          <%= form.collection_select :referral_source_id, ReferralSource.choices_for(@volunteer.referral_source_id), :id, :name,
                                      { include_blank: "Select..." }, { class: "input-large" } %>
         </div>
         <% normalized_phone = @volunteer.phone.to_s.gsub(/\D/, "") %>

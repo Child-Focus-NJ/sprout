@@ -596,6 +596,7 @@
   }
 
   .volunteer-filter-chip--vicinage,
+  .volunteer-filter-chip--source,
   .volunteer-filter-chip--date {
     @apply border-gray-300 bg-white text-gray-800;
   }

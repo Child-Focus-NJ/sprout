@@ -28,6 +28,19 @@ RSpec.describe "Volunteer profile page", type: :request do
     end
   end
 
+  it "labels the inquiry source and keeps a retired one selected" do
+    flyer = create(:referral_source, name: "Flyer", active: false)
+    create(:referral_source, name: "Idealist")
+    volunteer.update!(referral_source: flyer)
+
+    get volunteer_path(volunteer)
+
+    expect(page_html.at_css("label[for='volunteer_referral_source_id']").text).to eq("Inquiry source")
+    select = page_html.at_css("select#volunteer_referral_source_id")
+    expect(select.css("option").map(&:text)).to eq([ "Select...", "Flyer", "Idealist" ])
+    expect(select.at_css("option[selected]").text).to eq("Flyer")
+  end
+
   it "keeps the status badge and the status update control" do
     get volunteer_path(volunteer)
 

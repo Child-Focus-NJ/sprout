@@ -1,15 +1,15 @@
-Feature: Search the volunteers list and filter it by status, vicinage and status date
+Feature: Search the volunteers list and filter it by status, vicinage, inquiry source and status date
   As a staff member
-  I want to search volunteers by name, switch between status tabs and filter by vicinage or when they reached their status
+  I want to search volunteers by name, switch between status tabs and filter by vicinage, inquiry source or when they reached their status
   So that I can find one volunteer or a group without scrolling the whole list
 
   Background:
     Given I am a signed-in system administrator
     And the volunteers list contains:
-      | name        | status               | vicinage | inquired   |
-      | Harry Kane  | inquiry              | Union    | 2026-09-01 |
-      | Hana Kimura | application_eligible | Union    | 2026-08-15 |
-      | Sofia Reyes | inquiry              | Passaic  | 2026-10-01 |
+      | name        | status               | vicinage | inquired   | source        |
+      | Harry Kane  | inquiry              | Union    | 2026-09-01 | Tabling Event |
+      | Hana Kimura | application_eligible | Union    | 2026-08-15 | Tabling Event |
+      | Sofia Reyes | inquiry              | Passaic  | 2026-10-01 | Idealist      |
 
   Scenario: Search volunteers by name
     Given I am on the volunteers list page
@@ -47,6 +47,16 @@ Feature: Search the volunteers list and filter it by status, vicinage and status
     And I should see "Vicinage: Union"
     When I click the "All" status tab
     Then I should see only these volunteers in the list: "Harry Kane, Hana Kimura"
+
+  Scenario: Filter by inquiry source
+    Given I am on the volunteers list page
+    When I open the volunteer filters
+    And I choose the inquiry source "Tabling Event"
+    And I apply the volunteer filters
+    Then I should see only these volunteers in the list: "Harry Kane, Hana Kimura"
+    And the "All" status tab should be selected with 2 volunteers
+    And the filter button should show 1 active filters
+    And I should see "Inquiry source: Tabling Event"
 
   Scenario: Filter by when volunteers moved into their current status
     Given I am on the volunteers list page

@@ -6,10 +6,12 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
   let(:user) { create(:user) }
   let(:passaic) { create(:vicinage, name: "Passaic") }
   let(:union) { create(:vicinage, name: "Union") }
+  let(:tabling) { create(:referral_source, name: "Tabling Event") }
+  let(:idealist) { create(:referral_source, name: "Idealist") }
 
-  let!(:harry) { create(:volunteer, first_name: "Harry", last_name: "Kane", current_funnel_stage: :inquiry, vicinage: union, inquiry_date: Date.new(2026, 9, 1)) }
-  let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura", current_funnel_stage: :application_eligible, vicinage: union, inquiry_date: Date.new(2026, 8, 15), first_session_attended_at: Date.new(2026, 8, 20)) }
-  let!(:sofia) { create(:volunteer, first_name: "Sofia", last_name: "Reyes", current_funnel_stage: :inquiry, vicinage: passaic, inquiry_date: Date.new(2026, 10, 1)) }
+  let!(:harry) { create(:volunteer, first_name: "Harry", last_name: "Kane", current_funnel_stage: :inquiry, vicinage: union, referral_source: tabling, inquiry_date: Date.new(2026, 9, 1)) }
+  let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura", current_funnel_stage: :application_eligible, vicinage: union, referral_source: tabling, inquiry_date: Date.new(2026, 8, 15), first_session_attended_at: Date.new(2026, 8, 20)) }
+  let!(:sofia) { create(:volunteer, first_name: "Sofia", last_name: "Reyes", current_funnel_stage: :inquiry, vicinage: passaic, referral_source: idealist, inquiry_date: Date.new(2026, 10, 1)) }
 
   before { login_as(user, scope: :user) }
 
@@ -139,6 +141,52 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
       expect(response.parsed_body.at_css("input#vicinage_id_all[checked]")).to be_present
     end
 
+    it "filters by inquiry source inside a tab, and the tab counts follow the source" do
+      get volunteers_path, params: { status: "inquiry", referral_source_id: tabling.id }
+
+      expect(listed_names).to eq([ "Harry Kane" ])
+      expect(tabs.first(3)).to eq([ "All 2", "Inquiry 1", "Application eligible 1" ])
+      expect(response.parsed_body.at_css(".volunteer-filter-chip--source").text).to include("Inquiry source: Tabling Event")
+    end
+
+    it "offers the active inquiry sources in the filters, with Other last" do
+      create(:referral_source, name: "Other")
+      create(:referral_source, name: "Flyer", active: false)
+
+      get volunteers_path
+
+      options = response.parsed_body.css("input[name='referral_source_id']").map { |input| input.parent.text.squish }
+      expect(options).to eq([ "All sources", "Idealist", "Tabling Event", "Other" ])
+    end
+
+    it "keeps the inquiry source when switching tabs or searching" do
+      get volunteers_path, params: { status: "inquiry", referral_source_id: tabling.id }
+      page = response.parsed_body
+
+      tab = ->(label) { page.css("#volunteer-status-tabs a").find { |link| link.text.squish.start_with?("#{label} ") } }
+      expect(tab.call("Applied")["href"]).to eq(volunteers_path(referral_source_id: tabling.id, status: "applied"))
+      expect(page.at_css("form.volunteer-search input[name='referral_source_id'][value='#{tabling.id}'][checked]")).to be_present
+    end
+
+    it "counts the vicinage and inquiry source on the filter button, and each chip removes only its own" do
+      get volunteers_path, params: { status: "inquiry", vicinage_id: union.id, referral_source_id: tabling.id }
+      page = response.parsed_body
+
+      expect(page.at_css(".volunteer-filter-menu__badge").text.strip).to eq("2")
+      expect(page.at_css('a[aria-label="Remove vicinage filter"]')["href"]).to eq(volunteers_path(status: "inquiry", referral_source_id: tabling.id))
+      expect(page.at_css('a[aria-label="Remove inquiry source filter"]')["href"]).to eq(volunteers_path(status: "inquiry", vicinage_id: union.id))
+    end
+
+    it "ignores a retired inquiry source instead of hiding everyone" do
+      flyer = create(:referral_source, name: "Flyer", active: false)
+      harry.update!(referral_source: flyer)
+
+      get volunteers_path, params: { referral_source_id: flyer.id }
+
+      expect(listed_names.size).to eq(3)
+      expect(response.parsed_body.at_css("#volunteer-active-filters")).to be_nil
+    end
+
     it "filters by when volunteers moved into their current status, and the tab counts follow the dates" do
       get volunteers_path, params: { status_from: "2026-08-25", status_to: "2026-09-30" }
 
@@ -195,8 +243,8 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
       expect(response.parsed_body.css("#volunteer-list .volunteer-subtext").map(&:text).join).to include("Passaic", "Union")
     end
 
-    it "ignores an unknown status or vicinage instead of hiding everyone" do
-      get volunteers_path, params: { status: "bogus", vicinage_id: "999999" }
+    it "ignores an unknown status, vicinage or inquiry source instead of hiding everyone" do
+      get volunteers_path, params: { status: "bogus", vicinage_id: "999999", referral_source_id: "999999" }
 
       expect(listed_names.size).to eq(3)
       expect(active_tab).to eq("All 3")
@@ -223,11 +271,11 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
       response.parsed_body.at_css("a.nav-back")["href"]
     end
 
-    it "returns to the tab, search and vicinage the list was showing" do
-      get volunteers_path, params: { q: "ha", status: "inquiry", vicinage_id: union.id }
+    it "returns to the tab, search, vicinage and inquiry source the list was showing" do
+      get volunteers_path, params: { q: "ha", status: "inquiry", vicinage_id: union.id, referral_source_id: tabling.id }
       get volunteer_path(harry)
 
-      expect(back_link_href).to eq(volunteers_path(q: "ha", status: "inquiry", vicinage_id: union.id))
+      expect(back_link_href).to eq(volunteers_path(q: "ha", status: "inquiry", vicinage_id: union.id, referral_source_id: tabling.id))
     end
 
     it "returns to the same status dates" do
