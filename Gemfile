@@ -35,6 +35,7 @@ gem "groupdate"
 # ---------------------------------------------------------------------------
 gem "omniauth", ">= 2.0.0"                  # Single Sign-On
 gem "omniauth-google-oauth2"
+gem "warden"                              # Warden::Test::Helpers (login_as) in RSpec and Cucumber
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -84,7 +85,6 @@ group :test do
   gem "shoulda-matchers", "~> 6.0"
   gem "database_cleaner-active_record"
   gem "simplecov", require: false
-  gem "warden"                              # Warden::Test::Helpers (login_as) in RSpec and Cucumber
   gem "webmock"                             # Stubs the raw Net::HTTP calls ExternalVmsSync makes to the external VMS
 
   # Build and inspect exported files in specs and features
