@@ -65,16 +65,14 @@ RSpec.describe Volunteer, type: :model do
       end.not_to change { volunteer.status_changes.count }
     end
 
-    it "stamps a reactivation only when a volunteer leaves inactive" do
-      volunteer = create(:volunteer, current_funnel_stage: :inquiry)
-
-      volunteer.change_status!(:inactive)
-      expect(volunteer.reload.reactivation_count).to eq(0)
+    it "doesn't count a manual move out of inactive as a reactivation" do
+      volunteer = create(:volunteer, current_funnel_stage: :inactive)
 
       volunteer.change_status!(:inquiry)
+
       volunteer.reload
-      expect(volunteer.reactivated_at).to be_within(1.minute).of(Time.current)
-      expect(volunteer.reactivation_count).to eq(1)
+      expect(volunteer.reactivated_at).to be_nil
+      expect(volunteer.reactivation_count).to eq(0)
     end
   end
 
@@ -87,10 +85,21 @@ RSpec.describe Volunteer, type: :model do
       volunteer.reactivate!(user: user)
 
       expect(volunteer.reload).to be_inquiry
+      expect(volunteer.reactivated_at).to be_within(1.minute).of(Time.current)
+      expect(volunteer.reactivation_count).to eq(1)
       expect(volunteer.status_changes.last).to have_attributes(
         from_funnel_stage: "Inactive", to_funnel_stage: "Inquiry", user_id: user.id
       )
       expect(volunteer.status_changes.last).to be_event
+    end
+
+    it "leaves a volunteer deactivated as a duplicate alone" do
+      volunteer = create(:volunteer, current_funnel_stage: :inactive, inactive_reason: :duplicate)
+
+      volunteer.reactivate!(user: user)
+
+      expect(volunteer.reload).to be_inactive
+      expect(volunteer.reactivation_count).to eq(0)
     end
 
     it "returns a volunteer to the stage their history matches" do
@@ -232,6 +241,15 @@ RSpec.describe Volunteer, type: :model do
       volunteer.finalize_check_in_for_session!(session, user: create(:user))
 
       expect(volunteer.reload).to be_application_sent
+    end
+
+    it "keeps a volunteer deactivated as a duplicate inactive when they check in" do
+      session = create(:information_session)
+      volunteer = create(:volunteer, current_funnel_stage: :inactive, inactive_reason: :duplicate)
+
+      volunteer.finalize_check_in_for_session!(session, user: create(:user))
+
+      expect(volunteer.reload).to be_inactive
     end
   end
 
@@ -510,6 +528,12 @@ RSpec.describe Volunteer, type: :model do
       volunteer.reactivate!
 
       expect(volunteer.reload.days_in_current_stage).to eq(0)
+    end
+
+    it "falls back to the reactivation when the stage has no start timestamp" do
+      volunteer = create(:volunteer, current_funnel_stage: :application_eligible, first_session_attended_at: nil,
+                                     reactivated_at: 3.days.ago)
+      expect(volunteer.days_in_current_stage).to eq(3)
     end
 
     it "returns nil when the stage has no start timestamp yet" do

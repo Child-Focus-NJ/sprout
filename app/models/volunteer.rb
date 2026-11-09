@@ -51,9 +51,10 @@ class Volunteer < ApplicationRecord
     when :inquiry then inquiry_date
     when :application_eligible then first_session_attended_at
     when :application_sent then application_sent_at
+    else return
     end
 
-    started_at && [ started_at, reactivated_at ].compact.max
+    [ started_at, reactivated_at ].compact.max
   end
 
   def days_in_current_stage
@@ -70,12 +71,15 @@ class Volunteer < ApplicationRecord
   end
 
   def can_reactivate?
-    inactive?
+    inactive? && !inactive_reason_duplicate?
   end
 
   # A deactivated volunteer who inquires or registers again returns to the stage their history matches.
   def reactivate!(user: nil)
-    change_status!(reactivation_stage, user: user, trigger: :event) if can_reactivate?
+    return unless can_reactivate?
+
+    assign_attributes(reactivated_at: Time.current, reactivation_count: reactivation_count + 1)
+    change_status!(reactivation_stage, user: user, trigger: :event)
   end
 
   def full_name
@@ -119,7 +123,6 @@ class Volunteer < ApplicationRecord
     new_stage_key = new_stage.to_s
     return if old_stage == new_stage_key
 
-    assign_attributes(reactivated_at: Time.current, reactivation_count: reactivation_count + 1) if inactive?
     update!(current_funnel_stage: new_stage_key)
     status_changes.create!(
       from_funnel_stage: old_stage.humanize,
@@ -140,7 +143,7 @@ class Volunteer < ApplicationRecord
 
     update!(first_session_attended_at: Time.current) unless first_session_attended_at.present?
     reactivate!(user: user)
-    change_status!(:application_eligible, user: user, trigger: :event) unless application_sent? || applied?
+    change_status!(:application_eligible, user: user, trigger: :event) unless application_sent? || applied? || inactive?
   end
 
   # Staff action or automation: move to application_sent and record send time (idempotent on duplicate send).
