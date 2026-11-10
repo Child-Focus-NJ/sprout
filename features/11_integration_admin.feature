@@ -69,9 +69,10 @@ Feature: Integration & Administration
             And I click the "Inquiry Sources" tab
             Then the "Remove" button for "Website" should require confirmation
 
-        Scenario: Importing historical data
-            And I upload an Excel sheet containing "Colin Smith"
-            Then "Colin Smith" should appear on the volunteers page
+        # Import Historical Data is hidden on System Management for now; uncomment when needed.
+        # Scenario: Importing historical data
+        #     And I upload an Excel sheet containing "Colin Smith"
+        #     Then "Colin Smith" should appear on the volunteers page
 
         Scenario: Deactivating an Employee
             Given I click the "Employees" tab
