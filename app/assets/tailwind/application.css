@@ -556,7 +556,7 @@
   }
 
   .volunteer-search__field .input-large {
-    @apply w-full max-w-none pl-9;
+    @apply w-full max-w-none pl-7;
   }
 
   .volunteer-search__icon {

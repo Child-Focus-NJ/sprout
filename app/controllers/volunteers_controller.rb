@@ -8,10 +8,10 @@ class VolunteersController < ApplicationController
     @inquiry_sources = ReferralSource.active.menu_order
 
     matching = Volunteer.includes(:vicinage).order(:first_name, :last_name)
-    matching = matching.name_matching(@filters[:q]) if @filters[:q]
+    matching = matching.search_matching(@filters[:q]) if @filters[:q]
     matching = matching.where(vicinage_id: @filters[:vicinage_id]) if @filters[:vicinage_id]
     matching = matching.where(referral_source_id: @filters[:referral_source_id]) if @filters[:referral_source_id]
-    # Tab counts follow the name search, so each tab shows how many matches are at that status
+    # Tab counts follow the search, so each tab shows how many matches are at that status
     @status_counts = matching.reorder(nil).group(:current_funnel_stage).count
     @volunteers = @filters[:status] ? matching.where(current_funnel_stage: @filters[:status]) : matching
     @volunteers = @volunteers.reorder(inquiry_date: :desc, first_name: :asc, last_name: :asc) if @filters[:status] == "inquiry"
