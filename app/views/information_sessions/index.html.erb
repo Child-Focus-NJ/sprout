@@ -69,7 +69,13 @@
           data-session-list-item
           class="volunteer-row session-history-card">
           <div class="volunteer-meta min-w-0">
-            <div class="volunteer-name"><%= session.name %></div>
+            <div class="volunteer-name">
+              <% if session.past? %>
+                <%= link_to session.name, information_session_path(session, filter_opts), class: "session-roster-link" %>
+              <% else %>
+                <%= session.name %>
+              <% end %>
+            </div>
             <div class="volunteer-subtext session-history-meta">
               <span><%= session.location %></span>
               <span>

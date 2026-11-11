@@ -179,4 +179,14 @@ RSpec.describe InformationSession, type: :model do
       expect(session.zoom_location?).to be false
     end
   end
+
+  describe '#past?' do
+    it 'is true once the scheduled time has passed' do
+      expect(build(:information_session, scheduled_at: 1.minute.ago).past?).to be true
+    end
+
+    it 'is false before the scheduled time' do
+      expect(build(:information_session, scheduled_at: 1.hour.from_now).past?).to be false
+    end
+  end
 end

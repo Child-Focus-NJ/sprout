@@ -1,6 +1,14 @@
 module InformationSessionsHelper
   FILTER_PARAM_KEYS = %i[start_date end_date location upcoming_past page].freeze
 
+  SESSION_OUTCOME_LABELS = {
+    "registered" => "Registered",
+    "attended" => "Attended",
+    "no_show" => "No-Show",
+    "cancelled" => "Cancelled",
+    "rescheduled" => "Rescheduled"
+  }.freeze
+
   def information_sessions_filter_params
     params.permit(*FILTER_PARAM_KEYS).to_h.symbolize_keys
   end
@@ -15,6 +23,13 @@ module InformationSessionsHelper
       choices.unshift([ session.location, session.location ])
     end
     choices
+  end
+
+  # The label is the registration status, which is the same column outcome notes update.
+  def session_outcome_badge(registration)
+    status = registration.status
+    label = SESSION_OUTCOME_LABELS.fetch(status)
+    tag.span(label, class: "status-badge status-badge--outcome-#{status.tr("_", "-")}")
   end
 
   def information_session_creator_line(session)
