@@ -18,8 +18,9 @@ Given("I am on the volunteers list page filtered to status {string}") do |label|
 end
 
 When("I search volunteers for {string}") do |query|
-  fill_in "Search by name", with: query
-  find_field("Search by name").send_keys(:enter)
+  fill_in "Search by name, email or phone", with: query
+  find_field("Search by name, email or phone").send_keys(:enter)
+  expect(page).to have_current_path(/[?&]q=#{Regexp.escape(URI.encode_www_form_component(query))}(&|\z)/)
 end
 
 When("I click the {string} status tab") do |label|
@@ -71,7 +72,7 @@ Then("the {string} status tab should be selected with {int} volunteers") do |lab
 end
 
 Then("the volunteer search should contain {string}") do |query|
-  expect(page).to have_field("Search by name", with: query)
+  expect(page).to have_field("Search by name, email or phone", with: query)
 end
 
 Then("the filter button should show {int} active filters") do |count|

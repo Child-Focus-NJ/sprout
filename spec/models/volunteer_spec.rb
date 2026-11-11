@@ -76,32 +76,42 @@ RSpec.describe Volunteer, type: :model do
     end
   end
 
-  describe ".name_matching" do
-    let!(:harry) { create(:volunteer, first_name: "Harry", last_name: "Kane") }
-    let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura") }
+  describe ".search_matching" do
+    let!(:harry) { create(:volunteer, first_name: "Harry", last_name: "Kane", email: "hkane@example.org", phone: "732-555-0101") }
+    let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura", phone: "973 555 0199") }
     let!(:sofia) { create(:volunteer, first_name: "Sofia", last_name: "Reyes") }
 
     it "matches first or last name, ignoring case" do
-      expect(described_class.name_matching("KANE")).to contain_exactly(harry)
-      expect(described_class.name_matching("sofia")).to contain_exactly(sofia)
+      expect(described_class.search_matching("KANE")).to contain_exactly(harry)
+      expect(described_class.search_matching("sofia")).to contain_exactly(sofia)
     end
 
     it "matches partial names" do
-      expect(described_class.name_matching("ha")).to contain_exactly(harry, hana)
+      expect(described_class.search_matching("ha")).to contain_exactly(harry, hana)
     end
 
     it "requires every word to match, so a full name narrows the results" do
-      expect(described_class.name_matching("harry kane")).to contain_exactly(harry)
-      expect(described_class.name_matching("harry reyes")).to be_empty
+      expect(described_class.search_matching("harry kane")).to contain_exactly(harry)
+      expect(described_class.search_matching("harry reyes")).to be_empty
+    end
+
+    it "matches email, ignoring case" do
+      expect(described_class.search_matching("HKANE@example")).to contain_exactly(harry)
+    end
+
+    it "matches phone, ignoring dashes and spaces" do
+      expect(described_class.search_matching("7325550101")).to contain_exactly(harry)
+      expect(described_class.search_matching("973-555-0199")).to contain_exactly(hana)
+      expect(described_class.search_matching("555")).to contain_exactly(harry, hana)
     end
 
     it "returns everyone for a blank query" do
-      expect(described_class.name_matching("  ")).to contain_exactly(harry, hana, sofia)
+      expect(described_class.search_matching("  ")).to contain_exactly(harry, hana, sofia)
     end
 
     it "treats SQL wildcards as literal characters" do
-      expect(described_class.name_matching("%")).to be_empty
-      expect(described_class.name_matching("_")).to be_empty
+      expect(described_class.search_matching("%")).to be_empty
+      expect(described_class.search_matching("_")).to be_empty
     end
   end
 
