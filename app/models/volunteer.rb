@@ -52,11 +52,14 @@ class Volunteer < ApplicationRecord
   end
 
   def stage_started_at
-    case current_funnel_stage.to_sym
+    started_at = case current_funnel_stage.to_sym
     when :inquiry then inquiry_date
     when :application_eligible then first_session_attended_at
     when :application_sent then application_sent_at
+    else return
     end
+
+    [ started_at, reactivated_at ].compact.max
   end
 
   def days_in_current_stage
@@ -73,7 +76,15 @@ class Volunteer < ApplicationRecord
   end
 
   def can_reactivate?
-    inactive?
+    inactive? && !inactive_reason_duplicate?
+  end
+
+  # A deactivated volunteer who inquires or registers again returns to the stage their history matches.
+  def reactivate!(user: nil)
+    return unless can_reactivate?
+
+    assign_attributes(reactivated_at: Time.current, reactivation_count: reactivation_count + 1)
+    change_status!(reactivation_stage, user: user, trigger: :event)
   end
 
   def full_name
@@ -101,8 +112,9 @@ class Volunteer < ApplicationRecord
         record_attendance!(registration, user: user)
       when "no_show", "cancelled"
         registration.update!(status: note_category.key)
+        return_to_inquiry_if_dropped_off!(user: user)
       when "rescheduled"
-        reschedule_registration!(registration, new_information_session)
+        reschedule_registration!(registration, new_information_session, user: user)
       when NoteCategory::DEACTIVATED_KEY
         change_status!(:inactive, user: user)
       end
@@ -135,7 +147,8 @@ class Volunteer < ApplicationRecord
     registration.save!
 
     update!(first_session_attended_at: Time.current) unless first_session_attended_at.present?
-    change_status!(:application_eligible, user: user, trigger: :event) unless application_sent? || applied?
+    reactivate!(user: user)
+    change_status!(:application_eligible, user: user, trigger: :event) unless application_sent? || applied? || inactive?
   end
 
   # Staff action or automation: move to application_sent and record send time (idempotent on duplicate send).
@@ -158,6 +171,27 @@ class Volunteer < ApplicationRecord
 
   private
 
+  def reactivation_stage
+    return :applied if application_submitted_at.present?
+    return :application_sent if application_sent_at.present?
+    return :application_eligible if attended_session?
+
+    :inquiry
+  end
+
+  # Anyone who attended or has an application keeps their progress,
+  # and inactive volunteers stay inactive.
+  def return_to_inquiry_if_dropped_off!(user:)
+    return unless application_eligible? && !attended_session?
+    return if registered_for_upcoming_session?
+
+    change_status!(:inquiry, user: user, trigger: :event)
+  end
+
+  def registered_for_upcoming_session?
+    information_sessions.active.upcoming.merge(SessionRegistration.registered).exists?
+  end
+
   def registration_for_outcome!(information_session, note_category)
     raise OutcomeNoteError, "Choose the session this note is about" if information_session.nil?
 
@@ -177,7 +211,7 @@ class Volunteer < ApplicationRecord
     change_status!(:application_eligible, user: user, trigger: :event) if inquiry?
   end
 
-  def reschedule_registration!(registration, new_information_session)
+  def reschedule_registration!(registration, new_information_session, user:)
     raise OutcomeNoteError, "Choose the session they're rescheduling to" if new_information_session.nil?
     if new_information_session == registration.information_session
       raise OutcomeNoteError, "Choose a different session to reschedule to"
@@ -192,7 +226,10 @@ class Volunteer < ApplicationRecord
     end
 
     registration.update!(status: :rescheduled)
-    new_registration.update!(status: :registered) unless new_registration.attended?
+    return if new_registration.attended?
+
+    new_registration.update!(status: :registered)
+    reactivate!(user: user)
   end
 
   def default_inquiry_date

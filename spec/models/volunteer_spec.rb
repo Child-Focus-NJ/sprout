@@ -64,6 +64,57 @@ RSpec.describe Volunteer, type: :model do
         volunteer.change_status!(:inquiry, user: nil, trigger: :manual)
       end.not_to change { volunteer.status_changes.count }
     end
+
+    it "doesn't count a manual move out of inactive as a reactivation" do
+      volunteer = create(:volunteer, current_funnel_stage: :inactive)
+
+      volunteer.change_status!(:inquiry)
+
+      volunteer.reload
+      expect(volunteer.reactivated_at).to be_nil
+      expect(volunteer.reactivation_count).to eq(0)
+    end
+  end
+
+  describe "#reactivate!" do
+    let(:user) { create(:user) }
+
+    it "returns a volunteer with no history to inquiry as an event" do
+      volunteer = create(:volunteer, current_funnel_stage: :inactive)
+
+      volunteer.reactivate!(user: user)
+
+      expect(volunteer.reload).to be_inquiry
+      expect(volunteer.reactivated_at).to be_within(1.minute).of(Time.current)
+      expect(volunteer.reactivation_count).to eq(1)
+      expect(volunteer.status_changes.last).to have_attributes(
+        from_funnel_stage: "Inactive", to_funnel_stage: "Inquiry", user_id: user.id
+      )
+      expect(volunteer.status_changes.last).to be_event
+    end
+
+    it "leaves a volunteer deactivated as a duplicate alone" do
+      volunteer = create(:volunteer, current_funnel_stage: :inactive, inactive_reason: :duplicate)
+
+      volunteer.reactivate!(user: user)
+
+      expect(volunteer.reload).to be_inactive
+      expect(volunteer.reactivation_count).to eq(0)
+    end
+
+    it "returns a volunteer to the stage their history matches" do
+      {
+        { first_session_attended_at: 1.year.ago } => :application_eligible,
+        { first_session_attended_at: 1.year.ago, application_sent_at: 1.year.ago } => :application_sent,
+        { application_sent_at: 1.year.ago, application_submitted_at: 1.year.ago } => :applied
+      }.each do |history, stage|
+        volunteer = create(:volunteer, current_funnel_stage: :inactive, **history)
+
+        volunteer.reactivate!(user: user)
+
+        expect(volunteer.reload.current_funnel_stage).to eq(stage.to_s)
+      end
+    end
   end
 
   describe ".awaiting_application_submission" do
@@ -192,6 +243,24 @@ RSpec.describe Volunteer, type: :model do
       expect(volunteer.first_session_attended_at).to be_present
       expect(volunteer.status_changes.last.event?).to be true
     end
+
+    it "returns a deactivated volunteer who already had an application to application sent" do
+      session = create(:information_session)
+      volunteer = create(:volunteer, current_funnel_stage: :inactive, application_sent_at: 1.year.ago)
+
+      volunteer.finalize_check_in_for_session!(session, user: create(:user))
+
+      expect(volunteer.reload).to be_application_sent
+    end
+
+    it "keeps a volunteer deactivated as a duplicate inactive when they check in" do
+      session = create(:information_session)
+      volunteer = create(:volunteer, current_funnel_stage: :inactive, inactive_reason: :duplicate)
+
+      volunteer.finalize_check_in_for_session!(session, user: create(:user))
+
+      expect(volunteer.reload).to be_inactive
+    end
   end
 
   describe "#add_note_with_outcome!" do
@@ -275,6 +344,70 @@ RSpec.describe Volunteer, type: :model do
 
       expect(registration.reload).to be_rescheduled
       expect(volunteer.session_registrations.find_by!(information_session: later)).to be_registered
+    end
+
+    it "reactivates a deactivated volunteer who reschedules" do
+      volunteer.update!(current_funnel_stage: :inactive)
+      later = create(:information_session, scheduled_at: 2.weeks.from_now)
+
+      volunteer.add_note_with_outcome!(content: "Coming back", user: admin, note_category: category("rescheduled"),
+                                       information_session: session, new_information_session: later)
+
+      expect(volunteer.reload).to be_inquiry
+      expect(volunteer.status_changes.last).to have_attributes(from_funnel_stage: "Inactive", user_id: admin.id)
+    end
+
+    context "when a volunteer who was moved ahead without attending drops off" do
+      before { volunteer.update!(current_funnel_stage: :application_eligible) }
+
+      it "moves them back to inquiry when they have no other upcoming session" do
+        %w[no_show cancelled].each do |key|
+          volunteer.update!(current_funnel_stage: :application_eligible)
+          registration.update!(status: :registered)
+
+          volunteer.add_note_with_outcome!(content: "Dropped off", user: admin,
+                                           note_category: category(key), information_session: session)
+
+          expect(volunteer.reload).to be_inquiry
+          expect(volunteer.status_changes.last).to have_attributes(
+            from_funnel_stage: "Application eligible", to_funnel_stage: "Inquiry", user_id: admin.id
+          )
+          expect(volunteer.status_changes.last).to be_event
+        end
+      end
+
+      it "doesn't count sessions that are past, inactive, or no longer registered" do
+        past = create(:information_session)
+        past.update_column(:scheduled_at, 1.week.ago)
+        SessionRegistration.create!(volunteer: volunteer, information_session: past, status: :registered)
+        SessionRegistration.create!(volunteer: volunteer, status: :registered,
+                                    information_session: create(:information_session, active: false))
+        SessionRegistration.create!(volunteer: volunteer, information_session: create(:information_session), status: :cancelled)
+
+        volunteer.add_note_with_outcome!(content: "Didn't come", user: admin,
+                                         note_category: category("no_show"), information_session: session)
+
+        expect(volunteer.reload).to be_inquiry
+      end
+    end
+
+    it "keeps the stage of a volunteer who attended, has an application, or is inactive" do
+      [
+        { current_funnel_stage: :application_eligible, first_session_attended_at: 1.month.ago },
+        { current_funnel_stage: :application_sent, application_sent_at: 1.day.ago },
+        { current_funnel_stage: :applied, application_submitted_at: 1.day.ago },
+        { current_funnel_stage: :inactive }
+      ].each do |attributes|
+        volunteer.update!(attributes)
+        registration.update!(status: :registered)
+
+        expect do
+          volunteer.add_note_with_outcome!(content: "Didn't come", user: admin,
+                                           note_category: category("no_show"), information_session: session)
+        end.not_to change { volunteer.status_changes.count }
+
+        expect(volunteer.reload.current_funnel_stage).to eq(attributes[:current_funnel_stage].to_s)
+      end
     end
 
     it "deactivates the volunteer for a Deactivated note" do
@@ -397,6 +530,20 @@ RSpec.describe Volunteer, type: :model do
     it "anchors the application_sent stage on application_sent_at" do
       volunteer = create(:volunteer, current_funnel_stage: :application_sent, application_sent_at: 90.days.ago)
       expect(volunteer.days_in_current_stage).to eq(90)
+    end
+
+    it "restarts the clock when a volunteer is reactivated" do
+      volunteer = create(:volunteer, current_funnel_stage: :inactive, inquiry_date: 200.days.ago)
+
+      volunteer.reactivate!
+
+      expect(volunteer.reload.days_in_current_stage).to eq(0)
+    end
+
+    it "falls back to the reactivation when the stage has no start timestamp" do
+      volunteer = create(:volunteer, current_funnel_stage: :application_eligible, first_session_attended_at: nil,
+                                     reactivated_at: 3.days.ago)
+      expect(volunteer.days_in_current_stage).to eq(3)
     end
 
     it "returns nil when the stage has no start timestamp yet" do

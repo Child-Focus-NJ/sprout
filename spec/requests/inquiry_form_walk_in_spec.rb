@@ -16,6 +16,25 @@ RSpec.describe "Inquiry form walk-in check-in", type: :request do
   end
 
   describe "POST /inquiry_form with session context" do
+    it "reactivates a deactivated volunteer who walks in" do
+      volunteer = create(:volunteer, email: "walkin-back@childfocusnj.org", current_funnel_stage: :inactive)
+
+      expect do
+        post inquiry_form_path, params: {
+          information_session_id: information_session.id,
+          first_name: "Pat",
+          last_name: "Walker",
+          email: volunteer.email,
+          phone: "5551234567"
+        }
+      end.not_to change(Volunteer, :count)
+
+      volunteer.reload
+      expect(volunteer.status_changes.first).to have_attributes(from_funnel_stage: "Inactive", to_funnel_stage: "Application eligible")
+      expect(volunteer.reactivation_count).to eq(1)
+      expect(SessionRegistration.find_by!(volunteer: volunteer, information_session: information_session)).to be_attended
+    end
+
     it "creates a volunteer, records attendance, and sends the application email" do
       expect do
         post inquiry_form_path, params: {

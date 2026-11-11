@@ -120,6 +120,15 @@ RSpec.describe VolunteerTimeline do
       expect(entry[:time]).to eq(Time.zone.parse("2024-05-01 09:00"))
     end
 
+    it "marks a reactivation with its own heading" do
+      volunteer.change_status!(:inactive, user: user)
+      volunteer.reactivate!(user: user)
+
+      entries = described_class.entries_for(volunteer.reload, filter: VolunteerTimeline::FILTER_STATUS_CHANGES)
+      headings = entries.to_h { |e| [ e[:text], e[:heading] ] }
+      expect(headings).to eq("Inactive → Inquiry" => "Reactivated", "Inquiry → Inactive" => nil)
+    end
+
     it "when filter is status_changes, returns only status changes" do
       volunteer.add_staff_note!(content: "Manual note", user: user, note_type: :general)
       volunteer.change_status!(:application_eligible, user: user)
