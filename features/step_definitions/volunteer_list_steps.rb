@@ -20,6 +20,7 @@ end
 When("I search volunteers for {string}") do |query|
   fill_in "Search by name, email or phone", with: query
   find_field("Search by name, email or phone").send_keys(:enter)
+  expect(page).to have_current_path(/[?&]q=#{Regexp.escape(URI.encode_www_form_component(query))}(&|\z)/)
 end
 
 When("I click the {string} status tab") do |label|
