@@ -48,7 +48,7 @@ gem "httparty"                              # HTTP client for API Gateway calls 
 
 # AWS SDK (SQS for async Lambda triggers, S3 for report storage)
 gem "aws-sdk-s3", "~> 1.235"
-gem "aws-sdk-sqs", "~> 1.122"
+gem "aws-sdk-sqs", "~> 1.126"
 
 gem "caxlsx"                                # Excel generation for data exports (admin full-data export, reporting)
 gem "prawn"                                 # PDF generation for report exports
