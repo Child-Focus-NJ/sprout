@@ -36,18 +36,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_120000) do
     t.bigint "communication_template_id"
     t.integer "communication_type", default: 0, null: false
     t.datetime "created_at", null: false
-    t.string "email_to"
-    t.text "error_message"
     t.string "external_id"
-    t.string "purpose"
     t.datetime "sent_at"
     t.bigint "sent_by_user_id"
-    t.string "sms_consent"
-    t.string "sms_to"
     t.integer "status", default: 0, null: false
     t.string "subject"
     t.datetime "updated_at", null: false
     t.bigint "volunteer_id", null: false
+    t.string "sms_to"
+    t.string "sms_consent"
+    t.text "error_message"
+    t.string "email_to"
+    t.string "purpose"
     t.index ["communication_template_id"], name: "index_communications_on_communication_template_id"
     t.index ["sent_at"], name: "index_communications_on_sent_at"
     t.index ["sent_by_user_id"], name: "index_communications_on_sent_by_user_id"
@@ -139,9 +139,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_120000) do
   end
 
   create_table "note_categories", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "key"
     t.string "name", null: false
+    t.string "key"
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_note_categories_on_key", unique: true
     t.index ["name"], name: "index_note_categories_on_name", unique: true
@@ -150,12 +150,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_120000) do
   create_table "notes", force: :cascade do |t|
     t.text "content", null: false
     t.datetime "created_at", null: false
-    t.datetime "edited_at"
-    t.bigint "note_category_id", null: false
     t.integer "note_type", default: 0, null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.bigint "volunteer_id", null: false
+    t.bigint "note_category_id", null: false
+    t.datetime "edited_at"
     t.index ["note_category_id"], name: "index_notes_on_note_category_id"
     t.index ["user_id"], name: "index_notes_on_user_id"
     t.index ["volunteer_id"], name: "index_notes_on_volunteer_id"
