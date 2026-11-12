@@ -4,7 +4,7 @@ source "https://rubygems.org"
 # Framework
 # ---------------------------------------------------------------------------
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.2", ">= 8.1.3.1"
+gem "rails", "~> 8.1.2", ">= 8.1.4.1"
 
 gem "pg", "~> 1.7"                          # PostgreSQL
 gem "puma", ">= 5.0"                        # Web server
@@ -47,8 +47,8 @@ gem "dotenv-rails"                          # Load .env files
 gem "httparty"                              # HTTP client for API Gateway calls and external APIs
 
 # AWS SDK (SQS for async Lambda triggers, S3 for report storage)
-gem "aws-sdk-s3", "~> 1.235"
-gem "aws-sdk-sqs", "~> 1.122"
+gem "aws-sdk-s3", "~> 1.239"
+gem "aws-sdk-sqs", "~> 1.126"
 
 gem "caxlsx"                                # Excel generation for data exports (admin full-data export, reporting)
 gem "prawn"                                 # PDF generation for report exports
@@ -80,7 +80,7 @@ end
 
 group :test do
   # RSpec
-  gem "rspec-rails", "~> 8.0"
+  gem "rspec-rails", "~> 8.1"
   gem "shoulda-matchers", "~> 6.0"
   gem "database_cleaner-active_record"
   gem "simplecov", require: false

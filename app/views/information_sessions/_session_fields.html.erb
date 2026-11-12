@@ -22,11 +22,6 @@
       } %>
 </div>
 
-<div class="form-row" id="session-zoom-link-row">
-  <%= f.label :zoom_link, "Zoom link" %>
-  <%= f.url_field :zoom_link, class: "input-large", placeholder: "https://..." %>
-</div>
-
 <div class="form-row">
   <%= f.label :capacity %>
   <%= f.number_field :capacity,
@@ -34,4 +29,9 @@
       min: 1,
       step: 1,
       class: "input-large" %>
+</div>
+
+<div class="form-row" id="session-zoom-link-row">
+  <%= f.label :zoom_link, "Zoom link" %>
+  <%= f.url_field :zoom_link, class: "input-large", placeholder: "https://..." %>
 </div>

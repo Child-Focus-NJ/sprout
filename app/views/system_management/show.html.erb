@@ -39,28 +39,32 @@
     <% end %>
   </div>
 
-  <div class="card">
-    <h2 class="section-heading">Import Historical Data</h2>
-    <p class="help-text">Upload a CSV or spreadsheet to import historical volunteer records.</p>
+  <%# Import Historical Data is hidden for now to avoid accidental imports. Set to true to bring it back. %>
+  <% show_import_historical_data = false %>
+  <% if show_import_historical_data %>
+    <div class="card">
+      <h2 class="section-heading">Import Historical Data</h2>
+      <p class="help-text">Upload a CSV or spreadsheet to import historical volunteer records.</p>
 
-    <%= form_with url: import_system_management_path, multipart: true do |f| %>
-      <div class="inline-form items-center">
-        <%= f.file_field :file, id: "import_file",
-              class: "sr-only",
-              accept: ".csv,.xlsx,.xls",
-              onchange: "
-                document.getElementById('import-filename').textContent = this.files[0]?.name ?? '';
-                document.getElementById('import-submit').classList.toggle('hidden', !this.files.length);
-              " %>
-        <label for="import_file" class="button-link cursor-pointer">
-          Choose File
-        </label>
-        <span id="import-filename" class="text-sm text-gray-600 truncate max-w-xs"></span>
-        <%= f.submit "Import Data", id: "import-submit",
-              class: "button-primary hidden" %>
-      </div>
-    <% end %>
-  </div>
+      <%= form_with url: import_system_management_path, multipart: true do |f| %>
+        <div class="inline-form items-center">
+          <%= f.file_field :file, id: "import_file",
+                class: "sr-only",
+                accept: ".csv,.xlsx,.xls",
+                onchange: "
+                  document.getElementById('import-filename').textContent = this.files[0]?.name ?? '';
+                  document.getElementById('import-submit').classList.toggle('hidden', !this.files.length);
+                " %>
+          <label for="import_file" class="button-link cursor-pointer">
+            Choose File
+          </label>
+          <span id="import-filename" class="text-sm text-gray-600 truncate max-w-xs"></span>
+          <%= f.submit "Import Data", id: "import-submit",
+                class: "button-primary hidden" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 
   <div class="card" id="export-data-section">
     <h2 class="section-heading">Export Data</h2>
