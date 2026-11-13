@@ -15,8 +15,8 @@ This short guide assumes you have no prior application/database deployed and tha
 > </p>
 
 >[!NOTE]
-> As part of the deployment process, the database migrations should execute via the [Procfile](`Procfile`). 
+> As part of the deployment process, the database migrations should execute via the [Procfile](../../Procfile). 
 
-   4. `heroku run "rake db:seed"` - seeds the database
-   5. `heroku config:set RAILS_MASTER_KEY="$(cat config/master.key)"` - passes the value of the encryption master key to the application, so that keys used for external services (Mailchimp,
+4. `heroku run "rake db:seed"` - seeds the database
+5. `heroku config:set RAILS_MASTER_KEY="$(cat config/master.key)"` - passes the value of the encryption master key to the application, so that keys used for external services (Mailchimp,
 Mandrill, Google OAuth) work correctly. This will restart the application to apply the variables.
