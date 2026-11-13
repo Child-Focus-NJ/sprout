@@ -44,29 +44,18 @@ class Volunteer < ApplicationRecord
     end
   }
 
-  before_create :default_inquiry_date
+  before_create :default_inquiry_date, :default_stage_started_at
+  before_update :restart_stage_clock, if: :will_save_change_to_current_funnel_stage?
   after_save :cancel_pending_reminders_if_applied
 
   def attended_session?
     first_session_attended_at.present?
   end
 
-  def stage_started_at
-    started_at = case current_funnel_stage.to_sym
-    when :inquiry then inquiry_date
-    when :application_eligible then first_session_attended_at
-    when :application_sent then application_sent_at
-    else return
-    end
-
-    [ started_at, reactivated_at ].compact.max
-  end
-
   def days_in_current_stage
-    started_at = stage_started_at
-    return nil if started_at.blank?
+    return nil if stage_started_at.blank?
 
-    ((Time.current - started_at) / 1.day).floor
+    ((Time.current - stage_started_at) / 1.day).floor
   end
 
   def status
@@ -234,6 +223,24 @@ class Volunteer < ApplicationRecord
 
   def default_inquiry_date
     self.inquiry_date ||= created_at || Time.current
+  end
+
+  def default_stage_started_at
+    self.stage_started_at ||= [ stage_date_on_record, reactivated_at ].compact.max || Time.current
+  end
+
+  def stage_date_on_record
+    case current_funnel_stage.to_sym
+    when :inquiry then inquiry_date
+    when :application_eligible then first_session_attended_at
+    when :application_sent then application_sent_at
+    when :applied then application_submitted_at
+    when :inactive then became_inactive_at
+    end
+  end
+
+  def restart_stage_clock
+    self.stage_started_at = Time.current unless will_save_change_to_stage_started_at?
   end
 
   def cancel_pending_reminders_if_applied

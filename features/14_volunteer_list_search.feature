@@ -1,6 +1,6 @@
-Feature: Search the volunteers list and filter it by status, vicinage and inquiry source
+Feature: Search the volunteers list and filter it by status, vicinage, inquiry source and status date
   As a staff member
-  I want to search volunteers by name, switch between status tabs and filter by vicinage or inquiry source
+  I want to search volunteers by name, switch between status tabs and filter by vicinage, inquiry source or when they reached their status
   So that I can find one volunteer or a group without scrolling the whole list
 
   Background:
@@ -57,6 +57,16 @@ Feature: Search the volunteers list and filter it by status, vicinage and inquir
     And the "All" status tab should be selected with 2 volunteers
     And the filter button should show 1 active filters
     And I should see "Inquiry source: Tabling Event"
+
+  Scenario: Filter by when volunteers moved into their current status
+    Given I am on the volunteers list page
+    When I open the volunteer filters
+    And I set the status date from "2026-08-01" to "2026-09-15"
+    And I apply the volunteer filters
+    Then I should see only these volunteers in the list: "Harry Kane"
+    And the "All" status tab should be selected with 1 volunteers
+    And the filter button should show 1 active filters
+    And I should see "Status date: Aug 1, 2026 – Sep 15, 2026"
 
   Scenario: Back from a profile returns to the same tab, search and vicinage
     Given I am on the volunteers list page

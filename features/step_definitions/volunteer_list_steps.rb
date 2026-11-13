@@ -39,6 +39,13 @@ When("I choose the inquiry source {string}") do |source|
   within(".volunteer-filter-menu__panel") { choose source }
 end
 
+When("I set the status date from {string} to {string}") do |from, to|
+  within(".volunteer-filter-menu__panel") do
+    fill_in "status_from", with: Date.iso8601(from)
+    fill_in "status_to", with: Date.iso8601(to)
+  end
+end
+
 When("I apply the volunteer filters") do
   within(".volunteer-filter-menu__panel") { click_button "Apply" }
 end

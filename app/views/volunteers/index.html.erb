@@ -1,5 +1,6 @@
 <main class="volunteer-page">
-<% active_filter_count = @filters.slice(:vicinage_id, :referral_source_id).size %>
+<% date_filtered = @filters.key?(:status_from) || @filters.key?(:status_to) %>
+<% active_filter_count = @filters.slice(:vicinage_id, :referral_source_id).size + (date_filtered ? 1 : 0) %>
 <% filtered_vicinage = @vicinages.detect { |vicinage| vicinage.id == @filters[:vicinage_id] } %>
 <% filtered_source = @inquiry_sources.detect { |source| source.id == @filters[:referral_source_id] } %>
 
@@ -17,6 +18,12 @@
       <span class="volunteer-filter-chip volunteer-filter-chip--source">
         Inquiry source: <%= filtered_source.name %>
         <%= link_to "×", volunteers_path(@filters.except(:referral_source_id)), aria: { label: "Remove inquiry source filter" } %>
+      </span>
+    <% end %>
+    <% if date_filtered %>
+      <span class="volunteer-filter-chip volunteer-filter-chip--date">
+        Status date: <%= status_date_range_label(@filters[:status_from], @filters[:status_to]) %>
+        <%= link_to "×", volunteers_path(@filters.except(:status_from, :status_to)), aria: { label: "Remove status date filter" } %>
       </span>
     <% end %>
   </div>
@@ -82,8 +89,21 @@
           </div>
         </fieldset>
 
+        <fieldset>
+          <legend>Status date</legend>
+          <p class="volunteer-filter-hint">When they moved into their current status</p>
+          <div class="volunteer-filter-options">
+            <label class="volunteer-filter-date">
+              From <%= date_field_tag :status_from, @filters[:status_from] %>
+            </label>
+            <label class="volunteer-filter-date">
+              To <%= date_field_tag :status_to, @filters[:status_to] %>
+            </label>
+          </div>
+        </fieldset>
+
         <div class="volunteer-filter-menu__actions">
-          <%= link_to "Clear", volunteers_path(@filters.except(:vicinage_id, :referral_source_id)), class: "button-link" %>
+          <%= link_to "Clear", volunteers_path(@filters.except(:vicinage_id, :referral_source_id, :status_from, :status_to)), class: "button-link" %>
           <button type="submit" class="button-primary">Apply</button>
         </div>
       </div>

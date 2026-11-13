@@ -607,6 +607,18 @@
     @apply flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm text-gray-800 hover:bg-gray-100;
   }
 
+  .volunteer-filter-hint {
+    @apply -mt-1 mb-2 text-xs text-gray-500;
+  }
+
+  .volunteer-filter-date {
+    @apply flex items-center justify-between gap-2 px-1.5 py-1 text-sm text-gray-800;
+  }
+
+  .volunteer-filter-date input {
+    @apply rounded border border-gray-300 px-2 py-1 text-sm;
+  }
+
   .volunteer-filter-menu__actions {
     @apply flex justify-end gap-2 border-t border-gray-200 pt-3;
   }
@@ -620,7 +632,8 @@
   }
 
   .volunteer-filter-chip--vicinage,
-  .volunteer-filter-chip--source {
+  .volunteer-filter-chip--source,
+  .volunteer-filter-chip--date {
     @apply border-gray-300 bg-white text-gray-800;
   }
 

@@ -30,6 +30,13 @@ module VolunteersHelper
     end
   end
 
+  def status_date_range_label(from, to)
+    from_text, to_text = [ from, to ].map { |date| date&.strftime("%b %-d, %Y") }
+    return "#{from_text} – #{to_text}" if from && to
+
+    from ? "from #{from_text}" : "until #{to_text}"
+  end
+
   # Heading for a profile timeline entry (e.g. :sms -> "SMS", :status_change -> "Status change").
   def timeline_entry_label(kind)
     kind == :sms ? "SMS" : kind.to_s.humanize
