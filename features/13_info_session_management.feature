@@ -111,8 +111,9 @@ Feature: Manage Information Sessions
 
         Scenario: Filtering information sessions by Upcoming/Past
             Given I am on the information session management page
-            And I have changed the "Time range" dropdown to "Past only"
-            And I have clicked the "Filter" button
+            Then an information session with date Mar 06, 2027 and time 06:00 PM should be on the list of information sessions
+            And an information session with date Dec 08, 2025 and time 10:00 AM should not be on the list of information sessions
+            When I click the "Past Info Sessions" navigation button
             Then an information session with date Mar 06, 2027 and time 06:00 PM should not be on the list of information sessions
             And an information session with date Apr 16, 2027 and time 06:00 PM should not be on the list of information sessions
             And an information session with date Dec 08, 2025 and time 10:00 AM should be on the list of information sessions
