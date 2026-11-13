@@ -414,6 +414,11 @@
     @apply text-gray-600 [--badge-bg:var(--color-gray-100)] [--badge-border:var(--color-gray-300)];
   }
 
+  /* Volunteers list: flag for volunteers who keep no-showing, cancelling or rescheduling info sessions */
+  .missed-sessions-flag {
+    @apply inline-flex items-center rounded-md border border-rose-300 bg-rose-50 px-2.5 py-0.5 text-sm font-semibold text-rose-800;
+  }
+
   .status-update-form {
     @apply flex flex-col items-start gap-3;
   }
@@ -633,7 +638,8 @@
 
   .volunteer-filter-chip--vicinage,
   .volunteer-filter-chip--source,
-  .volunteer-filter-chip--date {
+  .volunteer-filter-chip--date,
+  .volunteer-filter-chip--no-shows {
     @apply border-gray-300 bg-white text-gray-800;
   }
 

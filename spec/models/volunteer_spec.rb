@@ -509,6 +509,23 @@ RSpec.describe Volunteer, type: :model do
     end
   end
 
+  describe ".repeat_no_shows" do
+    it "finds volunteers who no-showed, cancelled or rescheduled at least twice" do
+      first_session, second_session = create_list(:information_session, 2)
+      repeat = create(:volunteer)
+      missed_once = create(:volunteer)
+      attended = create(:volunteer)
+      create(:session_registration, volunteer: repeat, information_session: first_session, status: :no_show)
+      create(:session_registration, volunteer: repeat, information_session: second_session, status: :rescheduled)
+      create(:session_registration, volunteer: missed_once, information_session: first_session, status: :cancelled)
+      create(:session_registration, volunteer: missed_once, information_session: second_session, status: :registered)
+      create(:session_registration, volunteer: attended, information_session: first_session, status: :attended)
+      create(:session_registration, volunteer: attended, information_session: second_session, status: :attended)
+
+      expect(Volunteer.repeat_no_shows).to contain_exactly(repeat)
+    end
+  end
+
   describe "#stage_started_at and #days_in_current_stage" do
     it "anchors the inquiry stage on inquiry_date" do
       volunteer = create(:volunteer, current_funnel_stage: :inquiry, inquiry_date: 45.days.ago)

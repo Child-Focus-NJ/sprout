@@ -266,6 +266,69 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
     end
   end
 
+  describe "repeat no-shows" do
+    let(:sessions) { create_list(:information_session, 3) }
+
+    def miss_sessions(volunteer, *statuses)
+      statuses.each_with_index do |status, index|
+        create(:session_registration, volunteer: volunteer, information_session: sessions[index], status: status)
+      end
+    end
+
+    def flag_for(name)
+      row = response.parsed_body.css("#volunteer-list .volunteer-row").find { |node| node.at_css(".volunteer-name").text.strip == name }
+      row.at_css(".missed-sessions-flag")&.text&.squish
+    end
+
+    before do
+      miss_sessions(hana, :no_show, :rescheduled)
+      miss_sessions(harry, :no_show, :no_show, :cancelled)
+      miss_sessions(sofia, :cancelled, :attended)
+    end
+
+    it "flags volunteers who missed two or more sessions with what happened" do
+      get volunteers_path, params: { status: "application_eligible" }
+      expect(flag_for("Hana Kimura")).to eq("1 no-show · 1 reschedule")
+
+      get volunteers_path, params: { status: "inquiry" }
+      expect(flag_for("Harry Kane")).to eq("2 no-shows · 1 cancellation")
+      expect(flag_for("Sofia Reyes")).to be_nil
+    end
+
+    it "shows only repeat no-shows when filtered, and the tab counts follow" do
+      get volunteers_path, params: { repeat_no_shows: "1" }
+
+      expect(listed_names).to eq([ "Hana Kimura", "Harry Kane" ])
+      expect(tabs.first(3)).to eq([ "All 2", "Inquiry 1", "Application eligible 1" ])
+      expect(response.parsed_body.at_css(".volunteer-filter-chip--no-shows").text.squish).to include("Repeat no-shows")
+    end
+
+    it "counts as one filter, and its chip removes only itself" do
+      get volunteers_path, params: { status: "inquiry", vicinage_id: union.id, repeat_no_shows: "1" }
+      page = response.parsed_body
+
+      expect(page.at_css(".volunteer-filter-menu__badge").text.strip).to eq("2")
+      expect(page.at_css('a[aria-label="Remove repeat no-shows filter"]')["href"]).to eq(volunteers_path(status: "inquiry", vicinage_id: union.id))
+      expect(page.at_css("form.volunteer-search input#repeat_no_shows")["checked"]).to eq("checked")
+    end
+
+    it "keeps the filter when switching tabs and coming back from a profile" do
+      get volunteers_path, params: { status: "inquiry", repeat_no_shows: "1" }
+      applied_tab = response.parsed_body.css("#volunteer-status-tabs a").find { |link| link.text.squish.start_with?("Applied ") }
+      expect(applied_tab["href"]).to eq(volunteers_path(repeat_no_shows: "1", status: "applied"))
+
+      get volunteer_path(harry)
+      expect(response.parsed_body.at_css("a.nav-back")["href"]).to eq(volunteers_path(status: "inquiry", repeat_no_shows: "1"))
+    end
+
+    it "ignores any other value instead of filtering" do
+      get volunteers_path, params: { repeat_no_shows: "yes" }
+
+      expect(listed_names.size).to eq(3)
+      expect(response.parsed_body.at_css("#volunteer-active-filters")).to be_nil
+    end
+  end
+
   describe "Back to volunteers link on a profile" do
     def back_link_href
       response.parsed_body.at_css("a.nav-back")["href"]

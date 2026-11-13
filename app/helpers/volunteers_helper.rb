@@ -30,6 +30,18 @@ module VolunteersHelper
     end
   end
 
+  MISSED_SESSION_LABELS = { "no_show" => "no-show", "cancelled" => "cancellation", "rescheduled" => "reschedule" }.freeze
+
+  # Flag for a volunteer who keeps missing info sessions, e.g. "2 no-shows · 1 reschedule".
+  # counts maps [volunteer_id, status] to how many registrations ended that way.
+  def missed_sessions_flag(counts, volunteer)
+    by_status = SessionRegistration::MISSED_STATUSES.index_with { |status| counts.fetch([ volunteer.id, status ], 0) }
+    return if by_status.values.sum < Volunteer::REPEAT_MISS_THRESHOLD
+
+    text = by_status.filter_map { |status, count| pluralize(count, MISSED_SESSION_LABELS.fetch(status)) if count.positive? }
+    tag.span(text.join(" · "), class: "missed-sessions-flag", title: "Repeatedly missed info sessions")
+  end
+
   def status_date_range_label(from, to)
     from_text, to_text = [ from, to ].map { |date| date&.strftime("%b %-d, %Y") }
     return "#{from_text} – #{to_text}" if from && to
