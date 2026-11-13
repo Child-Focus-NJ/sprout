@@ -35,6 +35,14 @@ module VolunteersHelper
     kind == :sms ? "SMS" : kind.to_s.humanize
   end
 
+  # Message bodies longer than this render as a one-line preview with a
+  # "Show more" control instead of the full text (Send Email, Send SMS, timeline).
+  MESSAGE_PREVIEW_LENGTH = 80
+
+  def collapsible_message?(text, error_message = nil)
+    "#{text} #{error_message}".strip.length > MESSAGE_PREVIEW_LENGTH
+  end
+
   MESSAGE_DIALOG_LABELS = { note: "Add Note", sms: "Send SMS" }.freeze
 
   def sms_template_options

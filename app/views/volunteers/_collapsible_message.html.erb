@@ -1,0 +1,17 @@
+<%# One-line preview of a long message body (and its delivery error) with a
+    "Show more" control that expands the full text. Used by the Send Email and
+    Send SMS histories and by the profile timeline so message history stays
+    scannable.
+
+    Locals:
+      text          - the full message body (rendered escaped)
+      error_message - optional delivery error (ignored when blank)
+      id            - optional element id, wired up as the toggle's aria-controls %>
+<% id = local_assigns[:id] %>
+<% error_message = local_assigns[:error_message] %>
+<div class="collapsible-message" data-collapsible-message>
+  <div class="content collapsible-message__preview whitespace-pre-wrap" <%= tag.attributes(id: id) if id.present? %>><%= text %><% if error_message.present? %> <span class="collapsible-message__error"><%= error_message %></span><% end %></div>
+  <% if collapsible_message?(text, error_message) %>
+    <button type="button" class="collapsible-message__toggle" data-collapsible-toggle aria-expanded="false" <%= tag.attributes(aria: { controls: id }) if id.present? %>>Show more</button>
+  <% end %>
+</div>

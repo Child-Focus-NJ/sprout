@@ -31,10 +31,7 @@
           <span class="delivery-status"><%= comm.status %></span>
           <% time = comm.sent_at || comm.created_at %>
           <time datetime="<%= time.iso8601 %>"><%= time.strftime("%Y-%m-%d %H:%M") %></time>
-          <div class="content whitespace-pre-wrap"><%= comm.body %></div>
-          <% if comm.error_message.present? %>
-            <p><%= comm.error_message %></p>
-          <% end %>
+          <%= render "collapsible_message", text: comm.body, error_message: comm.error_message, id: "comm-body-#{comm.id}" %>
         </div>
       <% end %>
     </section>

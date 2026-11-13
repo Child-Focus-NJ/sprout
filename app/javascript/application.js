@@ -17,3 +17,22 @@ document.addEventListener("input", (event) => {
 });
 
 document.querySelectorAll("textarea[data-autogrow]").forEach(autogrow);
+
+// Long message bodies (Send Email / Send SMS history and the profile timeline)
+// render as a one-line preview with a "Show more" control (_collapsible_message).
+function initCollapsibleMessages() {
+  document.querySelectorAll("[data-collapsible-message]").forEach((wrapper) => {
+    const toggle = wrapper.querySelector("[data-collapsible-toggle]");
+    if (!toggle || toggle.dataset.collapsibleBound === "true") return;
+    toggle.dataset.collapsibleBound = "true";
+
+    toggle.addEventListener("click", () => {
+      const expanded = wrapper.classList.toggle("is-expanded");
+      toggle.setAttribute("aria-expanded", String(expanded));
+      toggle.textContent = expanded ? "Show less" : "Show more";
+    });
+  });
+}
+
+initCollapsibleMessages();
+document.addEventListener("turbo:load", initCollapsibleMessages);

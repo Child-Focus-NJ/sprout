@@ -58,6 +58,7 @@ class VolunteerTimeline
     @volunteer.communications.includes(:sent_by_user).each do |comm|
       entries << {
         kind: comm.communication_type.to_sym,
+        id: comm.id,
         time: comm.sent_at || comm.created_at,
         text: comm.body.to_s,
         status: comm.status,

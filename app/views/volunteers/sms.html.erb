@@ -20,10 +20,7 @@
         <time datetime="<%= comm.sent_at&.iso8601 || comm.created_at.iso8601 %>">
           <%= (comm.sent_at || comm.created_at).strftime("%Y-%m-%d %H:%M") %>
         </time>
-        <div class="content"><%= comm.body.to_s %></div>
-        <% if comm.error_message.present? %>
-          <p><%= comm.error_message %></p>
-        <% end %>
+        <%= render "collapsible_message", text: comm.body.to_s, error_message: comm.error_message, id: "comm-body-#{comm.id}" %>
       </div>
     <% end %>
   <% else %>

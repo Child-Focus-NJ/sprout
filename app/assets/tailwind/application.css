@@ -301,6 +301,31 @@
     @apply border-t border-gray-200 py-2;
   }
 
+  /* Long message bodies/errors collapse to a one-line preview behind a
+     "Show more" control (Send Email, Send SMS, and the profile timeline). */
+  .collapsible-message__preview {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    overflow: hidden;
+  }
+
+  .collapsible-message.is-expanded .collapsible-message__preview {
+    display: block;
+    -webkit-line-clamp: none;
+    line-clamp: none;
+    overflow: visible;
+  }
+
+  .collapsible-message__error {
+    @apply font-medium text-red-700;
+  }
+
+  .collapsible-message__toggle {
+    @apply mt-1 h-auto min-h-0 border-0 bg-transparent p-0 text-sm font-normal text-sky-700 underline cursor-pointer;
+  }
+
   .volunteer-row {
     @apply flex items-start gap-2.5;
   }

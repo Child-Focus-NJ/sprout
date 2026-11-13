@@ -153,15 +153,19 @@
           <% if entry[:subject].present? %>
             <div><strong><%= entry[:subject] %></strong></div>
           <% end %>
-          <div class="content"><%= entry[:text] %></div>
+          <% if entry[:kind] == :email || entry[:kind] == :sms %>
+            <%= render "collapsible_message", text: entry[:text], error_message: entry[:error_message], id: ("comm-body-#{entry[:id]}" if entry[:id]) %>
+          <% else %>
+            <div class="content"><%= entry[:text] %></div>
+            <% if entry[:error_message].present? %>
+              <p><%= entry[:error_message] %></p>
+            <% end %>
+          <% end %>
           <% if entry[:sms_to].present? %>
             <div>To <%= entry[:sms_to] %></div>
           <% end %>
           <% if entry[:external_id].present? %>
             <div>Mailchimp ID: <%= entry[:external_id] %></div>
-          <% end %>
-          <% if entry[:error_message].present? %>
-            <p><%= entry[:error_message] %></p>
           <% end %>
         <% end %>
         <% if entry[:byline].present? %>
