@@ -13,10 +13,14 @@ class VolunteersController < ApplicationController
     matching = matching.where(referral_source_id: @filters[:referral_source_id]) if @filters[:referral_source_id]
     matching = matching.where(stage_started_at: @filters[:status_from].beginning_of_day..) if @filters[:status_from]
     matching = matching.where(stage_started_at: ..@filters[:status_to].end_of_day) if @filters[:status_to]
+    matching = matching.repeat_no_shows if @filters[:repeat_no_shows]
     # Tab counts follow the search, so each tab shows how many matches are at that status
     @status_counts = matching.reorder(nil).group(:current_funnel_stage).count
     @volunteers = @filters[:status] ? matching.where(current_funnel_stage: @filters[:status]) : matching
     @volunteers = @volunteers.reorder(inquiry_date: :desc, first_name: :asc, last_name: :asc) if @filters[:status] == "inquiry"
+    # Missed sessions per listed volunteer and outcome, e.g. { [id, "no_show"] => 2 }, for the row flags
+    @missed_session_counts = SessionRegistration.missed.where(volunteer_id: @volunteers.reorder(nil).select(:id))
+                                                .group(:volunteer_id, :status).count
   end
 
   def show
@@ -305,7 +309,8 @@ class VolunteersController < ApplicationController
       vicinage_id: vicinage_id,
       referral_source_id: referral_source_id,
       status_from: filter_date(params[:status_from]),
-      status_to: filter_date(params[:status_to])
+      status_to: filter_date(params[:status_to]),
+      repeat_no_shows: ("1" if params[:repeat_no_shows] == "1")
     }.compact
   end
 

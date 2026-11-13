@@ -13,6 +13,17 @@ Given("the volunteers list contains:") do |table|
   end
 end
 
+# One past session per outcome, e.g. "no_show, rescheduled"
+Given("these volunteers missed info sessions:") do |table|
+  table.hashes.each do |row|
+    first_name, last_name = row["name"].split(" ", 2)
+    volunteer = Volunteer.find_by!(first_name: first_name, last_name: last_name)
+    row["outcomes"].split(",").map(&:strip).each do |outcome|
+      SessionRegistration.create!(volunteer: volunteer, information_session: FactoryBot.create(:information_session), status: outcome)
+    end
+  end
+end
+
 Given("I am on the volunteers list page filtered to status {string}") do |label|
   visit volunteers_path(status: VolunteersHelper::STATUS_BADGE_LABELS.key(label))
 end
@@ -44,6 +55,10 @@ When("I set the status date from {string} to {string}") do |from, to|
     fill_in "status_from", with: Date.iso8601(from)
     fill_in "status_to", with: Date.iso8601(to)
   end
+end
+
+When("I show only repeat no-shows") do
+  within(".volunteer-filter-menu__panel") { check "Repeat no-shows only" }
 end
 
 When("I apply the volunteer filters") do
@@ -92,4 +107,12 @@ end
 
 Then("the volunteer filter popup should be closed") do
   expect(page).to have_no_css(".volunteer-filter-menu__panel", visible: :visible)
+end
+
+Then("{string} should be flagged with {string}") do |name, flag|
+  within(".volunteer-row", text: name) { expect(page).to have_css(".missed-sessions-flag", exact_text: flag) }
+end
+
+Then("{string} should not be flagged") do |name|
+  within(".volunteer-row", text: name) { expect(page).to have_no_css(".missed-sessions-flag") }
 end

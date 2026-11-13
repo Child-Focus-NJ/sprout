@@ -44,6 +44,16 @@ class Volunteer < ApplicationRecord
     end
   }
 
+  # Volunteers who no-showed, cancelled or rescheduled this many times are flagged on the list
+  REPEAT_MISS_THRESHOLD = 2
+
+  # Counted from session registrations, which session outcome notes keep up to date
+  scope :repeat_no_shows, lambda {
+    where(id: SessionRegistration.missed.group(:volunteer_id)
+                                 .having("COUNT(*) >= ?", REPEAT_MISS_THRESHOLD)
+                                 .select(:volunteer_id))
+  }
+
   before_create :default_inquiry_date, :default_stage_started_at
   before_update :restart_stage_clock, if: :will_save_change_to_current_funnel_stage?
   after_save :cancel_pending_reminders_if_applied

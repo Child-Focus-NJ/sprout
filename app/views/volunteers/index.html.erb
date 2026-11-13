@@ -1,6 +1,6 @@
 <main class="volunteer-page">
 <% date_filtered = @filters.key?(:status_from) || @filters.key?(:status_to) %>
-<% active_filter_count = @filters.slice(:vicinage_id, :referral_source_id).size + (date_filtered ? 1 : 0) %>
+<% active_filter_count = @filters.slice(:vicinage_id, :referral_source_id, :repeat_no_shows).size + (date_filtered ? 1 : 0) %>
 <% filtered_vicinage = @vicinages.detect { |vicinage| vicinage.id == @filters[:vicinage_id] } %>
 <% filtered_source = @inquiry_sources.detect { |source| source.id == @filters[:referral_source_id] } %>
 
@@ -24,6 +24,12 @@
       <span class="volunteer-filter-chip volunteer-filter-chip--date">
         Status date: <%= status_date_range_label(@filters[:status_from], @filters[:status_to]) %>
         <%= link_to "×", volunteers_path(@filters.except(:status_from, :status_to)), aria: { label: "Remove status date filter" } %>
+      </span>
+    <% end %>
+    <% if @filters[:repeat_no_shows] %>
+      <span class="volunteer-filter-chip volunteer-filter-chip--no-shows">
+        Repeat no-shows
+        <%= link_to "×", volunteers_path(@filters.except(:repeat_no_shows)), aria: { label: "Remove repeat no-shows filter" } %>
       </span>
     <% end %>
   </div>
@@ -102,8 +108,16 @@
           </div>
         </fieldset>
 
+        <fieldset>
+          <legend>Info sessions</legend>
+          <p class="volunteer-filter-hint">No-showed, cancelled or rescheduled <%= Volunteer::REPEAT_MISS_THRESHOLD %>+ times</p>
+          <label class="volunteer-filter-option">
+            <%= check_box_tag :repeat_no_shows, "1", @filters.key?(:repeat_no_shows) %> Repeat no-shows only
+          </label>
+        </fieldset>
+
         <div class="volunteer-filter-menu__actions">
-          <%= link_to "Clear", volunteers_path(@filters.except(:vicinage_id, :referral_source_id, :status_from, :status_to)), class: "button-link" %>
+          <%= link_to "Clear", volunteers_path(@filters.except(:vicinage_id, :referral_source_id, :status_from, :status_to, :repeat_no_shows)), class: "button-link" %>
           <button type="submit" class="button-primary">Apply</button>
         </div>
       </div>
@@ -144,6 +158,7 @@
               <span>Vicinage: <%= volunteer.vicinage.name %></span>
             <% end %>
             <%= volunteer_status_badge(volunteer) %>
+            <%= missed_sessions_flag(@missed_session_counts, volunteer) %>
           </div>
         </div>
         <div class="volunteer-actions">

@@ -1,4 +1,4 @@
-Feature: Search the volunteers list and filter it by status, vicinage, inquiry source and status date
+Feature: Search the volunteers list and filter it by status, vicinage, inquiry source, status date and repeat no-shows
   As a staff member
   I want to search volunteers by name, switch between status tabs and filter by vicinage, inquiry source or when they reached their status
   So that I can find one volunteer or a group without scrolling the whole list
@@ -67,6 +67,24 @@ Feature: Search the volunteers list and filter it by status, vicinage, inquiry s
     And the "All" status tab should be selected with 1 volunteers
     And the filter button should show 1 active filters
     And I should see "Status date: Aug 1, 2026 – Sep 15, 2026"
+
+  Scenario: Flag and filter volunteers who keep missing info sessions
+    Given these volunteers missed info sessions:
+      | name        | outcomes             |
+      | Hana Kimura | no_show, rescheduled |
+      | Harry Kane  | cancelled            |
+    And I am on the volunteers list page
+    When I click the "Application eligible" status tab
+    Then "Hana Kimura" should be flagged with "1 no-show · 1 reschedule"
+    When I click the "Inquiry" status tab
+    Then "Harry Kane" should not be flagged
+    When I click the "All" status tab
+    And I open the volunteer filters
+    And I show only repeat no-shows
+    And I apply the volunteer filters
+    Then I should see only these volunteers in the list: "Hana Kimura"
+    And the filter button should show 1 active filters
+    And I should see "Repeat no-shows"
 
   Scenario: Back from a profile returns to the same tab, search and vicinage
     Given I am on the volunteers list page
