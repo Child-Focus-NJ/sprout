@@ -148,9 +148,12 @@ jobs:
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/sprout_test
+          SIMPLECOV: "true"
         run: bundle exec cucumber
 
-      - name: Upload coverage reports to Codecov
+      - name: Upload Cucumber coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: cucumber
+          fail_ci_if_error: true
