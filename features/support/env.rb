@@ -1,3 +1,23 @@
+if ENV['SIMPLECOV'] == 'true'
+  require 'simplecov'
+  SimpleCov.command_name 'Cucumber'
+  SimpleCov.start 'rails' do
+    # Match any custom filters/formatters you already have in spec/spec_helper.rb
+    add_filter "/spec/"
+    add_filter "/config/"
+    add_filter "/db/"
+    add_filter "/vendor/"
+    add_filter "/tmp/"
+    add_group "Controllers", "app/controllers"
+    add_group "Models", "app/models"
+    add_group "Mailers", "app/mailers"
+    add_group "Helpers", "app/helpers"
+    add_group "Jobs", "app/jobs"
+    add_group "Services", "app/services"
+  end
+end
+
+# Existing Cucumber/Rails requires go below this line
 require 'cucumber/rails'
 require 'capybara/rails'
 require 'rspec/expectations'
