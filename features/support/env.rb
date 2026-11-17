@@ -2,6 +2,8 @@ if ENV['SIMPLECOV'] == 'true'
   require 'simplecov'
   SimpleCov.command_name 'Cucumber'
   SimpleCov.start 'rails' do
+    root File.expand_path('../..', __dir__)
+
     # Match any custom filters/formatters you already have in spec/spec_helper.rb
     add_filter "/spec/"
     add_filter "/config/"
