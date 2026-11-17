@@ -316,8 +316,9 @@ class VolunteersController < ApplicationController
                  "Each email is on their timeline."
     end
     if result.not_queued.positive?
-      summary << "#{helpers.pluralize(result.not_queued, 'email')} couldn't be queued and " \
-                 "#{result.not_queued == 1 ? 'is' : 'are'} marked failed. Send again to those volunteers."
+      failed = helpers.pluralize(result.not_queued, "email")
+      verb = result.not_queued == 1 ? "is" : "are"
+      summary << "#{failed} couldn't be queued and #{verb} marked failed. Send again to those volunteers."
     end
     summary.join(" ")
   end
