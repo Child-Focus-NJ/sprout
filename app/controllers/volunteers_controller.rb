@@ -199,6 +199,22 @@ class VolunteersController < ApplicationController
     redirect_to list_path, (sent.zero? && queued.zero? ? :alert : :notice) => summary.join(" ")
   end
 
+  # Emails an active email template to each selected volunteer, filled in with their details. Each
+  # one goes on the volunteer's timeline and is sent in the background.
+  def bulk_send_email
+    list_path = bulk_return_path
+    return redirect_to(list_path, alert: Email::DISABLED_MESSAGE) unless Email.sending_enabled?
+
+    volunteers = selected_volunteers
+    return redirect_to(list_path, alert: "Select at least one volunteer") if volunteers.empty?
+
+    template = CommunicationTemplate.active.email.find_by(id: params[:template_id].presence)
+    return redirect_to(list_path, alert: "Choose an active email template") unless template
+
+    result = Email::TemplateDelivery.deliver_all_later(volunteers, template: template, sent_by_user: current_user)
+    redirect_to list_path, (result.queued.zero? ? :alert : :notice) => bulk_email_summary(template, result)
+  end
+
   # Emails the application to selected volunteers who are still at inquiry or eligible and haven't
   # had one yet. Anyone else is skipped. A volunteer is marked sent only after Mailchimp accepts.
   def bulk_send_application
@@ -288,6 +304,22 @@ class VolunteersController < ApplicationController
     names = scope.order(:first_name, :last_name).limit(shown).pluck(:first_name, :last_name).map { |name| name.join(" ") }
     rest = total - names.size
     (rest.positive? ? names + [ "#{helpers.number_with_delimiter(rest)} more" ] : names).to_sentence
+  end
+
+  def bulk_email_summary(template, result)
+    summary = []
+    if result.queued.zero?
+      summary << "No emails sent."
+    else
+      # Names aren't length-limited and the flash lives in the session cookie, so truncate
+      summary << "Sending \"#{template.name.truncate(80)}\" to #{helpers.pluralize(result.queued, 'volunteer')}. " \
+                 "Each email is on their timeline."
+    end
+    if result.not_queued.positive?
+      summary << "#{helpers.pluralize(result.not_queued, 'email')} couldn't be queued and " \
+                 "#{result.not_queued == 1 ? 'is' : 'are'} marked failed. Send again to those volunteers."
+    end
+    summary.join(" ")
   end
 
   # Bulk actions go back to the same filtered list they were sent from

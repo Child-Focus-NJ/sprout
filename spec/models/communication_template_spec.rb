@@ -213,6 +213,12 @@ RSpec.describe CommunicationTemplate, type: :model do
       expect(template.render_subject(nil)).to eq("Hi ")
     end
 
+    it "renders the subject and body together with #render_for" do
+      volunteer = build(:volunteer, first_name: "Jane", last_name: "Doe")
+
+      expect(template.render_for(volunteer)).to eq(subject: template.render_subject(volunteer), body: template.render_body(volunteer))
+    end
+
     it "leaves text without merge fields untouched" do
       plain = CommunicationTemplate.new(name: "Plain", subject: "Hello", body: "No fields here", funnel_stage: :inquiry)
       expect(plain.render_subject(build(:volunteer))).to eq("Hello")
