@@ -85,6 +85,7 @@ group :test do
   gem "shoulda-matchers", "~> 6.0"
   gem "database_cleaner-active_record"
   gem "simplecov", require: false
+  gem "simplecov-cobertura", require: false
   gem "webmock"                             # Stubs the raw Net::HTTP calls ExternalVmsSync makes to the external VMS
 
   # Build and inspect exported files in specs and features
