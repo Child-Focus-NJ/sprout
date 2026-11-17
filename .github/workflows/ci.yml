@@ -111,7 +111,10 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-  
+          files: ./coverage/coverage.xml
+          flags: rspec
+          fail_ci_if_error: true
+
   cucumber:
     runs-on: ubuntu-latest
 
@@ -155,5 +158,6 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/coverage.xml
           flags: cucumber
           fail_ci_if_error: true
