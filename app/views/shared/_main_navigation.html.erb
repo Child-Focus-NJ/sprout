@@ -6,7 +6,7 @@
       <%= link_to "Sessions", information_sessions_path, class: app_nav_link_class(information_sessions_path) %>
       <%= link_to "Inquiry", new_inquiry_form_path, class: app_nav_link_class(new_inquiry_form_path) %>
       <%= link_to "External Sync", external_vms_sync_path, class: app_nav_link_class(external_vms_sync_path) %>
-      <%= link_to ExternalVmsSync.base_url,
+      <%= link_to vms_url,
             class: "app-navbar__link",
             target: "_blank",
             rel: "noopener noreferrer" do %>

@@ -21,7 +21,10 @@ RSpec.describe "Main navigation", type: :request do
   end
 
   it "uses EXTERNAL_VMS_URL when it is set" do
-    stub_const("ENV", ENV.to_h.merge(ExternalVmsSync::BASE_URL_ENV_KEY => "https://vms.example.org/"))
+    allow(ENV).to receive(:fetch).and_call_original
+    allow(ENV).to receive(:fetch)
+      .with(ExternalVmsSync::BASE_URL_ENV_KEY, anything)
+      .and_return("https://vms.example.org/")
 
     get application_dashboard_path
 
