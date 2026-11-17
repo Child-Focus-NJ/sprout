@@ -4,18 +4,18 @@ if ENV['SIMPLECOV'] == 'true'
   SimpleCov.start 'rails' do
     root File.expand_path('../..', __dir__)
 
-    # Match any custom filters/formatters you already have in spec/spec_helper.rb
-    add_filter "/spec/"
-    add_filter "/config/"
-    add_filter "/db/"
-    add_filter "/vendor/"
-    add_filter "/tmp/"
-    add_group "Controllers", "app/controllers"
-    add_group "Models", "app/models"
-    add_group "Mailers", "app/mailers"
-    add_group "Helpers", "app/helpers"
-    add_group "Jobs", "app/jobs"
-    add_group "Services", "app/services"
+    # Updated method names for newer SimpleCov
+    skip "/spec/"
+    skip "/config/"
+    skip "/db/"
+    skip "/vendor/"
+    skip "/tmp/"
+    group "Controllers", "app/controllers"
+    group "Models", "app/models"
+    group "Mailers", "app/mailers"
+    group "Helpers", "app/helpers"
+    group "Jobs", "app/jobs"
+    group "Services", "app/services"
   end
 end
 
