@@ -1,3 +1,7 @@
+[![CI](https://github.com/Child-Focus-NJ/sprout/actions/workflows/ci.yml/badge.svg)](https://github.com/Child-Focus-NJ/sprout/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Child-Focus-NJ/sprout/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Child-Focus-NJ/sprout/actions/workflows/github-code-scanning/codeql)
+[![codecov](https://codecov.io/gh/Child-Focus-NJ/sprout/graph/badge.svg?token=026VQFDDLY)](https://codecov.io/gh/Child-Focus-NJ/sprout)
+
 ## Sprout – Volunteer Management System
 
 **Sprout** is a Ruby on Rails application that replaces spreadsheet-based workflows with a centralized system for managing the full volunteer lifecycle.
