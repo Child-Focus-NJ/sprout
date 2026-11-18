@@ -35,9 +35,8 @@ RSpec.describe "Application dashboard", type: :request do
         expect(body).to include("Application sent")
         expect(body).to include(older.email)
         expect(body).to include("View profile")
-        expect(body.index(older.full_name)).to be < body.index(newer.full_name)
-
         panel = response.parsed_body.at_css("details#awaiting-submission")
+        expect(panel.text.index(older.full_name)).to be < panel.text.index(newer.full_name)
         expect(panel["open"]).to be_nil
         expect(panel.at_css("summary").text.squish).to eq("Awaiting submission 2")
       end
@@ -120,6 +119,64 @@ RSpec.describe "Application dashboard", type: :request do
 
         expect(response).to have_http_status(:ok)
       end
+    end
+  end
+
+  describe "New inquiries column" do
+    let(:user) { create(:user) }
+
+    before { login_as(user, scope: :user) }
+
+    def cards
+      response.parsed_body.css("#new-inquiries .new-inquiry-card")
+    end
+
+    it "shows volunteers added since the staff member's notices began, newest first, with a profile link and an ×" do
+      create(:volunteer, first_name: "Old", last_name: "Inquiry", created_at: user.inquiry_notices_since - 1.day)
+      rosa = create(:volunteer, first_name: "Rosa", last_name: "Delgado", created_at: 2.minutes.from_now)
+      create(:volunteer, first_name: "Leah", last_name: "Brennan", created_at: 3.minutes.from_now)
+
+      get application_dashboard_path
+
+      expect(cards.map { |card| card.at_css(".new-inquiry-card__name").text }).to eq([ "Leah Brennan", "Rosa Delgado" ])
+      expect(response.parsed_body.at_css("#new-inquiries .new-inquiries__count").text).to eq("2")
+      expect(cards.last.at_css("a")["href"]).to eq(volunteer_path(rosa))
+      expect(cards.last.at_css("form")["action"]).to eq(dismiss_new_inquiry_path(rosa))
+      expect(cards.last.at_css("button")["aria-label"]).to eq("Dismiss Rosa Delgado")
+    end
+
+    it "keeps the column on the page but empty when there's nothing new" do
+      get application_dashboard_path
+
+      expect(response.parsed_body.at_css("#new-inquiries h2").text.squish).to eq("New inquiries")
+      expect(cards).to be_empty
+      expect(response.parsed_body.at_css("#new-inquiries .new-inquiries__count")).to be_nil
+    end
+
+    it "hides a dismissed volunteer for this staff member only" do
+      colleague = create(:user)
+      volunteer = create(:volunteer, created_at: 1.minute.from_now)
+
+      post dismiss_new_inquiry_path(volunteer)
+
+      expect(response).to redirect_to(application_dashboard_path)
+      expect(response).to have_http_status(:see_other)
+      get application_dashboard_path
+      expect(cards).to be_empty
+
+      login_as(colleague, scope: :user)
+      get application_dashboard_path
+      expect(cards.size).to eq(1)
+    end
+
+    it "handles a second × on the same card or an unknown volunteer without an error" do
+      volunteer = create(:volunteer, created_at: 1.minute.from_now)
+
+      2.times { post dismiss_new_inquiry_path(volunteer) }
+      post dismiss_new_inquiry_path(volunteer_id: 0)
+
+      expect(response).to redirect_to(application_dashboard_path)
+      expect(user.inquiry_dismissals.count).to eq(1)
     end
   end
 end

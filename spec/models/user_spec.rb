@@ -333,4 +333,30 @@ RSpec.describe User, type: :model do
       expect { User.from_omniauth(auth) }.to change(User, :count).by(1)
     end
   end
+
+  describe '#new_inquiries' do
+    let(:user) { create(:user) }
+
+    it 'starts a new staff member from when they were added' do
+      expect(user.inquiry_notices_since).to be_within(1.minute).of(Time.current)
+    end
+
+    it 'lists volunteers added since then, newest first' do
+      create(:volunteer, first_name: 'Before', created_at: user.inquiry_notices_since - 1.day)
+      older = create(:volunteer, first_name: 'Older', created_at: user.inquiry_notices_since + 1.minute)
+      newer = create(:volunteer, first_name: 'Newer', created_at: user.inquiry_notices_since + 2.minutes)
+
+      expect(user.new_inquiries).to eq([ newer, older ])
+    end
+
+    it 'leaves out volunteers this staff member dismissed, but not ones someone else dismissed' do
+      colleague = create(:user)
+      dismissed = create(:volunteer, created_at: 1.minute.from_now)
+      kept = create(:volunteer, created_at: 1.minute.from_now)
+      user.inquiry_dismissals.create!(volunteer: dismissed)
+
+      expect(user.new_inquiries).to eq([ kept ])
+      expect(colleague.new_inquiries).to contain_exactly(dismissed, kept)
+    end
+  end
 end

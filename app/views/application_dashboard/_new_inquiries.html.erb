@@ -1,0 +1,26 @@
+<%# Right-hand column of volunteers added since this staff member's notices began. Each card links to
+    the profile, and its × hides that volunteer for this staff member only. %>
+<aside class="new-inquiries" id="new-inquiries" aria-labelledby="new-inquiries-heading">
+  <h2 class="new-inquiries__heading" id="new-inquiries-heading">
+    New inquiries
+    <% if volunteers.any? %>
+      <span class="new-inquiries__count"><%= volunteers.size %></span>
+    <% end %>
+  </h2>
+
+  <ul class="new-inquiries__list">
+    <% volunteers.each do |volunteer| %>
+      <li class="new-inquiry-card">
+        <div class="new-inquiry-card__body">
+          <%= link_to volunteer.full_name, volunteer_path(volunteer), class: "new-inquiry-card__name" %>
+          <p class="new-inquiry-card__meta">
+            Added <%= time_ago_in_words(volunteer.created_at) %> ago<%= " · #{volunteer.referral_source_name}" if volunteer.referral_source_name %>
+          </p>
+        </div>
+        <%= button_to "×", dismiss_new_inquiry_path(volunteer),
+                      class: "new-inquiry-card__dismiss", form_class: "new-inquiry-card__dismiss-form",
+                      title: "Dismiss", aria: { label: "Dismiss #{volunteer.full_name}" } %>
+      </li>
+    <% end %>
+  </ul>
+</aside>

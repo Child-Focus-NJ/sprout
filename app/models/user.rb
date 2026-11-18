@@ -12,6 +12,7 @@ class User < ApplicationRecord
     foreign_key: :created_by_user_id,
     inverse_of: :created_by_user,
     dependent: :nullify
+  has_many :inquiry_dismissals, dependent: :delete_all
 
   validates :email, presence: true, uniqueness: true
   validate :must_leave_at_least_one_active_admin
@@ -24,6 +25,13 @@ class User < ApplicationRecord
 
   def display_name
     full_name.presence || email.to_s.split("@").first.presence || "User"
+  end
+
+  # Volunteers added since this staff member's notices began, newest first, minus any they've dismissed
+  def new_inquiries
+    Volunteer.where(created_at: inquiry_notices_since..)
+             .where.not(id: inquiry_dismissals.select(:volunteer_id))
+             .order(created_at: :desc)
   end
 
   def self.from_omniauth(auth)
