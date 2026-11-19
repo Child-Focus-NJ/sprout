@@ -31,7 +31,8 @@ RSpec.describe "Information Sessions", type: :request do
       get information_sessions_path
 
       expect(response.body.scan(information_session.name).size).to eq(1)
-      expect(response.body).to include("2 registered volunteers")
+      expect(response.body).to include("Registered Volunteers")
+      expect(response.body).to match(/session-registered__value[^>]*>\s*2\s*</)
     end
 
     context "with date filters" do
