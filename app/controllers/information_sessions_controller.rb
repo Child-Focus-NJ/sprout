@@ -21,16 +21,12 @@ class InformationSessionsController < ApplicationController
       rel = rel.where(location: params[:location])
     end
 
-    time_filter = params[:upcoming_past].presence || "All"
-
-    case time_filter
-    when "Past"
-      rel = rel.where("scheduled_at < ?", Time.current)
-    when "Upcoming"
-      rel = rel.where("scheduled_at >= ?", Time.current)
+    @session_tab = selected_session_tab
+    rel = if @session_tab == "past"
+      rel.merge(InformationSession.past)
+    else
+      rel.merge(InformationSession.upcoming)
     end
-
-    rel = rel.order(created_at: :desc)
 
     total = rel.count
     max_page = [ (total.to_f / SESSIONS_PER_PAGE).ceil, 1 ].max
@@ -138,11 +134,19 @@ class InformationSessionsController < ApplicationController
   private
 
   def set_information_sessions_list_filters
-    @list_filter_params = params.permit(:start_date, :end_date, :location, :upcoming_past, :page).to_h.symbolize_keys
+    @list_filter_params = params.permit(:start_date, :end_date, :location, :upcoming_past, :tab, :page).to_h.symbolize_keys
   end
 
   def list_filter_params_compact
-    params.permit(:start_date, :end_date, :location, :upcoming_past, :page).to_h.symbolize_keys.compact_blank
+    params.permit(:start_date, :end_date, :location, :upcoming_past, :tab, :page).to_h.symbolize_keys.compact_blank
+  end
+
+  # A session leaves Upcoming at its scheduled time. The past scope uses the same cutoff,
+  # so opening Past Info Sessions is enough. Nothing stores a separate "moved" flag.
+  def selected_session_tab
+    return params[:tab].to_s if %w[upcoming past].include?(params[:tab].to_s)
+
+    params[:upcoming_past].to_s == "Past" ? "past" : "upcoming"
   end
 
   def parsed_list_filter_date(raw)
