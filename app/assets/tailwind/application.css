@@ -830,6 +830,18 @@
     @apply mt-2 flex-wrap gap-x-3 gap-y-1;
   }
 
+
+  .session-registered {
+    @apply mt-2 inline-flex items-center gap-2;
+  }
+
+  .session-registered__label {
+    @apply text-sm font-medium tracking-tight text-gray-700;
+  }
+
+  .session-registered__value {
+    @apply inline-flex min-w-7 items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-sm font-semibold tabular-nums text-gray-900;
+  }
   .session-history-created-by {
     @apply m-0 mt-2 text-sm leading-snug text-gray-600;
   }
