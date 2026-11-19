@@ -36,15 +36,44 @@ RSpec.describe "Information Sessions", type: :request do
       end
     end
 
-    context "with upcoming/past filter" do
-      it "filters upcoming sessions" do
-        get information_sessions_path, params: { upcoming_past: "Upcoming" }
-        expect(response).to be_successful
+    context "with upcoming and past tabs" do
+      let!(:upcoming_session) { create(:information_session, name: "Future Orientation") }
+      let!(:past_session) do
+        build(:information_session, name: "Old Orientation", scheduled_at: 3.days.ago).tap do |session|
+          session.save!(validate: false)
+        end
       end
 
-      it "filters past sessions" do
+      it "defaults to upcoming sessions" do
+        get information_sessions_path
+
+        expect(response.body).to include("Upcoming Info Sessions", "Past Info Sessions", upcoming_session.name)
+        expect(response.body).not_to include(past_session.name)
+      end
+
+      it "shows past sessions on the past tab and moves a finished session there" do
+        finished = build(:information_session, name: "Just Finished", scheduled_at: 1.minute.ago)
+        finished.save!(validate: false)
+
+        get information_sessions_path
+        expect(response.body).not_to include(finished.name)
+
+        get information_sessions_path, params: { tab: "past" }
+        expect(response.body).to include(past_session.name, finished.name)
+        expect(response.body).not_to include(upcoming_session.name)
+      end
+
+      it "keeps the past tab when a date filter is applied" do
+        get information_sessions_path, params: { tab: "past", start_date: 1.week.ago.strftime("%m/%d/%y") }
+        expect(response.body).to include(past_session.name)
+        expect(response.body).not_to include(upcoming_session.name)
+        expect(response.body).to include('value="past"')
+      end
+
+      it "still honors the legacy Past filter" do
         get information_sessions_path, params: { upcoming_past: "Past" }
-        expect(response).to be_successful
+        expect(response.body).to include(past_session.name)
+        expect(response.body).not_to include(upcoming_session.name)
       end
     end
 
