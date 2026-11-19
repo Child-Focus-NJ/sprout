@@ -10,7 +10,7 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
   let(:idealist) { create(:referral_source, name: "Idealist") }
 
   let!(:harry) { create(:volunteer, first_name: "Harry", last_name: "Kane", current_funnel_stage: :inquiry, vicinage: union, referral_source: tabling, inquiry_date: Date.new(2026, 9, 1)) }
-  let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura", current_funnel_stage: :application_eligible, vicinage: union, referral_source: tabling, inquiry_date: Date.new(2026, 8, 15)) }
+  let!(:hana) { create(:volunteer, first_name: "Hana", last_name: "Kimura", current_funnel_stage: :application_eligible, vicinage: union, referral_source: tabling, inquiry_date: Date.new(2026, 8, 15), first_session_attended_at: Date.new(2026, 8, 20)) }
   let!(:sofia) { create(:volunteer, first_name: "Sofia", last_name: "Reyes", current_funnel_stage: :inquiry, vicinage: passaic, referral_source: idealist, inquiry_date: Date.new(2026, 10, 1)) }
 
   before { login_as(user, scope: :user) }
@@ -187,6 +187,56 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
       expect(response.parsed_body.at_css("#volunteer-active-filters")).to be_nil
     end
 
+    it "filters by when volunteers moved into their current status, and the tab counts follow the dates" do
+      get volunteers_path, params: { status_from: "2026-08-25", status_to: "2026-09-30" }
+
+      expect(listed_names).to eq([ "Harry Kane" ])
+      expect(tabs.first(3)).to eq([ "All 1", "Inquiry 1", "Application eligible 0" ])
+      expect(response.parsed_body.at_css(".volunteer-filter-chip--date").text.squish).to include("Status date: Aug 25, 2026 – Sep 30, 2026")
+    end
+
+    it "includes volunteers who moved on the from and to dates themselves" do
+      get volunteers_path, params: { status_from: "2026-09-01", status_to: "2026-10-01" }
+
+      expect(listed_names).to eq([ "Harry Kane", "Sofia Reyes" ])
+    end
+
+    it "filters with only a from date or only a to date" do
+      get volunteers_path, params: { status_from: "2026-09-15" }
+      expect(listed_names).to eq([ "Sofia Reyes" ])
+      expect(response.parsed_body.at_css(".volunteer-filter-chip--date").text.squish).to include("Status date: from Sep 15, 2026")
+
+      get volunteers_path, params: { status_to: "2026-08-31" }
+      expect(listed_names).to eq([ "Hana Kimura" ])
+      expect(response.parsed_body.at_css(".volunteer-filter-chip--date").text.squish).to include("Status date: until Aug 31, 2026")
+    end
+
+    it "counts the date range as one filter, and its chip removes only the dates" do
+      get volunteers_path, params: { status: "inquiry", vicinage_id: union.id, status_from: "2026-08-01", status_to: "2026-09-30" }
+      page = response.parsed_body
+
+      expect(page.at_css(".volunteer-filter-menu__badge").text.strip).to eq("2")
+      expect(page.at_css('a[aria-label="Remove status date filter"]')["href"]).to eq(volunteers_path(status: "inquiry", vicinage_id: union.id))
+      expect(page.at_css('a[aria-label="Remove vicinage filter"]')["href"]).to eq(volunteers_path(status: "inquiry", status_from: "2026-08-01", status_to: "2026-09-30"))
+    end
+
+    it "keeps the dates when switching tabs or searching" do
+      get volunteers_path, params: { status: "inquiry", status_from: "2026-08-01", status_to: "2026-09-30" }
+      page = response.parsed_body
+
+      tab = ->(label) { page.css("#volunteer-status-tabs a").find { |link| link.text.squish.start_with?("#{label} ") } }
+      expect(tab.call("Applied")["href"]).to eq(volunteers_path(status_from: "2026-08-01", status_to: "2026-09-30", status: "applied"))
+      expect(page.at_css("form.volunteer-search input#status_from")["value"]).to eq("2026-08-01")
+      expect(page.at_css("form.volunteer-search input#status_to")["value"]).to eq("2026-09-30")
+    end
+
+    it "ignores dates that aren't real dates instead of hiding everyone" do
+      get volunteers_path, params: { status_from: "not-a-date", status_to: "2026-02-30" }
+
+      expect(listed_names.size).to eq(3)
+      expect(response.parsed_body.at_css("#volunteer-active-filters")).to be_nil
+    end
+
     it "still shows the vicinage on each volunteer that has one" do
       get volunteers_path
 
@@ -216,6 +266,69 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
     end
   end
 
+  describe "repeat no-shows" do
+    let(:sessions) { create_list(:information_session, 3) }
+
+    def miss_sessions(volunteer, *statuses)
+      statuses.each_with_index do |status, index|
+        create(:session_registration, volunteer: volunteer, information_session: sessions[index], status: status)
+      end
+    end
+
+    def flag_for(name)
+      row = response.parsed_body.css("#volunteer-list .volunteer-row").find { |node| node.at_css(".volunteer-name").text.strip == name }
+      row.at_css(".missed-sessions-flag")&.text&.squish
+    end
+
+    before do
+      miss_sessions(hana, :no_show, :rescheduled)
+      miss_sessions(harry, :no_show, :no_show, :cancelled)
+      miss_sessions(sofia, :cancelled, :attended)
+    end
+
+    it "flags volunteers who missed two or more sessions with what happened" do
+      get volunteers_path, params: { status: "application_eligible" }
+      expect(flag_for("Hana Kimura")).to eq("1 no-show · 1 reschedule")
+
+      get volunteers_path, params: { status: "inquiry" }
+      expect(flag_for("Harry Kane")).to eq("2 no-shows · 1 cancellation")
+      expect(flag_for("Sofia Reyes")).to be_nil
+    end
+
+    it "shows only repeat no-shows when filtered, and the tab counts follow" do
+      get volunteers_path, params: { repeat_no_shows: "1" }
+
+      expect(listed_names).to eq([ "Hana Kimura", "Harry Kane" ])
+      expect(tabs.first(3)).to eq([ "All 2", "Inquiry 1", "Application eligible 1" ])
+      expect(response.parsed_body.at_css(".volunteer-filter-chip--no-shows").text.squish).to include("Repeat no-shows")
+    end
+
+    it "counts as one filter, and its chip removes only itself" do
+      get volunteers_path, params: { status: "inquiry", vicinage_id: union.id, repeat_no_shows: "1" }
+      page = response.parsed_body
+
+      expect(page.at_css(".volunteer-filter-menu__badge").text.strip).to eq("2")
+      expect(page.at_css('a[aria-label="Remove repeat no-shows filter"]')["href"]).to eq(volunteers_path(status: "inquiry", vicinage_id: union.id))
+      expect(page.at_css("form.volunteer-search input#repeat_no_shows")["checked"]).to eq("checked")
+    end
+
+    it "keeps the filter when switching tabs and coming back from a profile" do
+      get volunteers_path, params: { status: "inquiry", repeat_no_shows: "1" }
+      applied_tab = response.parsed_body.css("#volunteer-status-tabs a").find { |link| link.text.squish.start_with?("Applied ") }
+      expect(applied_tab["href"]).to eq(volunteers_path(repeat_no_shows: "1", status: "applied"))
+
+      get volunteer_path(harry)
+      expect(response.parsed_body.at_css("a.nav-back")["href"]).to eq(volunteers_path(status: "inquiry", repeat_no_shows: "1"))
+    end
+
+    it "ignores any other value instead of filtering" do
+      get volunteers_path, params: { repeat_no_shows: "yes" }
+
+      expect(listed_names.size).to eq(3)
+      expect(response.parsed_body.at_css("#volunteer-active-filters")).to be_nil
+    end
+  end
+
   describe "Back to volunteers link on a profile" do
     def back_link_href
       response.parsed_body.at_css("a.nav-back")["href"]
@@ -226,6 +339,13 @@ RSpec.describe "Volunteers list search and status tabs", type: :request do
       get volunteer_path(harry)
 
       expect(back_link_href).to eq(volunteers_path(q: "ha", status: "inquiry", vicinage_id: union.id, referral_source_id: tabling.id))
+    end
+
+    it "returns to the same status dates" do
+      get volunteers_path, params: { status: "inquiry", status_from: "2026-09-01", status_to: "2026-09-30" }
+      get volunteer_path(harry)
+
+      expect(back_link_href).to eq(volunteers_path(status: "inquiry", status_from: "2026-09-01", status_to: "2026-09-30"))
     end
 
     it "still returns there after an action on the profile" do

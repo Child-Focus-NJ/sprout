@@ -30,35 +30,42 @@ class Volunteer < ApplicationRecord
   scope :awaiting_application_submission, lambda {
     where(current_funnel_stage: :application_sent).order(application_sent_at: :asc)
   }
-  # Case-insensitive name search; every word typed must match the first or last name,
-  # so "harry kane" and "kane" both find Harry Kane.
-  scope :name_matching, lambda { |query|
+  # Case-insensitive search; every word typed must match the first name, last name, email or phone,
+  # so "harry kane" and "kane" both find Harry Kane. Phone matching ignores dashes and spaces,
+  # so "7325550101" finds "732-555-0101".
+  scope :search_matching, lambda { |query|
     query.to_s.split.reduce(all) do |relation, term|
-      relation.where("volunteers.first_name ILIKE :term OR volunteers.last_name ILIKE :term",
-                     term: "%#{sanitize_sql_like(term)}%")
+      conditions = [ "volunteers.first_name ILIKE :term", "volunteers.last_name ILIKE :term", "volunteers.email ILIKE :term" ]
+      phone_term = term.delete("-")
+      conditions << "TRANSLATE(volunteers.phone, '- ', '') ILIKE :phone_term" if phone_term.present?
+      relation.where(conditions.join(" OR "),
+                     term: "%#{sanitize_sql_like(term)}%",
+                     phone_term: "%#{sanitize_sql_like(phone_term)}%")
     end
   }
 
-  before_create :default_inquiry_date
+  # Volunteers who no-showed, cancelled or rescheduled this many times are flagged on the list
+  REPEAT_MISS_THRESHOLD = 2
+
+  # Counted from session registrations, which session outcome notes keep up to date
+  scope :repeat_no_shows, lambda {
+    where(id: SessionRegistration.missed.group(:volunteer_id)
+                                 .having("COUNT(*) >= ?", REPEAT_MISS_THRESHOLD)
+                                 .select(:volunteer_id))
+  }
+
+  before_create :default_inquiry_date, :default_stage_started_at
+  before_update :restart_stage_clock, if: :will_save_change_to_current_funnel_stage?
   after_save :cancel_pending_reminders_if_applied
 
   def attended_session?
     first_session_attended_at.present?
   end
 
-  def stage_started_at
-    case current_funnel_stage.to_sym
-    when :inquiry then inquiry_date
-    when :application_eligible then first_session_attended_at
-    when :application_sent then application_sent_at
-    end
-  end
-
   def days_in_current_stage
-    started_at = stage_started_at
-    return nil if started_at.blank?
+    return nil if stage_started_at.blank?
 
-    ((Time.current - started_at) / 1.day).floor
+    ((Time.current - stage_started_at) / 1.day).floor
   end
 
   def status
@@ -68,7 +75,15 @@ class Volunteer < ApplicationRecord
   end
 
   def can_reactivate?
-    inactive?
+    inactive? && !inactive_reason_duplicate?
+  end
+
+  # A deactivated volunteer who inquires or registers again returns to the stage their history matches.
+  def reactivate!(user: nil)
+    return unless can_reactivate?
+
+    assign_attributes(reactivated_at: Time.current, reactivation_count: reactivation_count + 1)
+    change_status!(reactivation_stage, user: user, trigger: :event)
   end
 
   def full_name
@@ -96,8 +111,9 @@ class Volunteer < ApplicationRecord
         record_attendance!(registration, user: user)
       when "no_show", "cancelled"
         registration.update!(status: note_category.key)
+        return_to_inquiry_if_dropped_off!(user: user)
       when "rescheduled"
-        reschedule_registration!(registration, new_information_session)
+        reschedule_registration!(registration, new_information_session, user: user)
       when NoteCategory::DEACTIVATED_KEY
         change_status!(:inactive, user: user)
       end
@@ -130,7 +146,8 @@ class Volunteer < ApplicationRecord
     registration.save!
 
     update!(first_session_attended_at: Time.current) unless first_session_attended_at.present?
-    change_status!(:application_eligible, user: user, trigger: :event) unless application_sent? || applied?
+    reactivate!(user: user)
+    change_status!(:application_eligible, user: user, trigger: :event) unless application_sent? || applied? || inactive?
   end
 
   # Staff action or automation: move to application_sent and record send time (idempotent on duplicate send).
@@ -153,6 +170,27 @@ class Volunteer < ApplicationRecord
 
   private
 
+  def reactivation_stage
+    return :applied if application_submitted_at.present?
+    return :application_sent if application_sent_at.present?
+    return :application_eligible if attended_session?
+
+    :inquiry
+  end
+
+  # Anyone who attended or has an application keeps their progress,
+  # and inactive volunteers stay inactive.
+  def return_to_inquiry_if_dropped_off!(user:)
+    return unless application_eligible? && !attended_session?
+    return if registered_for_upcoming_session?
+
+    change_status!(:inquiry, user: user, trigger: :event)
+  end
+
+  def registered_for_upcoming_session?
+    information_sessions.active.upcoming.merge(SessionRegistration.registered).exists?
+  end
+
   def registration_for_outcome!(information_session, note_category)
     raise OutcomeNoteError, "Choose the session this note is about" if information_session.nil?
 
@@ -172,7 +210,7 @@ class Volunteer < ApplicationRecord
     change_status!(:application_eligible, user: user, trigger: :event) if inquiry?
   end
 
-  def reschedule_registration!(registration, new_information_session)
+  def reschedule_registration!(registration, new_information_session, user:)
     raise OutcomeNoteError, "Choose the session they're rescheduling to" if new_information_session.nil?
     if new_information_session == registration.information_session
       raise OutcomeNoteError, "Choose a different session to reschedule to"
@@ -187,11 +225,32 @@ class Volunteer < ApplicationRecord
     end
 
     registration.update!(status: :rescheduled)
-    new_registration.update!(status: :registered) unless new_registration.attended?
+    return if new_registration.attended?
+
+    new_registration.update!(status: :registered)
+    reactivate!(user: user)
   end
 
   def default_inquiry_date
     self.inquiry_date ||= created_at || Time.current
+  end
+
+  def default_stage_started_at
+    self.stage_started_at ||= [ stage_date_on_record, reactivated_at ].compact.max || Time.current
+  end
+
+  def stage_date_on_record
+    case current_funnel_stage.to_sym
+    when :inquiry then inquiry_date
+    when :application_eligible then first_session_attended_at
+    when :application_sent then application_sent_at
+    when :applied then application_submitted_at
+    when :inactive then became_inactive_at
+    end
+  end
+
+  def restart_stage_clock
+    self.stage_started_at = Time.current unless will_save_change_to_stage_started_at?
   end
 
   def cancel_pending_reminders_if_applied

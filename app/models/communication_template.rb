@@ -22,17 +22,23 @@ class CommunicationTemplate < ApplicationRecord
   scope :stalled_stage_triggers, -> { interval_triggers.where.not(interval_days: nil) }
 
   def render_subject(volunteer = nil)
-    render_text(subject, volunteer)
+    render_text(subject, merge_values(volunteer))
   end
 
   def render_body(volunteer = nil)
-    render_text(body, volunteer)
+    render_text(body, merge_values(volunteer))
+  end
+
+  # Both at once, working out the volunteer's merge values only once
+  def render_for(volunteer)
+    values = merge_values(volunteer)
+    { subject: render_text(subject, values), body: render_text(body, values) }
   end
 
   private
 
-  def render_text(text, volunteer)
-    merge_values(volunteer).reduce(text.to_s) do |rendered, (token, value)|
+  def render_text(text, values)
+    values.reduce(text.to_s) do |rendered, (token, value)|
       rendered.gsub("{{#{token}}}", value.to_s)
     end
   end
