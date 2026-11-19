@@ -72,12 +72,15 @@
             <div class="volunteer-name"><%= session.name %></div>
             <div class="volunteer-subtext session-history-meta">
               <span><%= session.location %></span>
-              <span><%= pluralize(session.registered_count, "registered volunteer") %></span>
               <span>
                 <time datetime="<%= tz.iso8601 %>">
                   <%= date_part %> <%= time_part %>
                 </time>
               </span>
+            </div>
+            <div class="session-registered" aria-label="<%= pluralize(session.registered_count, 'registered volunteer') %>">
+              <span class="session-registered__label">Registered Volunteers</span>
+              <span class="session-registered__value"><%= session.registered_count %></span>
             </div>
             <p class="session-history-created-by"><%= information_session_creator_line(session) %></p>
           </div>
