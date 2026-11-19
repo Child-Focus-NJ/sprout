@@ -125,7 +125,7 @@
   <% end %>
 </div>
 
-<%# Row checkboxes post straight to Send Application; Add Note and Send SMS copy the selection into the popup. %>
+<%# Row checkboxes post straight to Send Application; Add Note, Send SMS and Send Email copy the selection into their popup. %>
 <%= form_with url: bulk_send_application_volunteers_path, method: :post, html: { class: "card note-form volunteer-list-card", id: "volunteer-bulk-form" } do %>
   <% @filters.each do |key, value| %>
     <%= hidden_field_tag key, value, id: nil %>
@@ -190,6 +190,7 @@
     <div class="bulk-toolbar__actions">
       <%= bulk_message_button(:note) %>
       <%= bulk_message_button(:sms) %>
+      <button type="button" class="button-link bulk-toolbar__button" data-bulk-email-open><%= message_icon(:email) %>Send Email</button>
       <button type="submit" class="button-link bulk-toolbar__button">Send Application</button>
       <button type="button" class="bulk-toolbar__clear" data-bulk-clear>Clear</button>
     </div>
@@ -197,6 +198,7 @@
 <% end %>
 
 <%= render "message_dialog" %>
+<%= render "bulk_email_dialog" %>
 
 <script>
   (function () {

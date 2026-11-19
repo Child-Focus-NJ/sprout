@@ -55,5 +55,6 @@ RSpec.describe SendReminderJob, type: :job do
 
     expect(reminder.reload).to be_skipped
     expect(reminder.skip_reason).to eq("SMTP down")
+    expect(Communication.last).to be_failed
   end
 end
