@@ -6,4 +6,8 @@ class StatusChange < ApplicationRecord
 
   scope :recent, -> { order(created_at: :desc) }
   scope :for_volunteer, ->(volunteer) { where(volunteer: volunteer) }
+
+  def reactivation?
+    from_funnel_stage == "Inactive"
+  end
 end

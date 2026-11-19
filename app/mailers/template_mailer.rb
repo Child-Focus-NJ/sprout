@@ -3,7 +3,7 @@ class TemplateMailer < ApplicationMailer
     @communication = communication
 
     mail(
-      to: communication.volunteer.email,
+      to: communication.email_to.presence || communication.volunteer.email,
       subject: communication.subject.presence || "A note from Child Focus NJ",
       body: communication.body.to_s
     )
