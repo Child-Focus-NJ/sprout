@@ -30,6 +30,25 @@ module VolunteersHelper
     end
   end
 
+  MISSED_SESSION_LABELS = { "no_show" => "no-show", "cancelled" => "cancellation", "rescheduled" => "reschedule" }.freeze
+
+  # Flag for a volunteer who keeps missing info sessions, e.g. "2 no-shows · 1 reschedule".
+  # counts maps [volunteer_id, status] to how many registrations ended that way.
+  def missed_sessions_flag(counts, volunteer)
+    by_status = SessionRegistration::MISSED_STATUSES.index_with { |status| counts.fetch([ volunteer.id, status ], 0) }
+    return if by_status.values.sum < Volunteer::REPEAT_MISS_THRESHOLD
+
+    text = by_status.filter_map { |status, count| pluralize(count, MISSED_SESSION_LABELS.fetch(status)) if count.positive? }
+    tag.span(text.join(" · "), class: "missed-sessions-flag", title: "Repeatedly missed info sessions")
+  end
+
+  def status_date_range_label(from, to)
+    from_text, to_text = [ from, to ].map { |date| date&.strftime("%b %-d, %Y") }
+    return "#{from_text} – #{to_text}" if from && to
+
+    from ? "from #{from_text}" : "until #{to_text}"
+  end
+
   # Heading for a profile timeline entry (e.g. :sms -> "SMS", :status_change -> "Status change").
   def timeline_entry_label(kind)
     kind == :sms ? "SMS" : kind.to_s.humanize
@@ -43,11 +62,16 @@ module VolunteersHelper
     end
   end
 
+  def email_template_options
+    CommunicationTemplate.active.email.order(:name).pluck(:name, :id)
+  end
+
   # Icons from Heroicons (https://heroicons.com, by Tailwind Labs, MIT license), 24px outline set:
-  # "pencil-square" for notes and "device-phone-mobile" for SMS. Same set as the list's search and filter icons.
+  # "pencil-square" for notes, "device-phone-mobile" for SMS and "envelope" for email. Same set as the list's search and filter icons.
   MESSAGE_ICON_PATHS = {
     note: "m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10",
-    sms: "M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"
+    sms: "M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3",
+    email: "M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
   }.freeze
 
   def message_icon(tab)

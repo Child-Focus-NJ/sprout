@@ -20,6 +20,11 @@ module ApplicationHelper
     current_page?(path) ? "#{base} app-navbar__link--active" : base
   end
 
+  # External VMS root URL for "VMS" link in main navigation.
+  def vms_url
+    ExternalVmsSync.base_url
+  end
+
   def system_management_tab_link(label, tab, current_tab)
     classes = "sys-tabs__link"
     classes += " sys-tabs__link--active" if tab == current_tab

@@ -1,0 +1,62 @@
+<%# Popup for the Volunteers list's bulk Send Email. Its own form copies the selected volunteers. %>
+<% templates = Email.sending_enabled? ? email_template_options : [] %>
+<dialog id="bulk-email-dialog" class="message-dialog" aria-labelledby="bulk-email-dialog-title">
+  <div class="message-dialog__body">
+    <div class="message-dialog__header">
+      <h2 id="bulk-email-dialog-title" class="section-heading" data-bulk-email-title>Email volunteers</h2>
+      <button type="button" class="message-dialog__close" data-bulk-email-close aria-label="Close">×</button>
+    </div>
+
+    <% if !Email.sending_enabled? %>
+      <p class="subtle"><%= Email::DISABLED_MESSAGE %></p>
+    <% elsif templates.empty? %>
+      <p class="subtle">No active email templates yet. Create one to email several volunteers at once.</p>
+      <%= link_to "Create email template", new_admin_communication_template_path, class: "button-link" %>
+    <% else %>
+      <%= form_with url: bulk_send_email_volunteers_path, method: :post,
+                    html: { class: "message-dialog__panel note-form", data: { bulk_email_form: true } } do %>
+        <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
+        <label for="bulk-email-template">Email template</label>
+        <%= select_tag :template_id, options_for_select(templates),
+                       id: "bulk-email-template", prompt: "Select a template", required: true, autofocus: true,
+                       aria: { describedby: "bulk-email-template-help" } %>
+        <p id="bulk-email-template-help" class="subtle">
+          Merge fields such as {{first_name}} are filled in separately for each volunteer, and each email is added to their timeline.
+        </p>
+        <div class="note-form__footer">
+          <%= link_to "Manage message templates", admin_communication_templates_path, class: "button-link" %>
+          <button type="submit" class="button-primary">Send</button>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</dialog>
+
+<script>
+  (function () {
+    const dialog = document.getElementById("bulk-email-dialog");
+    const opener = document.querySelector("[data-bulk-email-open]");
+    if (!dialog || !opener) return;
+
+    const form = dialog.querySelector("[data-bulk-email-form]");
+    const title = dialog.querySelector("[data-bulk-email-title]");
+
+    opener.addEventListener("click", () => {
+      const ids = [...document.querySelectorAll("[data-bulk-select]:checked")].map((box) => box.value);
+      title.textContent = `Email ${ids.length.toLocaleString("en-US")} volunteer${ids.length === 1 ? "" : "s"}`;
+
+      if (form) {
+        // Rebuild the recipients every time so the email only goes to who is selected.
+        form.querySelectorAll("input[name='volunteer_ids[]']").forEach((input) => input.remove());
+        ids.forEach((id) => {
+          form.append(Object.assign(document.createElement("input"), { type: "hidden", name: "volunteer_ids[]", value: id }));
+        });
+        form.reset();
+      }
+      dialog.showModal();
+    });
+
+    dialog.querySelector("[data-bulk-email-close]").addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+  })();
+</script>
