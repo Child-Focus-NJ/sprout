@@ -55,6 +55,10 @@ class Volunteer < ApplicationRecord
                                  .select(:volunteer_id))
   }
 
+  # When a volunteer last inquired: when they were added, or when they came back after being
+  # inactive (by inquiring again or signing up for a session), whichever is later
+  LAST_INQUIRED_AT_SQL = "GREATEST(volunteers.created_at, volunteers.reactivated_at)".freeze
+
   before_create :default_inquiry_date, :default_stage_started_at
   before_update :restart_stage_clock, if: :will_save_change_to_current_funnel_stage?
   after_save :cancel_pending_reminders_if_applied
@@ -85,6 +89,14 @@ class Volunteer < ApplicationRecord
 
     assign_attributes(reactivated_at: Time.current, reactivation_count: reactivation_count + 1)
     change_status!(reactivation_stage, user: user, trigger: :event)
+  end
+
+  def last_inquired_at
+    [ created_at, reactivated_at ].compact.max
+  end
+
+  def came_back?
+    reactivated_at.present? && reactivated_at > created_at
   end
 
   def full_name

@@ -2,7 +2,7 @@
   <h1 class="page-title">Dashboard</h1>
 
   <div class="dashboard-layout">
-    <%= render "new_inquiries", volunteers: @new_inquiries %>
+    <%= render "new_inquiries", volunteers: @new_inquiries, total: @new_inquiry_count %>
 
     <div class="dashboard-main">
       <section class="dashboard-stats" aria-label="Key numbers">

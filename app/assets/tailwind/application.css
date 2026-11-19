@@ -1087,8 +1087,20 @@
     @apply self-start rounded-lg border border-gray-300 bg-gray-50 p-3 lg:sticky lg:top-4 lg:col-start-2 lg:row-start-1 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto;
   }
 
+  .new-inquiries__header {
+    @apply mb-3 flex items-center justify-between gap-2;
+  }
+
   .new-inquiries__heading {
-    @apply m-0 mb-3 flex items-center gap-2 text-base font-semibold text-gray-900;
+    @apply m-0 flex items-center gap-2 text-base font-semibold text-gray-900;
+  }
+
+  .new-inquiries__clear-form {
+    @apply m-0;
+  }
+
+  .new-inquiries__clear {
+    @apply cursor-pointer rounded-md border-0 bg-transparent px-2 py-1 text-sm font-medium text-sky-700 hover:bg-sky-50 hover:text-sky-900;
   }
 
   .new-inquiries__count {
@@ -1097,6 +1109,10 @@
 
   .new-inquiries__list {
     @apply m-0 grid list-none gap-2 p-0;
+  }
+
+  .new-inquiries__more {
+    @apply m-0 mt-3 text-sm text-gray-600;
   }
 
   .new-inquiry-card {

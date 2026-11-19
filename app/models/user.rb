@@ -27,11 +27,15 @@ class User < ApplicationRecord
     full_name.presence || email.to_s.split("@").first.presence || "User"
   end
 
-  # Volunteers added since this staff member's notices began, newest first, minus any they've dismissed
+  # Volunteers who inquired, or came back, since this staff member's notices began, newest first.
+  # A dismissal hides what happened up to when it was made, so someone who comes back later shows again.
   def new_inquiries
-    Volunteer.where(created_at: inquiry_notices_since..)
-             .where.not(id: inquiry_dismissals.select(:volunteer_id))
-             .order(created_at: :desc)
+    inquired_at = Volunteer::LAST_INQUIRED_AT_SQL
+    dismissed_since = inquiry_dismissals.where("inquiry_dismissals.volunteer_id = volunteers.id")
+                                        .where("inquiry_dismissals.updated_at >= #{inquired_at}")
+    Volunteer.where("#{inquired_at} >= ?", inquiry_notices_since)
+             .where.not(dismissed_since.arel.exists)
+             .order(Arel.sql("#{inquired_at} DESC"))
   end
 
   def self.from_omniauth(auth)

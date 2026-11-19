@@ -353,10 +353,31 @@ RSpec.describe User, type: :model do
       colleague = create(:user)
       dismissed = create(:volunteer, created_at: 1.minute.from_now)
       kept = create(:volunteer, created_at: 1.minute.from_now)
-      user.inquiry_dismissals.create!(volunteer: dismissed)
+      travel(2.minutes) { InquiryDismissal.dismiss!(user, dismissed) }
 
       expect(user.new_inquiries).to eq([ kept ])
       expect(colleague.new_inquiries).to contain_exactly(dismissed, kept)
+    end
+
+    it 'includes volunteers added before then who came back since, by when they came back' do
+      added = create(:volunteer, first_name: 'Added', created_at: 2.minutes.from_now)
+      returned = create(:volunteer, first_name: 'Returned', created_at: 1.year.ago, reactivated_at: 3.minutes.from_now)
+      create(:volunteer, first_name: 'Returned before', created_at: 1.year.ago, reactivated_at: 1.month.ago)
+
+      expect(user.new_inquiries).to eq([ returned, added ])
+    end
+
+    it 'shows a dismissed volunteer again once they come back after the dismissal' do
+      volunteer = create(:volunteer, created_at: 1.minute.from_now)
+      travel(2.minutes) { InquiryDismissal.dismiss!(user, volunteer) }
+      expect(user.new_inquiries).to be_empty
+
+      volunteer.update!(reactivated_at: 3.minutes.from_now)
+      expect(user.new_inquiries).to eq([ volunteer ])
+
+      travel(4.minutes) { InquiryDismissal.dismiss!(user, volunteer) }
+      expect(user.new_inquiries).to be_empty
+      expect(user.inquiry_dismissals.count).to eq(1)
     end
   end
 end

@@ -71,6 +71,24 @@ When("I dismiss {string} from the new inquiries column") do |name|
   within("#new-inquiries .new-inquiry-card", text: name) { click_button "Dismiss" }
 end
 
+When("I clear all new inquiries") do
+  within("#new-inquiries") { click_button "Clear all" }
+end
+
+Then("the new inquiries column should be empty") do
+  within("#new-inquiries") do
+    expect(page).to have_no_css(".new-inquiry-card")
+    expect(page).to have_no_button("Clear all")
+  end
+end
+
+When("{string} comes back after being inactive") do |name|
+  first_name, last_name = name.split(" ", 2)
+  volunteer = Volunteer.find_by!(first_name: first_name, last_name: last_name)
+  volunteer.update!(current_funnel_stage: :inactive, inactive_reason: :no_response)
+  volunteer.reactivate!
+end
+
 When("I click {string} in the new inquiries column") do |name|
   within("#new-inquiries") { click_link name }
 end

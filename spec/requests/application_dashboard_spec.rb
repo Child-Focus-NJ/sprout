@@ -151,11 +151,54 @@ RSpec.describe "Application dashboard", type: :request do
       expect(response.parsed_body.at_css("#new-inquiries h2").text.squish).to eq("New inquiries")
       expect(cards).to be_empty
       expect(response.parsed_body.at_css("#new-inquiries .new-inquiries__count")).to be_nil
+      expect(response.parsed_body.at_css("#new-inquiries form[action='#{clear_new_inquiries_path}']")).to be_nil
+    end
+
+    it "clears every card for this staff member only, and later inquiries still show" do
+      colleague = create(:user)
+      create_list(:volunteer, 16)
+      get application_dashboard_path
+      expect(response.parsed_body.at_css("#new-inquiries form[action='#{clear_new_inquiries_path}'] button").text).to eq("Clear all")
+
+      post clear_new_inquiries_path
+
+      expect(response).to redirect_to(application_dashboard_path)
+      expect(response).to have_http_status(:see_other)
+      get application_dashboard_path
+      expect(cards).to be_empty
+
+      later = travel(1.minute) { create(:volunteer, first_name: "Later", last_name: "Inquiry") }
+      get application_dashboard_path
+      expect(cards.map { |card| card.at_css(".new-inquiry-card__name").text }).to eq([ later.full_name ])
+
+      login_as(colleague, scope: :user)
+      get application_dashboard_path
+      expect(response.parsed_body.at_css("#new-inquiries .new-inquiries__count").text).to eq("17")
+    end
+
+    it "labels a volunteer who came back after being inactive" do
+      user.update!(inquiry_notices_since: 1.hour.ago)
+      create(:volunteer, first_name: "Ana", last_name: "Ruiz", created_at: 1.year.ago, reactivated_at: 1.minute.ago)
+
+      get application_dashboard_path
+
+      expect(cards.first.at_css(".new-inquiry-card__meta").text.squish).to eq("Came back 1 minute ago")
+    end
+
+    it "shows the newest 15 and says how many there are in all" do
+      volunteers = (1..16).map { |minutes| create(:volunteer, created_at: minutes.minutes.from_now) }
+
+      get application_dashboard_path
+
+      expect(cards.size).to eq(15)
+      expect(cards.first.at_css("a")["href"]).to eq(volunteer_path(volunteers.last))
+      expect(response.parsed_body.at_css("#new-inquiries .new-inquiries__count").text).to eq("16")
+      expect(response.parsed_body.at_css(".new-inquiries__more").text.squish).to eq("Showing the newest 15 of 16.")
     end
 
     it "hides a dismissed volunteer for this staff member only" do
       colleague = create(:user)
-      volunteer = create(:volunteer, created_at: 1.minute.from_now)
+      volunteer = create(:volunteer)
 
       post dismiss_new_inquiry_path(volunteer)
 
@@ -172,10 +215,10 @@ RSpec.describe "Application dashboard", type: :request do
     it "handles a second × on the same card or an unknown volunteer without an error" do
       volunteer = create(:volunteer, created_at: 1.minute.from_now)
 
-      2.times { post dismiss_new_inquiry_path(volunteer) }
-      post dismiss_new_inquiry_path(volunteer_id: 0)
-
-      expect(response).to redirect_to(application_dashboard_path)
+      [ volunteer.id, volunteer.id, 0 ].each do |volunteer_id|
+        post dismiss_new_inquiry_path(volunteer_id: volunteer_id)
+        expect(response).to redirect_to(application_dashboard_path)
+      end
       expect(user.inquiry_dismissals.count).to eq(1)
     end
   end

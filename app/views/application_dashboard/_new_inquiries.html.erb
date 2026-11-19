@@ -1,12 +1,18 @@
-<%# Right-hand column of volunteers added since this staff member's notices began. Each card links to
-    the profile, and its × hides that volunteer for this staff member only. %>
+<%# Right-hand column of volunteers who inquired, or came back, since this staff member's notices began.
+    Each card links to the profile, and its × hides that volunteer for this staff member only. %>
 <aside class="new-inquiries" id="new-inquiries" aria-labelledby="new-inquiries-heading">
-  <h2 class="new-inquiries__heading" id="new-inquiries-heading">
-    New inquiries
-    <% if volunteers.any? %>
-      <span class="new-inquiries__count"><%= volunteers.size %></span>
+  <div class="new-inquiries__header">
+    <h2 class="new-inquiries__heading" id="new-inquiries-heading">
+      New inquiries
+      <% if total.positive? %>
+        <span class="new-inquiries__count"><%= number_with_delimiter(total) %></span>
+      <% end %>
+    </h2>
+    <% if total.positive? %>
+      <%= button_to "Clear all", clear_new_inquiries_path,
+                    class: "new-inquiries__clear", form_class: "new-inquiries__clear-form" %>
     <% end %>
-  </h2>
+  </div>
 
   <ul class="new-inquiries__list">
     <% volunteers.each do |volunteer| %>
@@ -14,7 +20,7 @@
         <div class="new-inquiry-card__body">
           <%= link_to volunteer.full_name, volunteer_path(volunteer), class: "new-inquiry-card__name" %>
           <p class="new-inquiry-card__meta">
-            Added <%= time_ago_in_words(volunteer.created_at) %> ago<%= " · #{volunteer.referral_source_name}" if volunteer.referral_source_name %>
+            <%= volunteer.came_back? ? "Came back" : "Added" %> <%= time_ago_in_words(volunteer.last_inquired_at) %> ago<%= " · #{volunteer.referral_source_name}" if volunteer.referral_source_name %>
           </p>
         </div>
         <%= button_to "×", dismiss_new_inquiry_path(volunteer),
@@ -23,4 +29,8 @@
       </li>
     <% end %>
   </ul>
+
+  <% if total > volunteers.size %>
+    <p class="new-inquiries__more">Showing the newest <%= volunteers.size %> of <%= number_with_delimiter(total) %>.</p>
+  <% end %>
 </aside>
