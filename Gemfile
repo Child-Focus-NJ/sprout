@@ -47,9 +47,8 @@ gem "dotenv-rails"                          # Load .env files
 # ---------------------------------------------------------------------------
 gem "httparty"                              # HTTP client for API Gateway calls and external APIs
 
-# AWS SDK (SQS for async Lambda triggers, S3 for report storage)
+# AWS SDK (S3 for report storage)
 gem "aws-sdk-s3", "~> 1.239"
-gem "aws-sdk-sqs", "~> 1.126"
 
 gem "caxlsx"                                # Excel generation for data exports (admin full-data export, reporting)
 gem "prawn"                                 # PDF generation for report exports

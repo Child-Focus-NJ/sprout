@@ -10,8 +10,6 @@ class EbStack(Stack):
         scope: Construct,
         construct_id: str,
         reports_bucket_name: str,
-        zoom_attendance_queue_url: str,
-        mailchimp_batch_queue_url: str,
         database_url: str,
         **kwargs,
     ) -> None:
@@ -66,16 +64,6 @@ class EbStack(Stack):
                     namespace="aws:elasticbeanstalk:application:environment",
                     option_name="DATABASE_URL",
                     value=database_url,
-                ),
-                eb.CfnEnvironment.OptionSettingProperty(
-                    namespace="aws:elasticbeanstalk:application:environment",
-                    option_name="SQS_ZOOM_ATTENDANCE_URL",
-                    value=zoom_attendance_queue_url,
-                ),
-                eb.CfnEnvironment.OptionSettingProperty(
-                    namespace="aws:elasticbeanstalk:application:environment",
-                    option_name="SQS_MAILCHIMP_BATCH_URL",
-                    value=mailchimp_batch_queue_url,
                 ),
                 eb.CfnEnvironment.OptionSettingProperty(
                     namespace="aws:elasticbeanstalk:application:environment",

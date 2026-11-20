@@ -5,7 +5,6 @@ import aws_cdk as cdk
 from stacks.network_stack import NetworkStack
 from stacks.database_stack import DatabaseStack
 from stacks.storage_stack import StorageStack
-from stacks.queue_stack import QueueStack
 from stacks.iam_stack import IamStack
 
 app = cdk.App()
@@ -24,7 +23,5 @@ database = DatabaseStack(
 )
 
 storage = StorageStack(app, "SproutStorage", env=env)
-
-QueueStack(app, "SproutQueues", env=env)
 
 app.synth()
