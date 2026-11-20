@@ -71,35 +71,6 @@ RSpec.describe "SystemManagement", type: :request do
       expect(response.body).to include("View Usage Report")
     end
 
-    it "shows recent sync notifications" do
-      volunteer = create(:volunteer)
-      ExternalSyncLog.create!(
-        volunteer: volunteer,
-        status: :completed,
-        sync_type: :push,
-        sync_direction: :outbound,
-        started_at: 1.hour.ago,
-        completed_at: 1.hour.ago,
-        records_processed: 1
-      )
-      get system_management_path
-      expect(response.body).to include(volunteer.full_name)
-    end
-
-    it "does not show syncs older than 24 hours" do
-      volunteer = create(:volunteer)
-      ExternalSyncLog.create!(
-        volunteer: volunteer,
-        status: :completed,
-        sync_type: :push,
-        sync_direction: :outbound,
-        started_at: 25.hours.ago,
-        completed_at: 25.hours.ago,
-        records_processed: 1
-      )
-      get system_management_path
-      expect(response.body).not_to include(volunteer.full_name)
-    end
   end
 
   describe "POST /system_management/import" do

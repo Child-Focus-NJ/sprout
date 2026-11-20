@@ -26,7 +26,7 @@ Inquiry → Info Session Registered → Attended Session → Application Sent �
 |-------|--------|---------|
 | **Framework** | Rails 8.1.2 | Modern Rails with Solid suite |
 | **Database** | PostgreSQL 16 | 13 migrations, well-indexed schema |
-| **Models** | 13 models | Volunteer, User, Communication, CommunicationTemplate, ScheduledReminder, InformationSession, SessionRegistration, Note, StatusChange, ExternalSyncLog, InquiryFormSubmission, ReferralSource, SystemSetting |
+| **Models** | 12 models | Volunteer, User, Communication, CommunicationTemplate, ScheduledReminder, InformationSession, SessionRegistration, Note, StatusChange, InquiryFormSubmission, ReferralSource, SystemSetting |
 | **Background Jobs** | Solid Queue | Configured but no jobs defined |
 | **Caching** | Solid Cache | Configured |
 | **WebSockets** | Solid Cable | Configured |
@@ -230,7 +230,7 @@ gem "httparty"     # HTTP client
 gem "retriable"    # Retry with exponential backoff
 ```
 
-Service object pattern with adapter support for multiple external systems. Jobs handle async sync with retry logic via Solid Queue.
+Service object pattern for third-party integrations (e.g. Mailchimp). Background work runs via Solid Queue.
 
 ### 11. Data Import
 
@@ -348,15 +348,14 @@ gem "invisible_captcha"
                       │
 ┌─────────────────────v──────────────────────────────┐
 │                  Service Layer                       │
-│  ExternalSyncService, VolunteerImportService,       │
-│  CommunicationService, FunnelProgressionService     │
+│  VolunteerImportService, CommunicationService,      │
+│  FunnelProgressionService                           │
 └─────────────────────┬──────────────────────────────┘
                       │
 ┌─────────────────────v──────────────────────────────┐
 │               Background Jobs (Solid Queue)          │
 │  ProcessInquiryJob, SendReminderJob,                │
-│  ProcessScheduledRemindersJob, SyncVolunteerJob,    │
-│  ImportVolunteersJob                                 │
+│  ProcessScheduledRemindersJob, ImportVolunteersJob  │
 └─────────────────────┬──────────────────────────────┘
                       │
 ┌─────────────────────v──────────────────────────────┐
