@@ -28,15 +28,6 @@ mandrill:
 
 Do not put those values in a `.env` file. Turn local sending on by setting `SPROUT_EMAIL_MAILCHIMP_ENABLED=true` for the web process. See [Mailchimp's first email guide](https://mailchimp.com/developer/transactional/guides/send-first-email/) for account setup. SMS configuration remains independent.
 
-The campaigns page uses the Marketing API, which is a different product from Mandrill. A working transactional setup does not configure it. Store that key, including its datacenter suffix such as `-us2`, separately:
-
-```yaml
-mailchimp:
-  marketing_api_key: your_marketing_key-us2
-```
-
-`MAILCHIMP_MARKETING_API_KEY` is the environment fallback for the web process. It is not `MAILCHIMP_API_KEY` and it is not the Mandrill key.
-
 ```bash
 docker compose up -d db
 docker compose up -d --force-recreate localstack
