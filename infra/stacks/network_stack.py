@@ -7,6 +7,9 @@ class NetworkStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        # NAT remains because RDS is placed in PRIVATE_WITH_EGRESS (see database_stack).
+        # After Lambdas were removed nothing else needs private egress; switching RDS to
+        # PRIVATE_ISOLATED would allow nat_gateways=0 and save ~$30+/month.
         self.vpc = ec2.Vpc(
             self,
             "SproutVpc",
@@ -26,25 +29,11 @@ class NetworkStack(Stack):
             ],
         )
 
-        self.lambda_sg = ec2.SecurityGroup(
-            self,
-            "LambdaSg",
-            vpc=self.vpc,
-            description="Security group for Lambda functions",
-            allow_all_outbound=True,
-        )
-
         self.rds_sg = ec2.SecurityGroup(
             self,
             "RdsSg",
             vpc=self.vpc,
             description="Security group for RDS PostgreSQL",
-        )
-
-        self.rds_sg.add_ingress_rule(
-            peer=self.lambda_sg,
-            connection=ec2.Port.tcp(5432),
-            description="Lambda to RDS",
         )
 
         self.eb_sg = ec2.SecurityGroup(

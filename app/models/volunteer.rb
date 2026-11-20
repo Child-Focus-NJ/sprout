@@ -14,7 +14,7 @@ class Volunteer < ApplicationRecord
   has_many :status_changes, dependent: :destroy
   has_many :scheduled_reminders, dependent: :destroy
   has_many :inquiry_form_submissions, dependent: :nullify
-  has_many :external_sync_logs, dependent: :nullify
+  has_many :inquiry_dismissals, dependent: :delete_all
 
   validates :first_name, presence: true
   validates :last_name, presence: true
@@ -54,6 +54,10 @@ class Volunteer < ApplicationRecord
                                  .select(:volunteer_id))
   }
 
+  # When a volunteer last inquired: when they were added, or when they came back after being
+  # inactive (by inquiring again or signing up for a session), whichever is later
+  LAST_INQUIRED_AT_SQL = "GREATEST(volunteers.created_at, volunteers.reactivated_at)".freeze
+
   before_create :default_inquiry_date, :default_stage_started_at
   before_update :restart_stage_clock, if: :will_save_change_to_current_funnel_stage?
   after_save :cancel_pending_reminders_if_applied
@@ -84,6 +88,14 @@ class Volunteer < ApplicationRecord
 
     assign_attributes(reactivated_at: Time.current, reactivation_count: reactivation_count + 1)
     change_status!(reactivation_stage, user: user, trigger: :event)
+  end
+
+  def last_inquired_at
+    [ created_at, reactivated_at ].compact.max
+  end
+
+  def came_back?
+    reactivated_at.present? && reactivated_at > created_at
   end
 
   def full_name

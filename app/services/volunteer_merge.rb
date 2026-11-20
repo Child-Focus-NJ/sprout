@@ -14,12 +14,12 @@ class VolunteerMerge
   EARLIEST_DATES = %w[inquiry_date first_session_attended_at application_sent_at application_submitted_at].freeze
 
   # Filled in from the newer record when the older one has none
-  FILL_IN = %w[vicinage_id referral_source_id referred_by_volunteer_id external_id external_synced_at reactivated_at].freeze
+  FILL_IN = %w[vicinage_id referral_source_id referred_by_volunteer_id reactivated_at].freeze
 
   # When both were registered for the same session, the one that says the most about what happened stays
   REGISTRATION_PRIORITY = %w[attended registered rescheduled no_show cancelled].freeze
 
-  MOVED_RECORDS = [ Note, Communication, StatusChange, ScheduledReminder, InquiryFormSubmission, ExternalSyncLog ].freeze
+  MOVED_RECORDS = [ Note, Communication, StatusChange, ScheduledReminder, InquiryFormSubmission ].freeze
 
   attr_reader :kept, :removed
 

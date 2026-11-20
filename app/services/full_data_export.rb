@@ -21,8 +21,7 @@ class FullDataExport
     Communication,
     CommunicationTemplate,
     ScheduledReminder,
-    InquiryFormSubmission,
-    ExternalSyncLog
+    InquiryFormSubmission
   ].freeze
 
   # Excel's limit on the number of characters in a single cell.

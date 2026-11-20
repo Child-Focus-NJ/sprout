@@ -1,14 +1,12 @@
 # Integration & Administration
 
 **As a** system administrator  
-**I want to** integrate with external systems and manage settings  
-**So that** data stays synchronized and the system is configurable
+**I want to** manage application settings and administrative tools  
+**So that** the system stays configurable for staff workflows
 
 **Acceptance Criteria:**
-- System notifies when volunteer data is transferred to the external system
-- Transfer status visible in volunteer profile with date/time
-- When application is submitted, data is sent through a custom API to the external system
 - Volunteers remain in the system for future email communications
 - Role-based access control for administrators
 - Administrators can change reminder frequencies and manage email templates
 - System can import historical data from CSV/Excel/JSON files with duplicate detection
+- Staff can open the external VMS from the main navigation when needed (no in-app sync)

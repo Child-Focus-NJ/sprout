@@ -81,7 +81,7 @@ module Mailchimp
       raise UncertainDeliveryError, "SMS delivery could not be confirmed (#{e.class})"
     end
 
-    # Returns { "status", "external_id", "to", "reject_reason" } like the Lambda email path.
+    # Returns { "status", "external_id", "to", "reject_reason" }.
     def send_email(to:, subject:, text_body:, from_email: self.class.credential(:from_email, "MANDRILL_FROM_EMAIL", "MAILCHIMP_EMAIL_FROM"))
       sender = from_email.to_s.strip
       raise ConfigurationError, "Mandrill From address is not set in the encrypted credentials" if sender.blank?

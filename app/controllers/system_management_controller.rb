@@ -12,11 +12,6 @@ class SystemManagementController < ApplicationController
     @volunteer_tags = VolunteerTag.order(:title)
     @referral_sources = ReferralSource.order(:name)
     @note_categories = NoteCategory.ordered
-    @recent_syncs = ExternalSyncLog
-                      .completed
-                      .where("completed_at > ?", 24.hours.ago)
-                      .includes(:volunteer)
-                      .order(completed_at: :desc)
   end
 
   def import

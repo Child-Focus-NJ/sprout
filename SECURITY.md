@@ -76,7 +76,7 @@ public disclosure. We follow coordinated disclosure:
 - The Sprout Rails application code in this repository (admin dashboard, public
   inquiry form, information session and sign-in features)
 - Other code and configuration in this repository, including `infra/`,
-  `lambdas/`, `.github/`, and deployment configuration
+  `.github/`, and deployment configuration
 - Authentication, authorization, and session handling
 - Handling of volunteer personal data
 
