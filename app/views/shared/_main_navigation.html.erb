@@ -16,7 +16,9 @@
       <%= link_to "Reporting", reporting_exporting_index_path, class: app_nav_link_class(reporting_exporting_index_path) %>
       <% if current_user.admin? %>
         <%= link_to "Campaigns", admin_campaigns_path, class: app_nav_link_class(admin_campaigns_path) %>
-        <%= link_to "Admin", system_management_path, class: app_nav_link_class(system_management_path) %>
+        <%= link_to system_management_path, class: app_nav_link_class(system_management_path) do %>
+          Admin<% if possible_duplicates_to_review? %><span class="app-navbar__dot" title="Possible duplicate volunteers to review" aria-hidden="true"></span><span class="sr-only"> (possible duplicate volunteers to review)</span><% end %>
+        <% end %>
       <% end %>
     </nav>
 

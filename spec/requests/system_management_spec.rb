@@ -386,4 +386,127 @@ RSpec.describe "System management item updates", type: :request do
     expect(response).to redirect_to(system_management_path(tab: "note_categories", edit_note_category_id: category.id))
     expect(category.reload.name).to eq("Email")
   end
+
+  describe "Possible Duplicates" do
+    let!(:maria) { create(:volunteer, first_name: "Maria", last_name: "Lopez", phone: "(973) 555-0182") }
+    let!(:other_maria) { create(:volunteer, first_name: "maria", last_name: "Lopez", phone: "973-555-0182") }
+
+    def pairs
+      response.parsed_body.css("#possible-duplicates .duplicate-pair")
+    end
+
+    it "lists each pair with profile links, why they matched, and Merge and Not a duplicate buttons" do
+      create(:volunteer, first_name: "Sam", last_name: "Reed", phone: "201-555-0148")
+
+      get system_management_path(tab: "duplicates")
+
+      expect(pairs.size).to eq(1)
+      expect(pairs.first.css(".duplicate-pair__name").map { |link| link["href"] }).to eq([ volunteer_path(maria), volunteer_path(other_maria) ])
+      expect(pairs.first.css(".duplicate-pair__reason").map(&:text)).to eq([ "Same name", "Same phone" ])
+      expect(pairs.first.css(".duplicate-pair__actions button").map(&:text)).to eq([ "Merge", "Not a duplicate" ])
+      expect(pairs.first.at_css(".duplicate-pair__dismiss")["action"]).to eq(duplicate_dismissals_path)
+    end
+
+    it "offers a Merge popup to choose the name, email, phone and status to keep" do
+      other_maria.update!(email: "mlopez@work.org", current_funnel_stage: :application_eligible)
+
+      get system_management_path(tab: "duplicates")
+
+      dialog = pairs.first.at_css("dialog.merge-dialog")
+      expect(pairs.first.at_css("[data-merge-dialog-open]")["data-merge-dialog-open"]).to eq(dialog["id"])
+      expect(dialog.at_css("form")["action"]).to eq(duplicate_merges_path)
+      options = ->(field) { dialog.css("input[name='keep[#{field}]'][type=radio]").map { |radio| [ radio.parent.text.squish, radio["checked"].present? ] } }
+      expect(options.call("name")).to eq([ [ "Maria Lopez", true ], [ "maria Lopez", false ] ])
+      expect(options.call("email")).to eq([ [ maria.email, false ], [ "mlopez@work.org", true ] ])
+      expect(options.call("phone")).to eq([ [ "(973) 555-0182", false ], [ "973-555-0182", true ] ])
+      expect(options.call("status")).to eq([ [ "Inquiry", false ], [ "Application eligible", true ] ])
+    end
+
+    it "shows a single value instead of a choice when both records have the same one" do
+      get system_management_path(tab: "duplicates")
+
+      status = pairs.first.css(".merge-dialog__field").find { |field| field.at_css("legend").text == "Status" }
+      expect(status.at_css(".merge-dialog__only").text.squish).to eq("Inquiry · Same on both")
+      expect(status.at_css("input[type=hidden][name='keep[status]']")["value"]).to eq(maria.id.to_s)
+    end
+
+    it "merges a pair into one profile with what staff chose" do
+      post duplicate_merges_path, params: {
+        volunteer_id: maria.id, other_volunteer_id: other_maria.id,
+        keep: { name: maria.id, email: other_maria.id, phone: maria.id, status: maria.id }
+      }
+
+      expect(response).to redirect_to(system_management_path(tab: "duplicates"))
+      expect(flash[:notice]).to eq("Merged the two records into Maria Lopez's profile.")
+      expect(Volunteer.sole).to have_attributes(id: maria.id, email: other_maria.email, phone: "(973) 555-0182")
+      get system_management_path(tab: "duplicates")
+      expect(pairs).to be_empty
+    end
+
+    it "handles a second click or an unknown volunteer without an error" do
+      2.times { post duplicate_merges_path, params: { volunteer_id: maria.id, other_volunteer_id: other_maria.id } }
+
+      expect(response).to redirect_to(system_management_path(tab: "duplicates"))
+      expect(flash[:alert]).to eq("Couldn't find both volunteers.")
+      expect(Volunteer.sole).to eq(maria)
+    end
+
+    it "only lets admins merge" do
+      login_as(create(:user, role: :user), scope: :user)
+
+      post duplicate_merges_path, params: { volunteer_id: maria.id, other_volunteer_id: other_maria.id }
+
+      expect(response).to redirect_to(root_path)
+      expect(Volunteer.count).to eq(2)
+    end
+
+    it "shows a red count on the tab and a red dot on the Admin link while there are pairs" do
+      get system_management_path
+
+      expect(response.parsed_body.at_css(".sys-tabs a[href='#{system_management_path(tab: 'duplicates')}']").text.squish)
+        .to eq("Possible Duplicates 1")
+      expect(response.parsed_body.at_css(".app-navbar__links .app-navbar__dot")).to be_present
+    end
+
+    it "explains when there's nothing to check and shows no dot" do
+      other_maria.destroy!
+
+      get system_management_path(tab: "duplicates")
+
+      expect(response.body).to include("No possible duplicates right now.")
+      expect(response.parsed_body.at_css(".sys-tabs__alert-count")).to be_nil
+      expect(response.parsed_body.at_css(".app-navbar__dot")).to be_nil
+    end
+
+    it "stops showing a pair once it's marked not a duplicate" do
+      post duplicate_dismissals_path, params: { volunteer_id: other_maria.id, other_volunteer_id: maria.id }
+
+      expect(response).to redirect_to(system_management_path(tab: "duplicates"))
+      expect(flash[:notice]).to eq("Maria Lopez and maria Lopez won't show as possible duplicates again.")
+      expect(DuplicateDismissal.sole).to have_attributes(volunteer: maria, other_volunteer: other_maria, user: admin)
+      get system_management_path(tab: "duplicates")
+      expect(pairs).to be_empty
+    end
+
+    it "handles a second click or an unknown volunteer without an error" do
+      2.times do
+        post duplicate_dismissals_path, params: { volunteer_id: maria.id, other_volunteer_id: other_maria.id }
+        expect(response).to redirect_to(system_management_path(tab: "duplicates"))
+      end
+      post duplicate_dismissals_path, params: { volunteer_id: maria.id, other_volunteer_id: 0 }
+
+      expect(response).to redirect_to(system_management_path(tab: "duplicates"))
+      expect(flash[:alert]).to eq("Couldn't find both volunteers.")
+      expect(DuplicateDismissal.count).to eq(1)
+    end
+
+    it "is admin only" do
+      login_as(create(:user, role: :user), scope: :user)
+
+      post duplicate_dismissals_path, params: { volunteer_id: maria.id, other_volunteer_id: other_maria.id }
+
+      expect(response).to redirect_to(root_path)
+      expect(DuplicateDismissal.count).to eq(0)
+    end
+  end
 end

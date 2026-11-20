@@ -1,10 +1,12 @@
 class SystemManagementController < ApplicationController
   restrict_to_feature :system_management
 
-  TABS = %w[frequencies tags employees referral_sources note_categories].freeze
+  TABS = %w[frequencies tags employees referral_sources note_categories duplicates].freeze
 
   def show
     @tab = TABS.include?(params[:tab]) ? params[:tab] : "frequencies"
+    @possible_duplicates = PossibleDuplicates.pairs if @tab == "duplicates"
+    @possible_duplicate_count = @possible_duplicates&.size || PossibleDuplicates.count
     @users = User.where.not(id: current_user.id).order(:last_name, :first_name)
     @reminder_frequencies = ReminderFrequency.order(:title)
     @volunteer_tags = VolunteerTag.order(:title)
