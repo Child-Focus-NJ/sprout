@@ -3,12 +3,9 @@ from aws_cdk import Stack, Duration, CfnParameter
 import aws_cdk.aws_lambda as _lambda
 import aws_cdk.aws_ec2 as ec2
 import aws_cdk.aws_iam as iam
-import aws_cdk.aws_lambda_event_sources as event_sources
 import aws_cdk.aws_events as events
 import aws_cdk.aws_events_targets as targets
 from constructs import Construct
-
-from stacks.queue_stack import QueueStack
 
 
 class LambdaStack(Stack):
@@ -18,7 +15,6 @@ class LambdaStack(Stack):
         construct_id: str,
         vpc: ec2.Vpc,
         lambda_sg: ec2.SecurityGroup,
-        queues: QueueStack,
         database_secret_arn: str,
         **kwargs,
     ) -> None:
@@ -109,7 +105,7 @@ class LambdaStack(Stack):
             security_groups=[self._lambda_sg],
         )
 
-        # Async Lambda functions (SQS / EventBridge)
+        # Async Lambda functions (EventBridge; SQS triggers removed — unused)
         self.zoom_attendance_fn = _lambda.Function(
             self,
             "ZoomAttendanceFn",
@@ -128,13 +124,6 @@ class LambdaStack(Stack):
             security_groups=[self._lambda_sg],
         )
 
-        self.zoom_attendance_fn.add_event_source(
-            event_sources.SqsEventSource(
-                queues.zoom_attendance_queue,
-                batch_size=1,
-            )
-        )
-
         self.mailchimp_batch_fn = _lambda.Function(
             self,
             "MailchimpBatchFn",
@@ -151,13 +140,6 @@ class LambdaStack(Stack):
             vpc=self._vpc,
             vpc_subnets=self._vpc_subnets,
             security_groups=[self._lambda_sg],
-        )
-
-        self.mailchimp_batch_fn.add_event_source(
-            event_sources.SqsEventSource(
-                queues.mailchimp_batch_queue,
-                batch_size=10,
-            )
         )
 
         # EventBridge nightly schedule for mailchimp batch

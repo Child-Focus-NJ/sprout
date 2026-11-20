@@ -10,60 +10,8 @@ echo "============================================"
 echo ""
 
 # ---------------------------------------------------------------------------
-# 1. SQS Dead-Letter Queues
+# 1. S3 Bucket
 # ---------------------------------------------------------------------------
-echo "--- Creating SQS dead-letter queues ---"
-
-awslocal sqs create-queue \
-  --queue-name sprout-zoom-attendance-dlq \
-  --region "$REGION" 2>/dev/null || true
-
-awslocal sqs create-queue \
-  --queue-name sprout-mailchimp-batch-dlq \
-  --region "$REGION" 2>/dev/null || true
-
-echo "  Created: sprout-zoom-attendance-dlq"
-echo "  Created: sprout-mailchimp-batch-dlq"
-
-# ---------------------------------------------------------------------------
-# 2. SQS Main Queues with Redrive Policies
-# ---------------------------------------------------------------------------
-echo ""
-echo "--- Creating SQS main queues with redrive policies ---"
-
-ZOOM_DLQ_ARN=$(awslocal sqs get-queue-attributes \
-  --queue-url "http://sqs.$REGION.localhost.localstack.cloud:4566/$ACCOUNT_ID/sprout-zoom-attendance-dlq" \
-  --attribute-names QueueArn \
-  --region "$REGION" \
-  --query 'Attributes.QueueArn' \
-  --output text)
-
-MAILCHIMP_DLQ_ARN=$(awslocal sqs get-queue-attributes \
-  --queue-url "http://sqs.$REGION.localhost.localstack.cloud:4566/$ACCOUNT_ID/sprout-mailchimp-batch-dlq" \
-  --attribute-names QueueArn \
-  --region "$REGION" \
-  --query 'Attributes.QueueArn' \
-  --output text)
-
-awslocal sqs create-queue \
-  --queue-name sprout-zoom-attendance \
-  --region "$REGION" \
-  --attributes "{\"RedrivePolicy\":\"{\\\"deadLetterTargetArn\\\":\\\"${ZOOM_DLQ_ARN}\\\",\\\"maxReceiveCount\\\":\\\"3\\\"}\"}" \
-  2>/dev/null || true
-
-awslocal sqs create-queue \
-  --queue-name sprout-mailchimp-batch \
-  --region "$REGION" \
-  --attributes "{\"RedrivePolicy\":\"{\\\"deadLetterTargetArn\\\":\\\"${MAILCHIMP_DLQ_ARN}\\\",\\\"maxReceiveCount\\\":\\\"3\\\"}\"}" \
-  2>/dev/null || true
-
-echo "  Created: sprout-zoom-attendance (DLQ ARN: $ZOOM_DLQ_ARN)"
-echo "  Created: sprout-mailchimp-batch (DLQ ARN: $MAILCHIMP_DLQ_ARN)"
-
-# ---------------------------------------------------------------------------
-# 3. S3 Bucket
-# ---------------------------------------------------------------------------
-echo ""
 echo "--- Creating S3 bucket ---"
 
 awslocal s3 mb "s3://sprout-reports" \
@@ -72,7 +20,7 @@ awslocal s3 mb "s3://sprout-reports" \
 echo "  Created: sprout-reports"
 
 # ---------------------------------------------------------------------------
-# 4. Lambda Functions (stub handlers)
+# 2. Lambda Functions (stub handlers)
 # ---------------------------------------------------------------------------
 echo ""
 echo "--- Creating Lambda functions ---"
@@ -123,32 +71,7 @@ sleep 2
 rm -rf "$LAMBDA_DIR"
 
 # ---------------------------------------------------------------------------
-# 5. SQS -> Lambda Event Source Mappings
-# ---------------------------------------------------------------------------
-echo ""
-echo "--- Creating SQS -> Lambda event source mappings ---"
-
-ZOOM_QUEUE_ARN="arn:aws:sqs:${REGION}:${ACCOUNT_ID}:sprout-zoom-attendance"
-MAILCHIMP_QUEUE_ARN="arn:aws:sqs:${REGION}:${ACCOUNT_ID}:sprout-mailchimp-batch"
-
-awslocal lambda create-event-source-mapping \
-  --function-name sprout-zoom-attendance \
-  --event-source-arn "$ZOOM_QUEUE_ARN" \
-  --batch-size 1 \
-  --region "$REGION" > /dev/null 2>&1 || true
-
-echo "  Mapped: sprout-zoom-attendance queue -> sprout-zoom-attendance Lambda"
-
-awslocal lambda create-event-source-mapping \
-  --function-name sprout-mailchimp-batch \
-  --event-source-arn "$MAILCHIMP_QUEUE_ARN" \
-  --batch-size 10 \
-  --region "$REGION" > /dev/null 2>&1 || true
-
-echo "  Mapped: sprout-mailchimp-batch queue -> sprout-mailchimp-batch Lambda"
-
-# ---------------------------------------------------------------------------
-# 6. API Gateway REST API
+# 3. API Gateway REST API
 # ---------------------------------------------------------------------------
 echo ""
 echo "--- Creating API Gateway REST API ---"
@@ -255,16 +178,12 @@ echo "$API_URL" > /var/lib/localstack/api/gateway_url
 echo "  API URL written to /var/lib/localstack/api/gateway_url"
 
 # ---------------------------------------------------------------------------
-# 7. Summary
+# 4. Summary
 # ---------------------------------------------------------------------------
 echo ""
 echo "============================================"
 echo " Sprout LocalStack Bootstrap Complete"
 echo "============================================"
-echo ""
-echo "SQS Queues:"
-echo "  - sprout-zoom-attendance       (DLQ: sprout-zoom-attendance-dlq, maxReceiveCount: 3)"
-echo "  - sprout-mailchimp-batch       (DLQ: sprout-mailchimp-batch-dlq, maxReceiveCount: 3)"
 echo ""
 echo "S3 Buckets:"
 echo "  - sprout-reports"
@@ -275,10 +194,6 @@ echo "  - sprout-zoom-attendance"
 echo "  - sprout-volunteer-management-system-sync"
 echo "  - sprout-mailchimp-realtime"
 echo "  - sprout-mailchimp-batch"
-echo ""
-echo "Event Source Mappings:"
-echo "  - sprout-zoom-attendance queue -> sprout-zoom-attendance Lambda"
-echo "  - sprout-mailchimp-batch queue -> sprout-mailchimp-batch Lambda"
 echo ""
 echo "API Gateway: sprout-api (ID: $API_ID)"
 echo "  Stage: local"

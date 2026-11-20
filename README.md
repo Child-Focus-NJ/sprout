@@ -60,7 +60,7 @@ bin/dev-docker
 This will:
 - Build the Rails dev image
 - Start PostgreSQL and run migrations automatically
-- Start LocalStack and provision all AWS resources (SQS queues, S3 bucket, Lambda functions, API Gateway)
+- Start LocalStack and provision AWS resources used in local development (S3 bucket, Lambda stubs, API Gateway)
 - Start the Rails server on http://localhost:3000
 
 To rebuild after Gemfile or Dockerfile changes:
