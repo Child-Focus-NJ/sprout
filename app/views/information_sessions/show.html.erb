@@ -1,0 +1,51 @@
+<main class="volunteer-page">
+  <nav class="page-nav page-nav--back" aria-label="Back">
+    <%= back_nav_link information_sessions_path(information_sessions_filter_params.compact_blank), "Back to information sessions" %>
+  </nav>
+
+  <h1 class="page-title"><%= @information_session.name %></h1>
+  <% tz = @information_session.scheduled_at.in_time_zone %>
+  <p class="subtle">
+    <%= @information_session.location %>
+    at
+    <time datetime="<%= tz.iso8601 %>"><%= tz.strftime("%b %d, %Y %I:%M %p") %></time>
+  </p>
+
+  <section class="card status-panel">
+    <h2 class="section-heading">Session roster</h2>
+    <p class="help-text">
+      Everyone who registered for this session.
+      The outcome tag is that volunteer's record for this session.
+      The status tag is their current stage in Sprout.
+      Registered means an outcome has not been recorded yet.
+    </p>
+
+    <% if @registrations.empty? %>
+      <p class="subtle">Nobody registered for this session.</p>
+    <% else %>
+      <div class="sessions-table-wrap">
+        <table class="sessions-table">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Email</th>
+              <th scope="col">Session outcome</th>
+              <th scope="col">Current status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @registrations.each do |registration| %>
+              <% volunteer = registration.volunteer %>
+              <tr id="registrant-<%= volunteer.id %>">
+                <td><%= link_to volunteer.full_name, volunteer_path(volunteer) %></td>
+                <td><%= volunteer.email %></td>
+                <td><%= session_outcome_badge(registration) %></td>
+                <td><%= volunteer_status_badge(volunteer) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
+</main>
