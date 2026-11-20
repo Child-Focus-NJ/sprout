@@ -85,8 +85,6 @@ class InquiryFormController < ApplicationController
         processed: true,
         processed_at: Time.current
       )
-      VmsPushInquiryJob.perform_later(volunteer.id)
-
       complete_info_session_check_in_success!(volunteer: volunteer, information_session: info_session)
       return
     end
@@ -114,7 +112,6 @@ class InquiryFormController < ApplicationController
         referral_source_id: referral_source_id,
         current_funnel_stage: :inquiry
       )
-      VmsPushInquiryJob.perform_later(volunteer.id)
     end
 
     InquiryFormSubmission.create!(

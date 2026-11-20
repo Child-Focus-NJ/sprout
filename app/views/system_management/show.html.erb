@@ -1,16 +1,5 @@
 <div class="volunteer-page">
 
-  <% if @recent_syncs.any? %>
-    <div class="alert-success" id="sync-notifications">
-      <p class="font-semibold mb-1">Recent Transfers</p>
-      <ul class="list-disc list-inside text-sm">
-        <% @recent_syncs.each do |log| %>
-          <li><%= log.volunteer.full_name %> data was transferred to the external system</li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
-
   <h1 class="page-title">System Management</h1>
   <% if current_user.admin? %>
     <p><%= link_to "Application email settings", admin_settings_path(anchor: "application-email"), class: "button-link" %></p>

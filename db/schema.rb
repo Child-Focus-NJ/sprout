@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_13_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_20_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -69,23 +69,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_120000) do
     t.index ["created_at"], name: "index_data_export_logs_on_created_at"
     t.index ["status"], name: "index_data_export_logs_on_status"
     t.index ["user_id"], name: "index_data_export_logs_on_user_id"
-  end
-
-  create_table "external_sync_logs", force: :cascade do |t|
-    t.datetime "completed_at"
-    t.datetime "created_at", null: false
-    t.text "error_message"
-    t.jsonb "payload_snapshot"
-    t.integer "records_processed"
-    t.datetime "started_at"
-    t.integer "status", default: 0, null: false
-    t.integer "sync_direction", default: 0, null: false
-    t.integer "sync_type", default: 0, null: false
-    t.datetime "updated_at", null: false
-    t.bigint "volunteer_id"
-    t.index ["started_at"], name: "index_external_sync_logs_on_started_at"
-    t.index ["status"], name: "index_external_sync_logs_on_status"
-    t.index ["volunteer_id"], name: "index_external_sync_logs_on_volunteer_id"
   end
 
   create_table "features", force: :cascade do |t|
@@ -406,8 +389,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_120000) do
     t.datetime "created_at", null: false
     t.integer "current_funnel_stage", default: 0, null: false
     t.string "email", null: false
-    t.string "external_id"
-    t.datetime "external_synced_at"
     t.string "first_name", null: false
     t.datetime "first_session_attended_at"
     t.integer "inactive_reason"
@@ -426,7 +407,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_120000) do
     t.index ["became_inactive_at"], name: "index_volunteers_on_became_inactive_at"
     t.index ["current_funnel_stage"], name: "index_volunteers_on_current_funnel_stage"
     t.index ["email"], name: "index_volunteers_on_email", unique: true
-    t.index ["external_id"], name: "index_volunteers_on_external_id"
     t.index ["inquiry_date"], name: "index_volunteers_on_inquiry_date"
     t.index ["referral_source_id"], name: "index_volunteers_on_referral_source_id"
     t.index ["referred_by_volunteer_id"], name: "index_volunteers_on_referred_by_volunteer_id"
@@ -438,7 +418,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_120000) do
   add_foreign_key "communications", "users", column: "sent_by_user_id"
   add_foreign_key "communications", "volunteers"
   add_foreign_key "data_export_logs", "users", on_delete: :nullify
-  add_foreign_key "external_sync_logs", "volunteers"
   add_foreign_key "information_sessions", "users", column: "created_by_user_id"
   add_foreign_key "inquiry_dismissals", "users"
   add_foreign_key "inquiry_dismissals", "volunteers"

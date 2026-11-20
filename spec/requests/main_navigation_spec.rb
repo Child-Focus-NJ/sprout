@@ -15,7 +15,7 @@ RSpec.describe "Main navigation", type: :request do
     get application_dashboard_path
 
     expect(vms_link).to be_present
-    expect(vms_link["href"]).to eq(ExternalVmsSync::DEFAULT_BASE_URL)
+    expect(vms_link["href"]).to eq(ApplicationHelper::DEFAULT_VMS_URL)
     expect(vms_link["target"]).to eq("_blank")
     expect(vms_link["rel"]).to eq("noopener noreferrer")
   end
@@ -23,7 +23,7 @@ RSpec.describe "Main navigation", type: :request do
   it "uses EXTERNAL_VMS_URL when it is set" do
     allow(ENV).to receive(:fetch).and_call_original
     allow(ENV).to receive(:fetch)
-      .with(ExternalVmsSync::BASE_URL_ENV_KEY, anything)
+      .with(ApplicationHelper::VMS_URL_ENV_KEY, anything)
       .and_return("https://vms.example.org/")
 
     get application_dashboard_path

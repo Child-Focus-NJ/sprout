@@ -2,9 +2,13 @@
 
 Date: 2026-02-26
 
+> **Update (issue #398):** The stub Lambda functions, API Gateway stack, and
+> `Aws::LambdaClient` were removed. Rails talks to Mailchimp/Mandrill directly;
+> background work uses Solid Queue. SQS queue removal is tracked in #399.
+
 ## Overview
 
-AWS infrastructure for Sprout, a Rails 8.1 volunteer management system. The design decouples external integrations (Zoom, Volunteer Management System, MailChimp/Mandrill) into Lambda functions while keeping the Rails app focused on the web UI and data layer. All infrastructure is defined with AWS CDK (Python) and testable locally via LocalStack.
+AWS infrastructure for Sprout, a Rails 8.1 volunteer management system. The original design decoupled external integrations into Lambda functions while keeping the Rails app focused on the web UI and data layer. All infrastructure is defined with AWS CDK (Python) and testable locally via LocalStack.
 
 ---
 
