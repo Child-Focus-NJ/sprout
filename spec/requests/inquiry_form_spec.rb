@@ -85,7 +85,6 @@ RSpec.describe "Inquiry form submission", type: :request do
         follow_redirect!
         expect(response.body).to include("Thanks! Your inquiry has been submitted.")
       end
-
     end
 
     # US1: Missing required fields shows validation errors

@@ -70,7 +70,6 @@ RSpec.describe "SystemManagement", type: :request do
       get system_management_path
       expect(response.body).to include("View Usage Report")
     end
-
   end
 
   describe "POST /system_management/import" do
