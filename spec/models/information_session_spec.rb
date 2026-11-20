@@ -171,14 +171,28 @@ RSpec.describe InformationSession, type: :model do
       expect(session.registered_count).to eq(2)
     end
 
-    it 'excludes cancelled, rescheduled, attended, and no-show registrations' do
+    it 'keeps checked-in and walk-in attendees in the count' do
+      create(:session_registration, information_session: session, status: :registered)
+      create(:session_registration, information_session: session, status: :attended)
+
+      expect(session.registered_count).to eq(2)
+    end
+
+    it 'excludes cancelled, rescheduled, and no-show registrations' do
       create(:session_registration, information_session: session, status: :registered)
       create(:session_registration, information_session: session, status: :cancelled)
       create(:session_registration, information_session: session, status: :rescheduled)
-      create(:session_registration, information_session: session, status: :attended)
       create(:session_registration, information_session: session, status: :no_show)
 
       expect(session.registered_count).to eq(1)
+    end
+
+    it 'does not drop when a registered volunteer checks in' do
+      registration = create(:session_registration, information_session: session, status: :registered)
+      expect(session.reload.registered_count).to eq(1)
+
+      registration.update!(status: :attended)
+      expect(session.reload.registered_count).to eq(1)
     end
 
     it 'updates when a volunteer registers, cancels, or reschedules' do
@@ -193,6 +207,25 @@ RSpec.describe InformationSession, type: :model do
 
       registration.update!(status: :rescheduled)
       expect(session.reload.registered_count).to eq(0)
+    end
+  end
+
+  describe '#registered_summary' do
+    let(:session) { create(:information_session, capacity: 10) }
+
+    it 'includes capacity when the session has one' do
+      create(:session_registration, information_session: session, status: :registered)
+      create(:session_registration, information_session: session, status: :attended)
+
+      expect(session.reload.registered_summary).to eq('2/10 registered')
+    end
+
+    it 'shows only the count when capacity is blank' do
+      session.update!(capacity: nil)
+      create(:session_registration, information_session: session, status: :registered)
+      create(:session_registration, information_session: session, status: :attended)
+
+      expect(session.reload.registered_summary).to eq('2 registered')
     end
   end
 
