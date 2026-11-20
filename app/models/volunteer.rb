@@ -14,7 +14,6 @@ class Volunteer < ApplicationRecord
   has_many :status_changes, dependent: :destroy
   has_many :scheduled_reminders, dependent: :destroy
   has_many :inquiry_form_submissions, dependent: :nullify
-  has_many :external_sync_logs, dependent: :nullify
   has_many :inquiry_dismissals, dependent: :delete_all
 
   validates :first_name, presence: true
