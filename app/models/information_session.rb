@@ -65,6 +65,10 @@ class InformationSession < ApplicationRecord
     scheduled_at.present? && scheduled_at <= Time.current
   end
 
+  def upcoming?
+    scheduled_at.present? && scheduled_at > Time.current
+  end
+
   private
 
   def sync_from_location

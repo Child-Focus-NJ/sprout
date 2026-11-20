@@ -41,7 +41,11 @@ class InformationSessionsController < ApplicationController
 
   def show
     @information_session = InformationSession.find(params[:id])
-    @registrations = @information_session.session_registrations
+    registrations = @information_session.session_registrations
+    # Upcoming show pages list current registrants only; past show pages keep the full
+    # session roster so outcomes (attended, no-show, cancelled, rescheduled) remain visible.
+    registrations = registrations.registered if @information_session.upcoming?
+    @registrations = registrations
       .includes(:volunteer)
       .joins(:volunteer)
       .order(Arel.sql("volunteers.last_name ASC, volunteers.first_name ASC"))

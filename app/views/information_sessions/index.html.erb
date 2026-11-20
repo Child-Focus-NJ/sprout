@@ -68,7 +68,7 @@
           class="volunteer-row session-history-card">
           <div class="volunteer-meta min-w-0">
             <div class="volunteer-name">
-              <% if session.past? %>
+              <% if session.past? || session.upcoming? %>
                 <%= link_to session.name, information_session_path(session, filter_opts), class: "session-roster-link" %>
               <% else %>
                 <%= session.name %>
