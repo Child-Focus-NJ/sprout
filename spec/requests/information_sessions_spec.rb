@@ -22,17 +22,16 @@ RSpec.describe "Information Sessions", type: :request do
       expect(response.body).to include(information_session.name)
     end
 
-    it "shows how many volunteers are currently registered" do
+    it "shows how many volunteers are currently registered against capacity" do
       create(:session_registration, information_session: information_session, status: :registered)
-      create(:session_registration, information_session: information_session, status: :registered)
+      create(:session_registration, information_session: information_session, status: :attended)
       create(:session_registration, information_session: information_session, status: :cancelled)
       create(:session_registration, information_session: information_session, status: :rescheduled)
 
       get information_sessions_path
 
       expect(response.body.scan(information_session.name).size).to eq(1)
-      expect(response.body).to include("Registered Volunteers")
-      expect(response.body).to match(/session-registered__value[^>]*>\s*2\s*</)
+      expect(response.body).to include("2/#{information_session.capacity} registered")
     end
 
     context "with date filters" do

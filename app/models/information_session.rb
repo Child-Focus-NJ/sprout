@@ -10,7 +10,7 @@ class InformationSession < ApplicationRecord
 
   has_many :session_registrations, dependent: :destroy
   has_many :current_registrations,
-    -> { where(status: SessionRegistration.statuses[:registered]) },
+    -> { merge(SessionRegistration.active) },
     class_name: "SessionRegistration"
   has_many :volunteers, through: :session_registrations
 
@@ -29,11 +29,11 @@ class InformationSession < ApplicationRecord
   scope :past,      -> { where("scheduled_at <= ?", Time.current).order(scheduled_at: :desc) }
 
   def spots_remaining
-    capacity && capacity - session_registrations.where(status: [ :registered, :attended ]).count
+    capacity && capacity - registered_count
   end
 
-  # People who still hold a seat. Attended, no-show, cancelled, and rescheduled rows drop out,
-  # so the summary changes as soon as a registration is created or its status changes.
+  # People who still hold a seat: still registered, or already checked in (including walk-ins).
+  # No-show, cancelled, and rescheduled rows drop out.
   def registered_count
     current_registrations.size
   end
