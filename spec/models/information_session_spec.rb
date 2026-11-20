@@ -210,6 +210,25 @@ RSpec.describe InformationSession, type: :model do
     end
   end
 
+  describe '#registered_summary' do
+    let(:session) { create(:information_session, capacity: 10) }
+
+    it 'includes capacity when the session has one' do
+      create(:session_registration, information_session: session, status: :registered)
+      create(:session_registration, information_session: session, status: :attended)
+
+      expect(session.reload.registered_summary).to eq('2/10 registered')
+    end
+
+    it 'shows only the count when capacity is blank' do
+      session.update!(capacity: nil)
+      create(:session_registration, information_session: session, status: :registered)
+      create(:session_registration, information_session: session, status: :attended)
+
+      expect(session.reload.registered_summary).to eq('2 registered')
+    end
+  end
+
   describe '#label' do
     it 'returns a formatted string with name and date' do
       session = build(:information_session, name: 'Spring Session', scheduled_at: Time.zone.parse('2027-03-27 10:00 AM'))
