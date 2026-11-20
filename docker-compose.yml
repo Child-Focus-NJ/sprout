@@ -8,7 +8,6 @@ services:
     volumes:
       - .:/rails
       - bundle_cache:/usr/local/bundle
-      - localstack_data:/localstack_data:ro
     ports:
       - "3000:3000"
     environment:
@@ -18,7 +17,6 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      - API_GATEWAY_URL_FILE=/localstack_data/api/gateway_url
       - SQS_ZOOM_ATTENDANCE_URL=http://localstack:4566/000000000000/sprout-zoom-attendance
       - SQS_MAILCHIMP_BATCH_URL=http://localstack:4566/000000000000/sprout-mailchimp-batch
       - S3_REPORTS_BUCKET=sprout-reports
@@ -58,7 +56,6 @@ services:
       - DEBUG=${DEBUG:-0}
     volumes:
       - localstack_data:/var/lib/localstack
-      - /var/run/docker.sock:/var/run/docker.sock
       - ./localstack/init:/etc/localstack/init/ready.d
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:4566/_localstack/health"]

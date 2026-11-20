@@ -586,18 +586,7 @@ end
 
 ### External System Sync
 
-**Outbound (on application submitted):**
-1. Volunteer submits application → SyncVolunteerJob enqueued
-2. ExternalSyncService posts volunteer data to external API
-3. On success: store external_id, update external_synced_at
-4. On failure: retry 3x with exponential backoff, log to ExternalSyncLog
-5. Transfer status visible on volunteer profile with date/time
-
-**Inbound (webhooks):**
-- Endpoint for external system to notify of events
-- HMAC signature verification
-- Idempotency via payload hash
-- Updates volunteer status based on event type
+VMS sync was removed; staff open the external VMS from the nav link when needed. No credentials or sync jobs are stored in Sprout.
 
 ### Data Import
 

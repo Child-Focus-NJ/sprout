@@ -1,3 +1,7 @@
+[![CI](https://github.com/Child-Focus-NJ/sprout/actions/workflows/ci.yml/badge.svg)](https://github.com/Child-Focus-NJ/sprout/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Child-Focus-NJ/sprout/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Child-Focus-NJ/sprout/actions/workflows/github-code-scanning/codeql)
+[![codecov](https://codecov.io/gh/Child-Focus-NJ/sprout/graph/badge.svg?token=026VQFDDLY)](https://codecov.io/gh/Child-Focus-NJ/sprout)
+
 ## Sprout – Volunteer Management System
 
 **Sprout** is a Ruby on Rails application that replaces spreadsheet-based workflows with a centralized system for managing the full volunteer lifecycle.
@@ -27,8 +31,8 @@ Working under **Dr. Peter DePasquale**
 
 ## Tech Stack
 
-- **Language:** Ruby 3.4.12
-- **Framework:** Ruby on Rails 8.1.4
+- **Language:** Ruby 4.0.9
+- **Framework:** Ruby on Rails 8.1.4.1
 - **Database:** PostgreSQL
 - **Cloud Services:** AWS
 - **App Deployment:** Heroku
@@ -56,7 +60,7 @@ bin/dev-docker
 This will:
 - Build the Rails dev image
 - Start PostgreSQL and run migrations automatically
-- Start LocalStack and provision all AWS resources (SQS queues, S3 bucket, Lambda functions, API Gateway)
+- Start LocalStack and provision AWS resources used in local development (SQS queues, S3 bucket)
 - Start the Rails server on http://localhost:3000
 
 To rebuild after Gemfile or Dockerfile changes:
@@ -96,7 +100,7 @@ docker compose exec web bin/rails "tailwindcss:watch[always]"
    ```
    This starts the Rails server along with a Tailwind CSS watcher and the background job worker. Running `bin/rails server` on its own skips the CSS build, so new styles won't show up.
 
-Note: AWS integrations (Zoom, Mailchimp, VMS) won't work without LocalStack or real AWS credentials.
+Note: Local AWS stubs (SQS/S3 via LocalStack) are optional for most Rails work; Mailchimp email/SMS use Mandrill credentials when enabled.
 
 For more implementation details, see [docs/](https://github.com/Child-Focus-NJ/sprout/tree/main/docs).
 

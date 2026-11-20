@@ -35,6 +35,7 @@ gem "groupdate"
 # ---------------------------------------------------------------------------
 gem "omniauth", ">= 2.0.0"                  # Single Sign-On
 gem "omniauth-google-oauth2"
+gem "warden"                              # Warden::Test::Helpers (login_as) in RSpec and Cucumber
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -47,8 +48,8 @@ gem "dotenv-rails"                          # Load .env files
 gem "httparty"                              # HTTP client for API Gateway calls and external APIs
 
 # AWS SDK (SQS for async Lambda triggers, S3 for report storage)
-gem "aws-sdk-s3", "~> 1.235"
-gem "aws-sdk-sqs", "~> 1.122"
+gem "aws-sdk-s3", "~> 1.239"
+gem "aws-sdk-sqs", "~> 1.126"
 
 gem "caxlsx"                                # Excel generation for data exports (admin full-data export, reporting)
 gem "prawn"                                 # PDF generation for report exports
@@ -80,11 +81,11 @@ end
 
 group :test do
   # RSpec
-  gem "rspec-rails", "~> 8.0"
+  gem "rspec-rails", "~> 8.1"
   gem "shoulda-matchers", "~> 6.0"
   gem "database_cleaner-active_record"
   gem "simplecov", require: false
-  gem "warden"                              # Warden::Test::Helpers (login_as) in RSpec and Cucumber
+  gem "simplecov-cobertura", require: false
   gem "webmock"                             # Stubs the raw Net::HTTP calls ExternalVmsSync makes to the external VMS
 
   # Build and inspect exported files in specs and features

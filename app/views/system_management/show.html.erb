@@ -1,16 +1,5 @@
 <div class="volunteer-page">
 
-  <% if @recent_syncs.any? %>
-    <div class="alert-success" id="sync-notifications">
-      <p class="font-semibold mb-1">Recent Transfers</p>
-      <ul class="list-disc list-inside text-sm">
-        <% @recent_syncs.each do |log| %>
-          <li><%= log.volunteer.full_name %> data was transferred to the external system</li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
-
   <h1 class="page-title">System Management</h1>
   <% if current_user.admin? %>
     <p><%= link_to "Application email settings", admin_settings_path(anchor: "application-email"), class: "button-link" %></p>
@@ -39,28 +28,32 @@
     <% end %>
   </div>
 
-  <div class="card">
-    <h2 class="section-heading">Import Historical Data</h2>
-    <p class="help-text">Upload a CSV or spreadsheet to import historical volunteer records.</p>
+  <%# Import Historical Data is hidden for now to avoid accidental imports. Set to true to bring it back. %>
+  <% show_import_historical_data = false %>
+  <% if show_import_historical_data %>
+    <div class="card">
+      <h2 class="section-heading">Import Historical Data</h2>
+      <p class="help-text">Upload a CSV or spreadsheet to import historical volunteer records.</p>
 
-    <%= form_with url: import_system_management_path, multipart: true do |f| %>
-      <div class="inline-form items-center">
-        <%= f.file_field :file, id: "import_file",
-              class: "sr-only",
-              accept: ".csv,.xlsx,.xls",
-              onchange: "
-                document.getElementById('import-filename').textContent = this.files[0]?.name ?? '';
-                document.getElementById('import-submit').classList.toggle('hidden', !this.files.length);
-              " %>
-        <label for="import_file" class="button-link cursor-pointer">
-          Choose File
-        </label>
-        <span id="import-filename" class="text-sm text-gray-600 truncate max-w-xs"></span>
-        <%= f.submit "Import Data", id: "import-submit",
-              class: "button-primary hidden" %>
-      </div>
-    <% end %>
-  </div>
+      <%= form_with url: import_system_management_path, multipart: true do |f| %>
+        <div class="inline-form items-center">
+          <%= f.file_field :file, id: "import_file",
+                class: "sr-only",
+                accept: ".csv,.xlsx,.xls",
+                onchange: "
+                  document.getElementById('import-filename').textContent = this.files[0]?.name ?? '';
+                  document.getElementById('import-submit').classList.toggle('hidden', !this.files.length);
+                " %>
+          <label for="import_file" class="button-link cursor-pointer">
+            Choose File
+          </label>
+          <span id="import-filename" class="text-sm text-gray-600 truncate max-w-xs"></span>
+          <%= f.submit "Import Data", id: "import-submit",
+                class: "button-primary hidden" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 
   <div class="card" id="export-data-section">
     <h2 class="section-heading">Export Data</h2>

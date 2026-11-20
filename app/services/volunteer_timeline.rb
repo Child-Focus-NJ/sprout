@@ -72,6 +72,7 @@ class VolunteerTimeline
     @volunteer.status_changes.includes(:user).each do |change|
       entries << {
         kind: :status_change,
+        heading: ("Reactivated" if change.reactivation?),
         time: change.created_at,
         text: "#{change.from_funnel_stage} → #{change.to_funnel_stage}",
         byline: change.user&.full_name.to_s

@@ -32,3 +32,20 @@ Feature: Dashboard
     Then the awaiting submission list should be collapsed
     When I open the awaiting submission dropdown
     Then "Sofia Reyes" should be in the awaiting submission list
+
+  Scenario: New inquiries column lists volunteers added since I started, and the × dismisses one
+    When I visit the dashboard
+    Then the new inquiries column should list "Harry Kane, Hana Kimura, Sofia Reyes"
+    When I dismiss "Hana Kimura" from the new inquiries column
+    Then the new inquiries column should list "Harry Kane, Sofia Reyes"
+    When "Hana Kimura" comes back after being inactive
+    And I visit the dashboard
+    Then the new inquiries column should list "Hana Kimura, Harry Kane, Sofia Reyes"
+    When I click "Harry Kane" in the new inquiries column
+    Then I should be on the profile for "Harry Kane"
+
+  Scenario: Clear all empties the new inquiries column
+    When I visit the dashboard
+    Then the new inquiries column should list "Harry Kane, Hana Kimura, Sofia Reyes"
+    When I clear all new inquiries
+    Then the new inquiries column should be empty

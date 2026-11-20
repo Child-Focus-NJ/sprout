@@ -1,6 +1,6 @@
 class Communication < ApplicationRecord
   enum :communication_type, { email: 0, sms: 1 }
-  enum :status, { pending: 0, sent: 1, delivered: 2, failed: 3, bounced: 4, queued: 5 }
+  enum :status, { pending: 0, sent: 1, delivered: 2, failed: 3, bounced: 4, queued: 5, sending: 6 }
 
   belongs_to :volunteer
   belongs_to :communication_template, optional: true
@@ -22,7 +22,7 @@ class Communication < ApplicationRecord
     volunteer.add_staff_note!(
       user: sent_by_user,
       note_type: :communication,
-      content: "Reminder #{communication_type} sent at #{sent_at.strftime('%m/%d/%Y %H:%M')}"
+      content: "#{sms? ? 'SMS' : 'Email'} sent at #{sent_at.strftime('%m/%d/%Y %H:%M')}"
     )
   end
 end
