@@ -34,6 +34,17 @@ RSpec.describe "Information Sessions", type: :request do
       expect(response.body).to include("2/#{information_session.capacity} registered")
     end
 
+    it "omits capacity from the registration summary when the session has none" do
+      information_session.update!(capacity: nil)
+      create(:session_registration, information_session: information_session, status: :registered)
+      create(:session_registration, information_session: information_session, status: :attended)
+
+      get information_sessions_path
+
+      expect(response.body).to include("2 registered")
+      expect(response.body).not_to include("2/ registered")
+    end
+
     context "with date filters" do
       it "filters by start_date" do
         information_session
