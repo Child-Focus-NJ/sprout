@@ -85,8 +85,6 @@ class InquiryFormController < ApplicationController
         processed: true,
         processed_at: Time.current
       )
-      VmsPushInquiryJob.perform_later(volunteer.id)
-
       complete_info_session_check_in_success!(volunteer: volunteer, information_session: info_session)
       return
     end
@@ -99,20 +97,22 @@ class InquiryFormController < ApplicationController
 
     volunteer = Volunteer.find_by(email: email)
 
-    if volunteer
+    if volunteer&.can_reactivate?
+      volunteer.reactivate!(user: current_user)
+    elsif volunteer
       redirect_to new_inquiry_form_path, alert: "You've already signed up."
       return
+    else
+      volunteer = Volunteer.create!(
+        first_name: first_name,
+        last_name: last_name,
+        email: email,
+        phone: phone,
+        vicinage_id: vicinage_id,
+        referral_source_id: referral_source_id,
+        current_funnel_stage: :inquiry
+      )
     end
-
-    volunteer = Volunteer.create!(
-      first_name: first_name,
-      last_name: last_name,
-      email: email,
-      phone: phone,
-      vicinage_id: vicinage_id,
-      referral_source_id: referral_source_id,
-      current_funnel_stage: :inquiry
-    )
 
     InquiryFormSubmission.create!(
       volunteer: volunteer,
@@ -130,7 +130,6 @@ class InquiryFormController < ApplicationController
       processed: true,
       processed_at: Time.current
     )
-    VmsPushInquiryJob.perform_later(volunteer.id)
     begin
       Email::VolunteerNotifications.inquiry!(volunteer: volunteer)
     rescue Email::MailchimpOutbound::Error => e

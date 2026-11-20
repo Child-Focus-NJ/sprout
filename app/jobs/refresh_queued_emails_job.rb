@@ -4,7 +4,7 @@ class RefreshQueuedEmailsJob < ApplicationJob
   queue_as :default
 
   def perform
-    return unless ActiveModel::Type::Boolean.new.cast(ENV.fetch("SPROUT_EMAIL_MAILCHIMP_ENABLED", "false"))
+    return unless Email.sending_enabled?
 
     Communication.email.queued.where.not(external_id: [ nil, "" ]).find_each do |communication|
       Email::QueuedDelivery.refresh!(communication)

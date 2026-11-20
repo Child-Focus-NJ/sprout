@@ -12,6 +12,7 @@ class User < ApplicationRecord
     foreign_key: :created_by_user_id,
     inverse_of: :created_by_user,
     dependent: :nullify
+  has_many :inquiry_dismissals, dependent: :delete_all
 
   validates :email, presence: true, uniqueness: true
   validate :must_leave_at_least_one_active_admin
@@ -24,6 +25,17 @@ class User < ApplicationRecord
 
   def display_name
     full_name.presence || email.to_s.split("@").first.presence || "User"
+  end
+
+  # Volunteers who inquired, or came back, since this staff member's notices began, newest first.
+  # A dismissal hides what happened up to when it was made, so someone who comes back later shows again.
+  def new_inquiries
+    inquired_at = Volunteer::LAST_INQUIRED_AT_SQL
+    dismissed_since = inquiry_dismissals.where("inquiry_dismissals.volunteer_id = volunteers.id")
+                                        .where("inquiry_dismissals.updated_at >= #{inquired_at}")
+    Volunteer.where("#{inquired_at} >= ?", inquiry_notices_since)
+             .where.not(dismissed_since.arel.exists)
+             .order(Arel.sql("#{inquired_at} DESC"))
   end
 
   def self.from_omniauth(auth)

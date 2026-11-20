@@ -1,3 +1,25 @@
+if ENV['SIMPLECOV'] == 'true'
+  require 'simplecov'
+  SimpleCov.command_name 'Cucumber'
+  SimpleCov.start 'rails' do
+    root File.expand_path('../..', __dir__)
+
+    # Updated method names for newer SimpleCov
+    skip "/spec/"
+    skip "/config/"
+    skip "/db/"
+    skip "/vendor/"
+    skip "/tmp/"
+    group "Controllers", "app/controllers"
+    group "Models", "app/models"
+    group "Mailers", "app/mailers"
+    group "Helpers", "app/helpers"
+    group "Jobs", "app/jobs"
+    group "Services", "app/services"
+  end
+end
+
+# Existing Cucumber/Rails requires go below this line
 require 'cucumber/rails'
 require 'capybara/rails'
 require 'rspec/expectations'

@@ -51,10 +51,6 @@ RSpec.describe "Inquiry form submission", type: :request do
         expect(Volunteer.last.current_funnel_stage).to eq("inquiry")
       end
 
-      it "enqueues a job to push the new inquiry to the external VMS" do
-        expect { post inquiry_form_path, params: valid_params }.to have_enqueued_job(VmsPushInquiryJob)
-      end
-
       it "redirects with a confirmation notice" do
         post inquiry_form_path, params: valid_params
         expect(response).to redirect_to(new_inquiry_form_path)
@@ -73,6 +69,21 @@ RSpec.describe "Inquiry form submission", type: :request do
         post inquiry_form_path, params: valid_params
         expect(Communication.email.sent.count).to eq(1)
         expect(Communication.email.last.email_to).to eq("jane@childfocusnj.org")
+      end
+    end
+
+    context "when a deactivated volunteer inquires again" do
+      let!(:volunteer) { create(:volunteer, email: "jane@childfocusnj.org", current_funnel_stage: :inactive) }
+
+      it "reactivates them and handles it as a new inquiry instead of a duplicate" do
+        expect { post inquiry_form_path, params: valid_params }.not_to change(Volunteer, :count)
+
+        expect(volunteer.reload).to be_inquiry
+        expect(InquiryFormSubmission.last.volunteer).to eq(volunteer)
+        expect(Communication.email.last.email_to).to eq("jane@childfocusnj.org")
+
+        follow_redirect!
+        expect(response.body).to include("Thanks! Your inquiry has been submitted.")
       end
     end
 

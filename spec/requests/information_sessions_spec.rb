@@ -22,6 +22,29 @@ RSpec.describe "Information Sessions", type: :request do
       expect(response.body).to include(information_session.name)
     end
 
+    it "shows how many volunteers are currently registered against capacity" do
+      create(:session_registration, information_session: information_session, status: :registered)
+      create(:session_registration, information_session: information_session, status: :attended)
+      create(:session_registration, information_session: information_session, status: :cancelled)
+      create(:session_registration, information_session: information_session, status: :rescheduled)
+
+      get information_sessions_path
+
+      expect(response.body.scan(information_session.name).size).to eq(1)
+      expect(response.body).to include("2/#{information_session.capacity} registered")
+    end
+
+    it "omits capacity from the registration summary when the session has none" do
+      information_session.update!(capacity: nil)
+      create(:session_registration, information_session: information_session, status: :registered)
+      create(:session_registration, information_session: information_session, status: :attended)
+
+      get information_sessions_path
+
+      expect(response.body).to include("2 registered")
+      expect(response.body).not_to include("2/ registered")
+    end
+
     context "with date filters" do
       it "filters by start_date" do
         information_session
@@ -36,15 +59,44 @@ RSpec.describe "Information Sessions", type: :request do
       end
     end
 
-    context "with upcoming/past filter" do
-      it "filters upcoming sessions" do
-        get information_sessions_path, params: { upcoming_past: "Upcoming" }
-        expect(response).to be_successful
+    context "with upcoming and past tabs" do
+      let!(:upcoming_session) { create(:information_session, name: "Future Orientation") }
+      let!(:past_session) do
+        build(:information_session, name: "Old Orientation", scheduled_at: 3.days.ago).tap do |session|
+          session.save!(validate: false)
+        end
       end
 
-      it "filters past sessions" do
+      it "defaults to upcoming sessions" do
+        get information_sessions_path
+
+        expect(response.body).to include("Upcoming Info Sessions", "Past Info Sessions", upcoming_session.name)
+        expect(response.body).not_to include(past_session.name)
+      end
+
+      it "shows past sessions on the past tab and moves a finished session there" do
+        finished = build(:information_session, name: "Just Finished", scheduled_at: 1.minute.ago)
+        finished.save!(validate: false)
+
+        get information_sessions_path
+        expect(response.body).not_to include(finished.name)
+
+        get information_sessions_path, params: { tab: "past" }
+        expect(response.body).to include(past_session.name, finished.name)
+        expect(response.body).not_to include(upcoming_session.name)
+      end
+
+      it "keeps the past tab when a date filter is applied" do
+        get information_sessions_path, params: { tab: "past", start_date: 1.week.ago.strftime("%m/%d/%y") }
+        expect(response.body).to include(past_session.name)
+        expect(response.body).not_to include(upcoming_session.name)
+        expect(response.body).to include('value="past"')
+      end
+
+      it "still honors the legacy Past filter" do
         get information_sessions_path, params: { upcoming_past: "Past" }
-        expect(response).to be_successful
+        expect(response.body).to include(past_session.name)
+        expect(response.body).not_to include(upcoming_session.name)
       end
     end
 
@@ -279,10 +331,12 @@ RSpec.describe "Information Sessions", type: :request do
       session = past_session
       upcoming = create(:information_session, name: "Future Orientation")
 
-      get information_sessions_path
+      get information_sessions_path(tab: "past")
+      expect(response.body).to include(%(href="#{information_session_path(session, tab: "past")}"))
 
-      expect(response.body).to include(%(href="#{information_session_path(session)}"))
+      get information_sessions_path(tab: "upcoming")
       expect(response.body).not_to include(%(href="#{information_session_path(upcoming)}"))
+      expect(response.body).not_to include(%(href="#{information_session_path(upcoming, tab: "upcoming")}"))
     end
   end
 end

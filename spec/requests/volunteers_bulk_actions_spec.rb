@@ -22,7 +22,7 @@ RSpec.describe "Bulk actions on the volunteer list", type: :request do
 
       toolbar = html.at_css("#bulk-toolbar")
       expect(toolbar["hidden"]).not_to be_nil
-      expect(toolbar.css("button").map { |button| button.text.squish }).to eq([ "Add Note", "Send SMS", "Send Application", "Clear" ])
+      expect(toolbar.css("button").map { |button| button.text.squish }).to eq([ "Add Note", "Send SMS", "Send Email", "Send Application", "Clear" ])
     end
 
     it "marks which rows can get a text" do
@@ -187,6 +187,110 @@ RSpec.describe "Bulk actions on the volunteer list", type: :request do
     end
   end
 
+  describe "POST /volunteers/bulk_send_email" do
+    include ActiveJob::TestHelper
+    include_context "Mailchimp email enabled"
+
+    let(:template) do
+      CommunicationTemplate.create!(
+        name: "Info session invite", subject: "Hi {{first_name}}", body: "Hello {{full_name}}, join us!",
+        template_type: :email, funnel_stage: :inquiry, trigger_type: :manual, active: true
+      )
+    end
+
+    it "emails the filled-in template to each selected volunteer and logs it on their timeline" do
+      perform_enqueued_jobs do
+        post bulk_send_email_volunteers_path,
+             params: { volunteer_ids: [ harry.id, nora.id ], template_id: template.id, return_to: "/volunteers?status=inquiry" }
+      end
+
+      expect(response).to redirect_to("/volunteers?status=inquiry")
+      expect(flash[:notice]).to eq('Sending "Info session invite" to 2 volunteers. Each email is on their timeline.')
+
+      mails = ActionMailer::Base.deliveries
+      expect(mails.flat_map(&:to)).to contain_exactly(harry.email, nora.email)
+      harry_mail = mails.find { |mail| mail.to == [ harry.email ] }
+      expect(harry_mail.subject).to eq("Hi Harry")
+      expect(harry_mail.body.encoded).to include("Hello Harry Kane, join us!")
+
+      communication = harry.communications.email.sole
+      expect(communication).to be_sent
+      expect(communication).to have_attributes(communication_template: template, sent_by_user: user, subject: "Hi Harry")
+      expect(harry.notes.last.content).to start_with("Email sent at ")
+      expect(sofia.communications).to be_empty
+    end
+
+    it "queues the emails instead of sending them during the request" do
+      expect do
+        post bulk_send_email_volunteers_path, params: { volunteer_ids: [ harry.id, sofia.id ], template_id: template.id }
+      end.to have_enqueued_job(SendTemplateEmailJob).exactly(2).times
+
+      expect(Communication.email.pending.count).to eq(2)
+      expect(ActionMailer::Base.deliveries).to be_empty
+    end
+
+    it "refuses inactive, SMS, or missing templates" do
+      sms = CommunicationTemplate.create!(name: "Text", body: "Hi", template_type: :sms, funnel_stage: :inquiry, active: true)
+      template.update!(active: false)
+
+      [ template.id, sms.id, nil ].each do |template_id|
+        post bulk_send_email_volunteers_path, params: { volunteer_ids: [ harry.id ], template_id: template_id }
+        expect(flash[:alert]).to eq("Choose an active email template")
+      end
+      expect(Communication.count).to eq(0)
+    end
+
+    it "refuses to send while email sending is turned off" do
+      ENV["SPROUT_EMAIL_MAILCHIMP_ENABLED"] = "false"
+
+      post bulk_send_email_volunteers_path, params: { volunteer_ids: [ harry.id ], template_id: template.id }
+
+      expect(flash[:alert]).to eq(Email::DISABLED_MESSAGE)
+      expect(Communication.count).to eq(0)
+      expect(SendTemplateEmailJob).not_to have_been_enqueued
+    end
+
+    it "reports emails the queue didn't accept" do
+      allow(ActiveJob).to receive(:perform_all_later)
+
+      post bulk_send_email_volunteers_path, params: { volunteer_ids: [ harry.id, sofia.id ], template_id: template.id }
+
+      expect(flash[:alert]).to eq("No emails sent. 2 emails couldn't be queued and are marked failed. Send again to those volunteers.")
+      expect(Communication.pluck(:status, :error_message).uniq)
+        .to eq([ [ "failed", Email::TemplateDelivery::NOT_QUEUED_MESSAGE ] ])
+    end
+
+    it "shortens a very long template name in the message" do
+      template.update!(name: "Invite " * 100)
+
+      post bulk_send_email_volunteers_path, params: { volunteer_ids: [ harry.id ], template_id: template.id }
+
+      expect(flash[:notice]).to include(%("#{template.name.truncate(80)}"))
+      expect(flash[:notice].length).to be < 200
+    end
+
+    it "says sending is off in the popup instead of offering a form" do
+      template
+      ENV["SPROUT_EMAIL_MAILCHIMP_ENABLED"] = "false"
+
+      get volunteers_path
+
+      dialog = response.parsed_body.at_css("#bulk-email-dialog")
+      expect(dialog.text).to include(Email::DISABLED_MESSAGE)
+      expect(dialog.at_css("form")).to be_nil
+    end
+
+    it "offers active email templates in the popup" do
+      template
+      CommunicationTemplate.create!(name: "Old", body: "x", template_type: :email, funnel_stage: :inquiry, active: false)
+
+      get volunteers_path
+
+      options = response.parsed_body.css("#bulk-email-template option").map { |option| option.text.squish }
+      expect(options).to eq([ "Select a template", "Info session invite" ])
+    end
+  end
+
   describe "with nobody selected" do
     it "asks to select someone first for every bulk action" do
       post bulk_add_note_volunteers_path, params: { note: "Hello" }
@@ -196,6 +300,10 @@ RSpec.describe "Bulk actions on the volunteer list", type: :request do
       expect(flash[:alert]).to eq("Select at least one volunteer")
 
       post bulk_send_application_volunteers_path
+      expect(flash[:alert]).to eq("Select at least one volunteer")
+
+      allow(Email).to receive(:sending_enabled?).and_return(true)
+      post bulk_send_email_volunteers_path, params: { template_id: 1 }
       expect(flash[:alert]).to eq("Select at least one volunteer")
     end
   end

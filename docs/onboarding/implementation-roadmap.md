@@ -394,37 +394,28 @@ Analytics dashboard with charts. PDF reports for printing. CSV export with filte
 ### Tasks
 
 1. **External system sync**
-   - ExternalSyncService with adapter pattern
-   - On application submitted → push volunteer data to external API
-   - Retry with exponential backoff (3 attempts)
-   - ExternalSyncLog tracks every attempt
-   - Transfer status visible on volunteer profile
+   - Removed: ChildFocus is not syncing Sprout to the VMS
+   - Nav keeps a simple link that opens the VMS in a new tab
 
-2. **Inbound webhooks**
-   - `Webhooks::ExternalSystemController` (no auth, HMAC signature verification)
-   - Handle events: application submitted, application approved
-   - Idempotency checks (no duplicate processing)
-   - Audit logging
-
-3. **Data import**
+2. **Data import**
    - Admin UI for CSV/Excel upload
    - VolunteerImportService with duplicate detection
    - Preview before import (show what will be created/updated/skipped)
    - Background processing for large files
    - Import history log
 
-4. **Admin settings**
+3. **Admin settings**
    - SystemSetting management UI
    - Configurable: reminder frequencies, email intervals, notification recipients
    - Role-based access (admin only)
 
-5. **User management**
+4. **User management**
    - Admin can create/edit/deactivate staff accounts
    - Role assignment
    - Activity log (optional)
 
 ### Deliverable
-Volunteer data syncs to external system on application. Historical data importable from spreadsheets. Admin settings configurable through UI.
+Historical data importable from spreadsheets. Admin settings configurable through UI.
 
 ---
 

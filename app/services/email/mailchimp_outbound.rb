@@ -29,9 +29,7 @@ module Email
         raise ValidationError, "Subject is too long (maximum #{MAX_SUBJECT_LENGTH} characters)" if subject.length > MAX_SUBJECT_LENGTH
         raise ValidationError, "Subject must be a single line" if subject.match?(/[\r\n]/)
         raise ValidationError, "Message cannot be blank" if body.blank?
-        unless ActiveModel::Type::Boolean.new.cast(ENV.fetch("SPROUT_EMAIL_MAILCHIMP_ENABLED", "false"))
-          raise ConfigurationError, "Email sending is not enabled. Contact your administrator."
-        end
+        raise ConfigurationError, Email::DISABLED_MESSAGE unless Email.sending_enabled?
 
         volunteer.communications.create!(
           communication_type: :email, subject: subject, body: body, email_to: recipient,

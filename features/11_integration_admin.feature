@@ -25,12 +25,6 @@ Feature: Integration & Administration
             | VIP   |
         
         
-        Scenario: Volunteer data transferred to external system successfully
-            Given "Katie Jones" submits an application
-            Then I should receive a notification that "Katie Jones" data was transferred to the external system
-            And the status for "Katie Jones" should be "Applied"
-            And the profile for "Katie Jones" should include a note that says "Data transferred to external system" with the time and date that it occurred
-
         Scenario: Changing reminder frequencies
             Given I click "Remove" for "Six Months"
             And I click "Yes, remove"
@@ -69,9 +63,10 @@ Feature: Integration & Administration
             And I click the "Inquiry Sources" tab
             Then the "Remove" button for "Website" should require confirmation
 
-        Scenario: Importing historical data
-            And I upload an Excel sheet containing "Colin Smith"
-            Then "Colin Smith" should appear on the volunteers page
+        # Import Historical Data is hidden on System Management for now; uncomment when needed.
+        # Scenario: Importing historical data
+        #     And I upload an Excel sheet containing "Colin Smith"
+        #     Then "Colin Smith" should appear on the volunteers page
 
         Scenario: Deactivating an Employee
             Given I click the "Employees" tab

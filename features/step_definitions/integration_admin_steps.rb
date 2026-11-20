@@ -136,49 +136,6 @@ Given('the following volunteer tags exist:') do |table|
   end
 end
 
-Given('{string} submits an application') do |name|
-  @volunteer = find_or_create_volunteer_by_name(name)
-  @volunteer.update!(
-    application_sent_at: Time.current,
-    current_funnel_stage: :applied
-  )
-  system_user = User.first
-  @volunteer.notes.create!(
-    content: "Data transferred to external system",
-    note_type: :system,
-    user: system_user
-  )
-  ExternalSyncLog.create!(
-    volunteer: @volunteer,
-    status: :completed,
-    sync_type: :push,
-    sync_direction: :outbound,
-    started_at: Time.current,
-    completed_at: Time.current,
-    records_processed: 1
-  )
-end
-
-
-Then('I should receive a notification that {string} data was transferred to the external system') do |name|
-  visit system_management_path
-  expect(page).to have_content("#{name} data was transferred to the external system")
-end
-
-Then('the status for {string} should be {string}') do |name, status|
-  @volunteer ||= find_or_create_volunteer_by_name(name)
-  visit volunteer_path(@volunteer)
-  expect(page).to have_content(status)
-end
-
-Then('the profile for {string} should include a note that says {string} with the time and date that it occurred') do |name, note|
-  @volunteer ||= find_or_create_volunteer_by_name(name)
-  visit volunteer_path(@volunteer)
-  expect(page).to have_content(note)
-  formatted_date = Time.current.strftime("%m/%d/%Y")
-  expect(page).to have_content(formatted_date)
-end
-
 Given('I click {string} for {string}') do |button, row|
   visit current_url
   within(:xpath, "//li[.//span[contains(text(), '#{row}')]]") do

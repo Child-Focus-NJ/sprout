@@ -58,3 +58,42 @@ end
 Then("{string} should be in the awaiting submission list") do |name|
   expect(find("#awaiting-submission .volunteer-list")).to have_text(name)
 end
+
+Then("the new inquiries column should list {string}") do |names|
+  expected = names.split(",").map(&:strip)
+  within("#new-inquiries") do
+    expect(page).to have_css(".new-inquiry-card", count: expected.size)
+    expect(all(".new-inquiry-card__name").map(&:text)).to match_array(expected)
+  end
+end
+
+When("I dismiss {string} from the new inquiries column") do |name|
+  within("#new-inquiries .new-inquiry-card", text: name) { click_button "Dismiss" }
+end
+
+When("I clear all new inquiries") do
+  within("#new-inquiries") { click_button "Clear all" }
+end
+
+Then("the new inquiries column should be empty") do
+  within("#new-inquiries") do
+    expect(page).to have_no_css(".new-inquiry-card")
+    expect(page).to have_no_button("Clear all")
+  end
+end
+
+When("{string} comes back after being inactive") do |name|
+  first_name, last_name = name.split(" ", 2)
+  volunteer = Volunteer.find_by!(first_name: first_name, last_name: last_name)
+  volunteer.update!(current_funnel_stage: :inactive, inactive_reason: :no_response)
+  volunteer.reactivate!
+end
+
+When("I click {string} in the new inquiries column") do |name|
+  within("#new-inquiries") { click_link name }
+end
+
+Then("I should be on the profile for {string}") do |name|
+  first_name, last_name = name.split(" ", 2)
+  expect(page).to have_current_path(volunteer_path(Volunteer.find_by!(first_name: first_name, last_name: last_name)))
+end
