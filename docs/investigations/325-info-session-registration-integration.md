@@ -4,23 +4,25 @@ Investigation for [issue 325](https://github.com/Child-Focus-NJ/sprout/issues/32
 
 ## How someone gets onto a session today
 
-`SessionRegistration` is the roster. Its status is `registered`, `attended`, `no_show`, `cancelled`, or `rescheduled`, and a volunteer can have only one row per session.
+`SessionRegistration` is the roster. Status is `registered`, `attended`, `no_show`, `cancelled`, or `rescheduled`. A volunteer has at most one row per session.
 
-Production code writes that table in one place: `Volunteer#finalize_check_in_for_session!`. It creates the row if needed and immediately marks it `attended`. Two screens call it:
+### What production writes today
 
-- **Session sign-in** (`InformationSessionsController#check_in`). Staff enter an email. An existing `registered` row is checked in. If the person or the row is missing, staff are sent to the inquiry form with that session id.
-- **Walk-in inquiry** (`InquiryFormController#create` when `information_session_id` is present). A new volunteer is created at funnel stage Inquiry, an `InquiryFormSubmission` is stored with source `walk_in_check_in` and `preferred_session` set, and the same check-in method marks them attended.
+| Path | What it does to `SessionRegistration` |
+| --- | --- |
+| **Session check-in** (`Volunteer#finalize_check_in_for_session!` via `InformationSessionsController#check_in`) | Finds or creates the row and marks it `attended`. Missing person/row → staff go to the walk-in inquiry form with that session id. |
+| **Walk-in inquiry** (`InquiryFormController#create` with `information_session_id`) | Creates volunteer + `InquiryFormSubmission` (`walk_in_check_in`, `preferred_session` set), then the same check-in method marks them `attended`. |
+| **Session outcome notes** (`Volunteer#add_note_with_outcome!`) | Updates an existing row: attended / no-show / cancelled, or **reschedule** (old → `rescheduled`, new session → `registered` unless already attended). Shipped with issue 304. |
+| **Remove attendee** (`InformationSessionsController#remove_attendee`) | Deletes the registration row from the session edit page. Edit can remove; it cannot add. |
 
-The public inquiry form does not register anyone for a session. It creates a volunteer and an `InquiryFormSubmission` with source `public_inquiry_form`, leaves `preferred_session` blank, and never creates a `SessionRegistration`. The form has no session picker.
+There is **no** advance-signup write that creates a fresh `registered` row for a new external signup. The production paths that leave a row as `registered` are reschedule (new session) and direct inserts in seeds/tests.
 
-The session edit page lists volunteers already tied to the session and can delete the registration. It cannot add one.
+### What does not register anyone
 
-Two other imports create volunteers only, not registrations:
+- **Public inquiry form** — creates a volunteer and an `InquiryFormSubmission` (`public_inquiry_form`), leaves `preferred_session` blank, never creates a `SessionRegistration`. No session picker.
+- **Excel upload** (`VolunteerImportService`) — creates volunteers from `email` / `first_name` / `last_name` only. No session column, no registrations.
 
-- **Excel upload** (`VolunteerImportService`) reads `email`, `first_name`, and `last_name`.
-- **eVinto sync** (`ExternalVmsSync`) pulls active inquiries from the county VMS and stores a volunteer plus an inquiry submission. It does not read or write information sessions.
-
-Seeds and tests insert `SessionRegistration` rows directly. That is the only way a row stays `registered` instead of jumping to `attended`.
+(The former eVinto / `ExternalVmsSync` path is gone from main as of #451; it also never wrote session registrations.)
 
 ## Squarespace
 
@@ -34,7 +36,7 @@ There is no Google Sheets API client, service account, or scheduled sheet sync. 
 
 Sprout should stay the roster. `SessionRegistration` already has the statuses staff need for a headcount, a current registrant list, and a past-session outcome. A sync should write those rows, not a second list.
 
-1. **Add a registration write that does not check the person in.** The only production write marks the person attended. An advance signup needs a `registered` row (and `registered_at`) for a matched volunteer and session. Cancelling sets that row to `cancelled`. Rescheduling sets the old row to `rescheduled` and creates a `registered` row on the new session. Staff outcome notes in issue 304 should call that same write so the roster, the count, and the past-session tags stay on one record.
+1. **Add a registration write that does not check the person in.** Check-in marks attended. Advance signup needs a `registered` row (and `registered_at`) for a matched volunteer and session. Cancelling sets that row to `cancelled`. Rescheduling already exists via outcome notes (old → `rescheduled`, new → `registered`); an inbound sync should reuse the same status rules so the roster, the count, and past-session tags stay on one record.
 
 2. **Do not treat `InquiryFormSubmission.preferred_session` as the roster.** Walk-in submissions set it only because check-in already happened. The public form leaves it empty. Counting those rows would mix inquiries with people who actually hold a seat.
 

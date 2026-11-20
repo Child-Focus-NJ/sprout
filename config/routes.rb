@@ -65,7 +65,6 @@ Rails.application.routes.draw do
       post :export_data
     end
   end
-  resource :external_vms_sync, only: [ :show, :create ], controller: "external_vms_syncs"
   resources :reminder_frequencies, only: [ :create, :update, :destroy ]
   resources :volunteer_tags, only: [ :create, :update, :destroy ]
   resources :users, only: [ :create, :update ]

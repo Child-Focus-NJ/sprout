@@ -6,8 +6,6 @@ from stacks.network_stack import NetworkStack
 from stacks.database_stack import DatabaseStack
 from stacks.storage_stack import StorageStack
 from stacks.queue_stack import QueueStack
-from stacks.lambda_stack import LambdaStack
-from stacks.api_stack import ApiStack
 from stacks.iam_stack import IamStack
 
 app = cdk.App()
@@ -27,18 +25,6 @@ database = DatabaseStack(
 
 storage = StorageStack(app, "SproutStorage", env=env)
 
-queues = QueueStack(app, "SproutQueues", env=env)
-
-lambdas = LambdaStack(
-    app,
-    "SproutLambdas",
-    vpc=network.vpc,
-    lambda_sg=network.lambda_sg,
-    queues=queues,
-    database_secret_arn=database.secret.secret_arn,
-    env=env,
-)
-
-ApiStack(app, "SproutApi", lambdas=lambdas, env=env)
+QueueStack(app, "SproutQueues", env=env)
 
 app.synth()
