@@ -1,3 +1,7 @@
+[![CI](https://github.com/Child-Focus-NJ/sprout/actions/workflows/ci.yml/badge.svg)](https://github.com/Child-Focus-NJ/sprout/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Child-Focus-NJ/sprout/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Child-Focus-NJ/sprout/actions/workflows/github-code-scanning/codeql)
+[![codecov](https://codecov.io/gh/Child-Focus-NJ/sprout/graph/badge.svg?token=026VQFDDLY)](https://codecov.io/gh/Child-Focus-NJ/sprout)
+
 ## Sprout – Volunteer Management System
 
 **Sprout** is a Ruby on Rails application that replaces spreadsheet-based workflows with a centralized system for managing the full volunteer lifecycle.
@@ -27,8 +31,8 @@ Working under **Dr. Peter DePasquale**
 
 ## Tech Stack
 
-- **Language:** Ruby 3.4.12
-- **Framework:** Ruby on Rails 8.1.4
+- **Language:** Ruby 4.0.9
+- **Framework:** Ruby on Rails 8.1.4.1
 - **Database:** PostgreSQL
 - **Cloud Services:** AWS
 - **App Deployment:** Heroku

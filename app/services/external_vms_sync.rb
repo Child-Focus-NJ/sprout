@@ -66,6 +66,11 @@ class ExternalVmsSync
 
   attr_reader :synced_volunteers
 
+  # Root URL of external VMS
+  def self.base_url
+    ENV.fetch(BASE_URL_ENV_KEY, DEFAULT_BASE_URL).delete_suffix("/")
+  end
+
   def initialize(page_size: DEFAULT_PAGE_SIZE)
     @page_size = page_size
     @cookies = {}
@@ -443,7 +448,7 @@ class ExternalVmsSync
   end
 
   def base_url
-    ENV.fetch(BASE_URL_ENV_KEY, DEFAULT_BASE_URL).delete_suffix("/")
+    self.class.base_url
   end
 
   def username

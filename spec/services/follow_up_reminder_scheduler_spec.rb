@@ -31,6 +31,14 @@ RSpec.describe FollowUpReminderScheduler do
       expect { described_class.call }.not_to change(ScheduledReminder, :count)
     end
 
+    it "does not send a reactivated volunteer every overdue reminder at once" do
+      template_for(stage: :inquiry, days: 30)
+      volunteer = create(:volunteer, current_funnel_stage: :inactive, inquiry_date: 200.days.ago)
+      volunteer.reactivate!
+
+      expect { described_class.call }.not_to change(ScheduledReminder, :count)
+    end
+
     it "does not schedule the same template twice for the same volunteer" do
       template_for(stage: :inquiry, days: 30)
       create(:volunteer, current_funnel_stage: :inquiry, inquiry_date: 45.days.ago)

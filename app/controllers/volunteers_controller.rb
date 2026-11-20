@@ -8,13 +8,19 @@ class VolunteersController < ApplicationController
     @inquiry_sources = ReferralSource.active.menu_order
 
     matching = Volunteer.includes(:vicinage).order(:first_name, :last_name)
-    matching = matching.name_matching(@filters[:q]) if @filters[:q]
+    matching = matching.search_matching(@filters[:q]) if @filters[:q]
     matching = matching.where(vicinage_id: @filters[:vicinage_id]) if @filters[:vicinage_id]
     matching = matching.where(referral_source_id: @filters[:referral_source_id]) if @filters[:referral_source_id]
-    # Tab counts follow the name search, so each tab shows how many matches are at that status
+    matching = matching.where(stage_started_at: @filters[:status_from].beginning_of_day..) if @filters[:status_from]
+    matching = matching.where(stage_started_at: ..@filters[:status_to].end_of_day) if @filters[:status_to]
+    matching = matching.repeat_no_shows if @filters[:repeat_no_shows]
+    # Tab counts follow the search, so each tab shows how many matches are at that status
     @status_counts = matching.reorder(nil).group(:current_funnel_stage).count
     @volunteers = @filters[:status] ? matching.where(current_funnel_stage: @filters[:status]) : matching
     @volunteers = @volunteers.reorder(inquiry_date: :desc, first_name: :asc, last_name: :asc) if @filters[:status] == "inquiry"
+    # Missed sessions per listed volunteer and outcome, e.g. { [id, "no_show"] => 2 }, for the row flags
+    @missed_session_counts = SessionRegistration.missed.where(volunteer_id: @volunteers.reorder(nil).select(:id))
+                                                .group(:volunteer_id, :status).count
   end
 
   def show
@@ -193,6 +199,22 @@ class VolunteersController < ApplicationController
     redirect_to list_path, (sent.zero? && queued.zero? ? :alert : :notice) => summary.join(" ")
   end
 
+  # Emails an active email template to each selected volunteer, filled in with their details. Each
+  # one goes on the volunteer's timeline and is sent in the background.
+  def bulk_send_email
+    list_path = bulk_return_path
+    return redirect_to(list_path, alert: Email::DISABLED_MESSAGE) unless Email.sending_enabled?
+
+    volunteers = selected_volunteers
+    return redirect_to(list_path, alert: "Select at least one volunteer") if volunteers.empty?
+
+    template = CommunicationTemplate.active.email.find_by(id: params[:template_id].presence)
+    return redirect_to(list_path, alert: "Choose an active email template") unless template
+
+    result = Email::TemplateDelivery.deliver_all_later(volunteers, template: template, sent_by_user: current_user)
+    redirect_to list_path, (result.queued.zero? ? :alert : :notice) => bulk_email_summary(template, result)
+  end
+
   # Emails the application to selected volunteers who are still at inquiry or eligible and haven't
   # had one yet. Anyone else is skipped. A volunteer is marked sent only after Mailchimp accepts.
   def bulk_send_application
@@ -284,13 +306,30 @@ class VolunteersController < ApplicationController
     (rest.positive? ? names + [ "#{helpers.number_with_delimiter(rest)} more" ] : names).to_sentence
   end
 
+  def bulk_email_summary(template, result)
+    summary = []
+    if result.queued.zero?
+      summary << "No emails sent."
+    else
+      # Names aren't length-limited and the flash lives in the session cookie, so truncate
+      summary << "Sending \"#{template.name.truncate(80)}\" to #{helpers.pluralize(result.queued, 'volunteer')}. " \
+                 "Each email is on their timeline."
+    end
+    if result.not_queued.positive?
+      failed = helpers.pluralize(result.not_queued, "email")
+      verb = result.not_queued == 1 ? "is" : "are"
+      summary << "#{failed} couldn't be queued and #{verb} marked failed. Send again to those volunteers."
+    end
+    summary.join(" ")
+  end
+
   # Bulk actions go back to the same filtered list they were sent from
   def bulk_return_path
     url_from(params[:return_to]) || volunteers_path(list_filter_params)
   end
 
-  # Search/filter values for the volunteers list. Unknown statuses, vicinages and inquiry sources
-  # are dropped so a stale or hand-edited URL shows the full list instead of nothing.
+  # Search/filter values for the volunteers list. Unknown statuses, vicinages, inquiry sources and
+  # dates are dropped so a stale or hand-edited URL shows the full list instead of nothing.
   def list_filter_params
     vicinage_param = params[:vicinage_id].to_s.presence
     vicinage_id = vicinage_param && Vicinage.where(id: vicinage_param).pick(:id)
@@ -301,8 +340,17 @@ class VolunteersController < ApplicationController
       q: params[:q].to_s.strip.presence,
       status: params[:status].presence_in(Volunteer.current_funnel_stages.keys),
       vicinage_id: vicinage_id,
-      referral_source_id: referral_source_id
+      referral_source_id: referral_source_id,
+      status_from: filter_date(params[:status_from]),
+      status_to: filter_date(params[:status_to]),
+      repeat_no_shows: ("1" if params[:repeat_no_shows] == "1")
     }.compact
+  end
+
+  def filter_date(value)
+    Date.iso8601(value.to_s)
+  rescue Date::Error
+    nil
   end
 
   def volunteer_params

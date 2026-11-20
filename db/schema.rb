@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_30_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_13_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -112,6 +112,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_120000) do
     t.index ["active"], name: "index_information_sessions_on_active"
     t.index ["created_by_user_id"], name: "index_information_sessions_on_created_by_user_id"
     t.index ["scheduled_at"], name: "index_information_sessions_on_scheduled_at"
+  end
+
+  create_table "inquiry_dismissals", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "volunteer_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "volunteer_id"], name: "index_inquiry_dismissals_on_user_id_and_volunteer_id", unique: true
+    t.index ["user_id"], name: "index_inquiry_dismissals_on_user_id"
+    t.index ["volunteer_id"], name: "index_inquiry_dismissals_on_volunteer_id"
   end
 
   create_table "inquiry_form_submissions", force: :cascade do |t|
@@ -371,6 +381,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_120000) do
     t.string "last_name"
     t.integer "role", default: 1, null: false
     t.datetime "updated_at", null: false
+    t.datetime "inquiry_notices_since", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["google_uid"], name: "index_users_on_google_uid"
   end
@@ -411,6 +422,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_120000) do
     t.datetime "updated_at", null: false
     t.bigint "vicinage_id"
     t.integer "weeks_at_inactivation"
+    t.datetime "stage_started_at", null: false
     t.index ["became_inactive_at"], name: "index_volunteers_on_became_inactive_at"
     t.index ["current_funnel_stage"], name: "index_volunteers_on_current_funnel_stage"
     t.index ["email"], name: "index_volunteers_on_email", unique: true
@@ -418,6 +430,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_120000) do
     t.index ["inquiry_date"], name: "index_volunteers_on_inquiry_date"
     t.index ["referral_source_id"], name: "index_volunteers_on_referral_source_id"
     t.index ["referred_by_volunteer_id"], name: "index_volunteers_on_referred_by_volunteer_id"
+    t.index ["stage_started_at"], name: "index_volunteers_on_stage_started_at"
     t.index ["vicinage_id"], name: "index_volunteers_on_vicinage_id"
   end
 
@@ -427,6 +440,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_120000) do
   add_foreign_key "data_export_logs", "users", on_delete: :nullify
   add_foreign_key "external_sync_logs", "volunteers"
   add_foreign_key "information_sessions", "users", column: "created_by_user_id"
+  add_foreign_key "inquiry_dismissals", "users"
+  add_foreign_key "inquiry_dismissals", "volunteers"
   add_foreign_key "inquiry_form_submissions", "information_sessions", column: "preferred_session_id"
   add_foreign_key "inquiry_form_submissions", "referral_sources"
   add_foreign_key "inquiry_form_submissions", "vicinages"
