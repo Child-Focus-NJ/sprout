@@ -2,6 +2,10 @@ Rails.application.routes.draw do
   get "system_management/index"
   get "welcome/index"
   get "application_dashboard", to: "application_dashboard#index", as: :application_dashboard
+  post "application_dashboard/new_inquiries/:volunteer_id/dismiss", to: "application_dashboard#dismiss_new_inquiry",
+                                                                    as: :dismiss_new_inquiry
+  post "application_dashboard/new_inquiries/clear", to: "application_dashboard#clear_new_inquiries",
+                                                    as: :clear_new_inquiries
   get "admin/settings", to: "admin/settings#index", as: :admin_settings
   patch "admin/settings", to: "admin/settings#update"
   get "application_dashboard", to: "application_dashboard#index"
