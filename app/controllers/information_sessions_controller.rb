@@ -39,6 +39,15 @@ class InformationSessionsController < ApplicationController
     @sessions_total_count = total
   end
 
+  def show
+    @information_session = InformationSession.find(params[:id])
+    @registrations = @information_session.session_registrations
+      .registered
+      .includes(:volunteer)
+      .joins(:volunteer)
+      .order(Arel.sql("volunteers.last_name ASC, volunteers.first_name ASC"))
+  end
+
   def new
     @information_session = InformationSession.new
   end
