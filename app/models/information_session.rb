@@ -9,6 +9,9 @@ class InformationSession < ApplicationRecord
   belongs_to :created_by_user, class_name: "User", optional: true
 
   has_many :session_registrations, dependent: :destroy
+  has_many :current_registrations,
+    -> { merge(SessionRegistration.active) },
+    class_name: "SessionRegistration"
   has_many :volunteers, through: :session_registrations
 
   validates :scheduled_at, presence: { message: "Must include date." }
@@ -26,7 +29,28 @@ class InformationSession < ApplicationRecord
   scope :past,      -> { where("scheduled_at <= ?", Time.current).order(scheduled_at: :desc) }
 
   def spots_remaining
-    capacity && capacity - session_registrations.where(status: [ :registered, :attended ]).count
+    return unless capacity
+
+    # Always query so this stays correct even if current_registrations was loaded earlier.
+    capacity - session_registrations.merge(SessionRegistration.active).count
+  end
+
+  # People who still hold a seat: still registered, or already checked in (including walk-ins).
+  # No-show, cancelled, and rescheduled rows drop out.
+  def registered_count
+    if current_registrations.loaded?
+      current_registrations.size
+    else
+      current_registrations.count
+    end
+  end
+
+  def registered_summary
+    if capacity.present?
+      "#{registered_count}/#{capacity} registered"
+    else
+      "#{registered_count} registered"
+    end
   end
 
   def label
@@ -35,6 +59,10 @@ class InformationSession < ApplicationRecord
 
   def zoom_location?
     location == "Zoom"
+  end
+
+  def upcoming?
+    scheduled_at.present? && scheduled_at > Time.current
   end
 
   private

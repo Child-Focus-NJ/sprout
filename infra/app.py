@@ -5,8 +5,6 @@ import aws_cdk as cdk
 from stacks.network_stack import NetworkStack
 from stacks.database_stack import DatabaseStack
 from stacks.storage_stack import StorageStack
-from stacks.lambda_stack import LambdaStack
-from stacks.api_stack import ApiStack
 from stacks.iam_stack import IamStack
 
 app = cdk.App()
@@ -25,16 +23,5 @@ database = DatabaseStack(
 )
 
 storage = StorageStack(app, "SproutStorage", env=env)
-
-lambdas = LambdaStack(
-    app,
-    "SproutLambdas",
-    vpc=network.vpc,
-    lambda_sg=network.lambda_sg,
-    database_secret_arn=database.secret.secret_arn,
-    env=env,
-)
-
-ApiStack(app, "SproutApi", lambdas=lambdas, env=env)
 
 app.synth()

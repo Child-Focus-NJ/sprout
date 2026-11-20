@@ -1,4 +1,8 @@
 module ApplicationHelper
+  # External VMS root URL for "VMS" link in main navigation (opens the third-party site; no sync).
+  DEFAULT_VMS_URL = "https://nj-passaic.evintotraining.com"
+  VMS_URL_ENV_KEY = "EXTERNAL_VMS_URL"
+
   # Up-level navigation: chevron + label (dashboard-style “return to parent” link).
   def back_nav_link(path, label)
     link_to path, class: "nav-back" do
@@ -20,9 +24,8 @@ module ApplicationHelper
     current_page?(path) ? "#{base} app-navbar__link--active" : base
   end
 
-  # External VMS root URL for "VMS" link in main navigation.
   def vms_url
-    ExternalVmsSync.base_url
+    ENV.fetch(VMS_URL_ENV_KEY, DEFAULT_VMS_URL).to_s.sub(%r{/+\z}, "")
   end
 
   def system_management_tab_link(label, tab, current_tab)

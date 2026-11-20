@@ -4,9 +4,7 @@
 
 Full user story definition: [`docs/user-stories/11-integration-admin.md`](../user-stories/11-integration-admin.md)
 
-Allows system administrators to integrate with external systems and manage application settings, including:
-- Receiving notifications when volunteer data is successfully transferred to an external system
-- Viewing a note on the volunteer's profile with the timestamp of the data transfer
+Allows system administrators to manage application settings, including:
 - Adding and removing reminder frequency options used throughout the system
 - Adding and removing volunteer tags for categorizing volunteers
 - Importing historical volunteer data from an Excel spreadsheet
@@ -28,9 +26,6 @@ Allows system administrators to integrate with external systems and manage appli
 
 | Change | Description |
 |---|---|
-| **Sync notifications** | Dashboard view of volunteer data transfers to the external system in the last 24 hours |
-| **Transfer notes** | Automatic note added to volunteer profile with timestamp when data is transferred |
-| **Volunteer status on transfer** | Volunteer status is set to Applied when data is pushed to the external system |
 | **Reminder frequencies** | Admins can add and remove reminder frequency options used across the system |
 | **Volunteer tags** | Admins can add and remove tags for categorizing volunteers |
 | **Historical data import** | Upload an Excel spreadsheet to bulk-import volunteer records |
@@ -49,7 +44,6 @@ Allows system administrators to integrate with external systems and manage appli
 - `features/step_definitions/integration_admin_steps.rb` → Step definitions for the integration and administration feature
 - `app/models/reminder_frequency.rb` → Model for reminder frequency records
 - `app/models/volunteer_tag.rb` → Model for volunteer tag records
-- `app/models/external_sync_log.rb` → Model for tracking volunteer data transfers to the external system
 - `app/services/volunteer_import_service.rb` → Service object that parses an Excel file and bulk-creates volunteer records
 - `spec/requests/system_management_spec.rb` → RSpec request specs for the system management controller
 - `spec/services/volunteer_import_service_spec.rb` → RSpec unit specs for the import service
@@ -57,12 +51,6 @@ Allows system administrators to integrate with external systems and manage appli
 ---
 
 ## Step-by-step Flow
-
-### Volunteer Data Transfer
-- A volunteer submits an application and their data is pushed to the external system
-- Administrator sees a notification on the system management page confirming the transfer
-- A timestamped note is automatically added to the volunteer's profile
-- Volunteer's status is updated to Applied
 
 ### Managing Reminder Frequencies
 - Administrator navigates to the system management page

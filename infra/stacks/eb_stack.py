@@ -9,7 +9,6 @@ class EbStack(Stack):
         self,
         scope: Construct,
         construct_id: str,
-        api_url: str,
         reports_bucket_name: str,
         database_url: str,
         **kwargs,
@@ -65,11 +64,6 @@ class EbStack(Stack):
                     namespace="aws:elasticbeanstalk:application:environment",
                     option_name="DATABASE_URL",
                     value=database_url,
-                ),
-                eb.CfnEnvironment.OptionSettingProperty(
-                    namespace="aws:elasticbeanstalk:application:environment",
-                    option_name="API_GATEWAY_URL",
-                    value=api_url,
                 ),
                 eb.CfnEnvironment.OptionSettingProperty(
                     namespace="aws:elasticbeanstalk:application:environment",

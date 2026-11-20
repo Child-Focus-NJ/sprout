@@ -5,7 +5,7 @@ class InformationSessionsController < ApplicationController
     only: [ :index, :new, :create, :edit, :sign_in, :update, :destroy, :remove_attendee ]
 
   def index
-    rel = InformationSession.includes(:created_by_user).all
+    rel = InformationSession.includes(:created_by_user, :current_registrations).all
 
     if params[:start_date].present?
       start_date = parsed_list_filter_date(params[:start_date])
@@ -37,6 +37,15 @@ class InformationSessionsController < ApplicationController
     @sessions_page = page
     @sessions_total_pages = max_page
     @sessions_total_count = total
+  end
+
+  def show
+    @information_session = InformationSession.find(params[:id])
+    @registrations = @information_session.session_registrations
+      .registered
+      .includes(:volunteer)
+      .joins(:volunteer)
+      .order(Arel.sql("volunteers.last_name ASC, volunteers.first_name ASC"))
   end
 
   def new
