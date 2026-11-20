@@ -1071,6 +1071,70 @@
     @apply h-9 shrink-0 gap-1.5 border-gray-200 bg-transparent px-3 text-sm text-gray-700 hover:bg-gray-50;
   }
 
+  /* Dashboard: main content on the left and the New inquiries column on the right on wide screens.
+     On narrow screens the column comes first, above the numbers. */
+  .dashboard-layout {
+    @apply grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem];
+  }
+
+  .dashboard-main {
+    @apply min-w-0 lg:col-start-1 lg:row-start-1;
+  }
+
+  /* Popup-style cards for volunteers added since the staff member last cleared them. The column stays
+     in view while scrolling and scrolls on its own when it's longer than the screen. */
+  .new-inquiries {
+    @apply self-start rounded-lg border border-gray-300 bg-gray-50 p-3 lg:sticky lg:top-4 lg:col-start-2 lg:row-start-1 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto;
+  }
+
+  .new-inquiries__header {
+    @apply mb-3 flex items-center justify-between gap-2;
+  }
+
+  .new-inquiries__heading {
+    @apply m-0 flex items-center gap-2 text-base font-semibold text-gray-900;
+  }
+
+  .new-inquiries__clear-form {
+    @apply m-0;
+  }
+
+  .new-inquiries__clear {
+    @apply cursor-pointer rounded-md border-0 bg-transparent px-2 py-1 text-sm font-medium text-sky-700 hover:bg-sky-50 hover:text-sky-900;
+  }
+
+  .new-inquiries__count {
+    @apply flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-600 px-1.5 text-xs font-semibold text-white;
+  }
+
+  .new-inquiries__list {
+    @apply m-0 grid list-none gap-2 p-0;
+  }
+
+  .new-inquiries__more {
+    @apply m-0 mt-3 text-sm text-gray-600;
+  }
+
+  .new-inquiry-card {
+    @apply flex items-start gap-2 rounded-lg border border-l-4 border-gray-200 border-l-sky-500 bg-white p-3 shadow-md;
+  }
+
+  .new-inquiry-card__body {
+    @apply min-w-0 flex-1;
+  }
+
+  .new-inquiry-card__name {
+    @apply font-semibold text-sky-800 no-underline hover:underline;
+  }
+
+  .new-inquiry-card__meta {
+    @apply m-0 mt-0.5 text-sm text-gray-600;
+  }
+
+  .new-inquiry-card__dismiss {
+    @apply -mr-1 -mt-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-xl leading-none text-gray-500 hover:bg-gray-100 hover:text-gray-900;
+  }
+
   /* Dashboard: a row of headline numbers, then counts per funnel stage. */
   .dashboard-stats {
     @apply mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4;
