@@ -12,6 +12,7 @@
       <%= system_management_tab_link("Employees", "employees", @tab) %>
       <%= system_management_tab_link("Inquiry Sources", "referral_sources", @tab) %>
       <%= system_management_tab_link("Note Categories", "note_categories", @tab) %>
+      <%= system_management_tab_link("Possible Duplicates", "duplicates", @tab, alert_count: @possible_duplicate_count) %>
     </nav>
 
     <% case @tab %>
@@ -23,6 +24,8 @@
       <%= render "system_management/referral_sources" %>
     <% when "note_categories" %>
       <%= render "system_management/note_categories" %>
+    <% when "duplicates" %>
+      <%= render "system_management/duplicates" %>
     <% else %>
       <%= render "system_management/frequencies" %>
     <% end %>

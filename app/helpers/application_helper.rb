@@ -28,10 +28,21 @@ module ApplicationHelper
     ENV.fetch(VMS_URL_ENV_KEY, DEFAULT_VMS_URL).to_s.sub(%r{/+\z}, "")
   end
 
-  def system_management_tab_link(label, tab, current_tab)
+  # alert_count adds a red count after the label, for things waiting on staff
+  def system_management_tab_link(label, tab, current_tab, alert_count: 0)
     classes = "sys-tabs__link"
     classes += " sys-tabs__link--active" if tab == current_tab
-    link_to label, system_management_path(tab: tab), class: classes
+    link_to system_management_path(tab: tab), class: classes do
+      count = tag.span(alert_count, class: "sys-tabs__alert-count") if alert_count.positive?
+      safe_join([ label, count ].compact, " ")
+    end
+  end
+
+  # Red dot on the Admin link while Admin > Possible Duplicates has pairs to check
+  def possible_duplicates_to_review?
+    return @possible_duplicates_to_review if defined?(@possible_duplicates_to_review)
+
+    @possible_duplicates_to_review = current_user&.admin? && PossibleDuplicates.any?
   end
 
   def employee_active_toggle_params(user, active:)
