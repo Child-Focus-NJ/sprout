@@ -60,7 +60,8 @@ bin/dev-docker
 This will:
 - Build the Rails dev image
 - Start PostgreSQL and run migrations automatically
-- Start LocalStack and provision AWS resources used in local development (SQS queues, S3 bucket)
+- Start LocalStack and provision AWS resources used in local development (S3 bucket)
+
 - Start the Rails server on http://localhost:3000
 
 To rebuild after Gemfile or Dockerfile changes:
@@ -100,7 +101,7 @@ docker compose exec web bin/rails "tailwindcss:watch[always]"
    ```
    This starts the Rails server along with a Tailwind CSS watcher and the background job worker. Running `bin/rails server` on its own skips the CSS build, so new styles won't show up.
 
-Note: Local AWS stubs (SQS/S3 via LocalStack) are optional for most Rails work; Mailchimp email/SMS use Mandrill credentials when enabled.
+Note: Local AWS stubs (S3 via LocalStack) are optional for most Rails work; Mailchimp email/SMS use Mandrill credentials when enabled.
 
 For more implementation details, see [docs/](https://github.com/Child-Focus-NJ/sprout/tree/main/docs).
 
