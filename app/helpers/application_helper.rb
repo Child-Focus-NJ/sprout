@@ -1,6 +1,6 @@
 module ApplicationHelper
   # External VMS root URL for "VMS" link in main navigation (opens the third-party site; no sync).
-  DEFAULT_VMS_URL = "https://nj-passaic.evintotraining.com"
+  DEFAULT_VMS_URL = "https://nj-passaic.evintosolutions.com/Account/LogOn"
   VMS_URL_ENV_KEY = "EXTERNAL_VMS_URL"
 
   # Up-level navigation: chevron + label (dashboard-style “return to parent” link).
