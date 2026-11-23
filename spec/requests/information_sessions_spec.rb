@@ -327,7 +327,27 @@ RSpec.describe "Information Sessions", type: :request do
       expect(response.body).not_to include("status-badge--outcome-registered")
     end
 
-    it "links a past session name to that roster and leaves an upcoming session as text" do
+    it "lists volunteers registered for an upcoming session, including people who rescheduled into it" do
+      staying = create(:volunteer, first_name: "Amy", last_name: "Ng")
+      moved_in = create(:volunteer, first_name: "Bea", last_name: "Cole")
+      moved_away = create(:volunteer, first_name: "Cara", last_name: "Diaz")
+      cancelled = create(:volunteer, first_name: "Dee", last_name: "Ellis")
+
+      create(:session_registration, information_session: information_session, volunteer: staying, status: :registered)
+      create(:session_registration, information_session: information_session, volunteer: moved_in, status: :registered)
+      create(:session_registration, information_session: information_session, volunteer: moved_away, status: :rescheduled)
+      create(:session_registration, information_session: information_session, volunteer: cancelled, status: :cancelled)
+
+      get information_session_path(information_session)
+
+      expect(response).to be_successful
+      expect(response.body).to include(staying.full_name, moved_in.email)
+      expect(response.body).to include(moved_in.full_name)
+      expect(response.body).not_to include(moved_away.full_name, cancelled.full_name)
+      expect(response.body.index(moved_in.full_name)).to be < response.body.index(staying.full_name)
+    end
+
+    it "links both past and upcoming session names to their show pages" do
       session = past_session
       upcoming = create(:information_session, name: "Future Orientation")
 
@@ -335,8 +355,7 @@ RSpec.describe "Information Sessions", type: :request do
       expect(response.body).to include(%(href="#{information_session_path(session, tab: "past")}"))
 
       get information_sessions_path(tab: "upcoming")
-      expect(response.body).not_to include(%(href="#{information_session_path(upcoming)}"))
-      expect(response.body).not_to include(%(href="#{information_session_path(upcoming, tab: "upcoming")}"))
+      expect(response.body).to include(%(href="#{information_session_path(upcoming, tab: "upcoming")}"))
     end
   end
 end
