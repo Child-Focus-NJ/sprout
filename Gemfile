@@ -1,8 +1,11 @@
 source "https://rubygems.org"
 
+ruby "4.0.10"
+
 # ---------------------------------------------------------------------------
 # Framework
 # ---------------------------------------------------------------------------
+
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.2", ">= 8.1.4.1"
 
@@ -69,7 +72,7 @@ group :development, :test do
   gem "factory_bot_rails"
 
   # Code quality & security
-  gem "brakeman", "~> 8.1.0", require: false  # Static security analysis
+  gem "brakeman", ">= 8.1", require: false  # Static security analysis
   gem "bundler-audit", require: false         # Audits gems for known vulnerabilities (config/bundler-audit.yml)
   gem "rubocop-rails-omakase", require: false # Omakase Ruby styling
 end
