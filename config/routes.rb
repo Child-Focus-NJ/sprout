@@ -47,6 +47,7 @@ Rails.application.routes.draw do
       get :sms_template
       post :send_sms
       get :email
+      get :email_template
       post :send_email
       post :add_note
       patch "notes/:note_id", to: "volunteers#update_note", as: "update_note"

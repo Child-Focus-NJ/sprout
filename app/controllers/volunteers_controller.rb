@@ -1,5 +1,5 @@
 class VolunteersController < ApplicationController
-  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :sms_template, :send_sms, :update_note, :email, :send_email ]
+  before_action :set_volunteer, only: [ :show, :update, :destroy, :update_status, :send_application, :mark_submitted, :sms, :sms_template, :send_sms, :update_note, :email, :email_template, :send_email ]
 
   def index
     @filters = list_filter_params
@@ -115,17 +115,28 @@ class VolunteersController < ApplicationController
   def email
     @subject = ""
     @message = ""
+    @template_id = ""
+  end
+
+  # The chosen template's subject and message with this volunteer's details filled in, for staff to edit
+  def email_template
+    template = Email::MailchimpOutbound.template!(params[:template_id])
+    render json: template.render_for(@volunteer)
+  rescue Email::MailchimpOutbound::InvalidTemplateError => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   def send_email
     communication = Email::MailchimpOutbound.deliver!(
-      volunteer: @volunteer, subject: params[:subject], body: params[:message], sent_by_user: current_user
+      volunteer: @volunteer, subject: params[:subject], body: params[:message], sent_by_user: current_user,
+      template_id: params[:template_id].presence
     )
     notice = communication.queued? ? "Email queued by Mailchimp" : "Email sent to Mailchimp"
-    redirect_to volunteer_path(@volunteer), notice: notice
+    redirect_to return_path_for(@volunteer), notice: notice
   rescue Email::MailchimpOutbound::Error => e
     @subject = params[:subject].to_s
     @message = params[:message].to_s
+    @template_id = params[:template_id].to_s
     flash.now[:alert] = e.message
     render :email, status: :unprocessable_entity
   end
