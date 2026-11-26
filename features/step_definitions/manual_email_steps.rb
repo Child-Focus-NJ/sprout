@@ -44,3 +44,19 @@ Then("the email draft should retain {string} and {string}") do |subject, message
   expect(page).to have_field("Subject", with: subject)
   expect(page).to have_field("Message", with: message)
 end
+
+# Reloads the page so the popup's template menu includes the new template
+Given("an active email template named {string} with subject {string} and body {string}") do |name, subject, body|
+  CommunicationTemplate.create!(name: name, subject: subject, body: body, template_type: :email,
+    funnel_stage: :inquiry, trigger_type: :manual, active: true)
+  visit current_url
+end
+
+When("I choose the email template {string}") do |name|
+  select name, from: "Email template"
+  expect(page).to have_content("Template loaded.")
+end
+
+Then("the saved email should use the template {string}") do |name|
+  expect(@volunteer.communications.email.last.communication_template.name).to eq(name)
+end

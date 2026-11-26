@@ -7,8 +7,16 @@ module Email
     class ValidationError < Error; end
     class ConfigurationError < Error; end
     class DuplicateApplicationError < Error; end
+    class InvalidTemplateError < ValidationError; end
 
-    def self.deliver!(volunteer:, subject:, body:, sent_by_user: nil, purpose: nil)
+    def self.template!(id)
+      CommunicationTemplate.active.email.find_by(id: id) ||
+        raise(InvalidTemplateError, "Choose an active email template or write a custom email")
+    end
+
+    # template_id records which template the email started from; staff may have edited the text since
+    def self.deliver!(volunteer:, subject:, body:, sent_by_user: nil, purpose: nil, template_id: nil)
+      template = template!(template_id) if template_id.present?
       communication = volunteer.with_lock do
         if purpose == "application"
           if volunteer.application_sent_at.present? || volunteer.applied?
@@ -33,7 +41,7 @@ module Email
 
         volunteer.communications.create!(
           communication_type: :email, subject: subject, body: body, email_to: recipient,
-          sent_by_user: sent_by_user, purpose: purpose, status: :pending
+          sent_by_user: sent_by_user, purpose: purpose, communication_template: template, status: :pending
         )
       end
       send_message!(communication)

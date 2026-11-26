@@ -1,4 +1,4 @@
-<%# One popup for adding a note or sending an SMS. Buttons made with message_dialog_button
+<%# One popup for adding a note, sending an SMS or sending an email. Buttons made with message_dialog_button
     fill in which volunteer it's for and open it on the right tab. On a profile (volunteer given) it
     also offers the categories that update that volunteer's sessions or status; lists only offer plain ones. %>
 <% volunteer = local_assigns[:volunteer] %>
@@ -16,6 +16,8 @@
               aria-controls="message-dialog-note" data-message-dialog-tab="note"><%= message_icon(:note) %>Note</button>
       <button type="button" role="tab" class="message-dialog__tab" id="message-dialog-tab-sms"
               aria-controls="message-dialog-sms" data-message-dialog-tab="sms"><%= message_icon(:sms) %>SMS</button>
+      <button type="button" role="tab" class="message-dialog__tab" id="message-dialog-tab-email"
+              aria-controls="message-dialog-email" data-message-dialog-tab="email"><%= message_icon(:email) %>Email</button>
     </div>
     <p class="subtle message-dialog__no-phone" data-message-dialog-no-phone hidden>
       No phone number on file, so SMS is turned off. Add one under Contact to send texts.
@@ -84,6 +86,32 @@
       <a class="button-link" data-sms-compose-link>Open full SMS page</a>
       <%= render "volunteers/mailchimp_links" %>
     <% end %>
+
+    <%# Not offered for a group: the list's bulk toolbar has its own template-only email popup %>
+    <%= form_with url: "", method: :post,
+                  html: { id: "message-dialog-email", class: "message-dialog__panel note-form", role: "tabpanel", hidden: true,
+                          aria: { labelledby: "message-dialog-tab-email" },
+                          data: { message_dialog_panel: "email" } } do %>
+      <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
+      <p class="subtle" data-message-dialog-email-recipient></p>
+      <% unless Email.sending_enabled? %>
+        <p class="message-dialog__notice"><%= Email::DISABLED_MESSAGE %></p>
+      <% end %>
+      <%= render "volunteers/email_template_picker", prefix: "dialog-email" %>
+      <label for="dialog-email-subject">Subject</label>
+      <%= text_field_tag :subject, nil, id: "dialog-email-subject", required: true,
+                         maxlength: Email::MailchimpOutbound::MAX_SUBJECT_LENGTH,
+                         data: { email_subject: true, message_dialog_focus: true } %>
+      <label for="dialog-email-message">Message</label>
+      <textarea id="dialog-email-message" name="message" rows="8" required data-autogrow data-email-message
+                placeholder="Write the email"></textarea>
+      <div class="note-form__footer">
+        <p class="subtle"><span data-message-dialog-count>0</span> characters</p>
+        <%= tag.button "Send", type: "submit", class: "button-primary", disabled: !Email.sending_enabled?,
+                       data: Email.sending_enabled? ? {} : { send_disabled: true } %>
+      </div>
+      <a class="button-link" data-email-compose-link>Open full email page</a>
+    <% end %>
   </div>
 </dialog>
 
@@ -96,9 +124,11 @@
     const noPhone = dialog.querySelector("[data-message-dialog-no-phone]");
     const tabs = dialog.querySelectorAll("[data-message-dialog-tab]");
     const smsTab = dialog.querySelector("[data-message-dialog-tab='sms']");
+    const emailTab = dialog.querySelector("[data-message-dialog-tab='email']");
     const panels = {
       note: dialog.querySelector("[data-message-dialog-panel='note']"),
-      sms: dialog.querySelector("[data-message-dialog-panel='sms']")
+      sms: dialog.querySelector("[data-message-dialog-panel='sms']"),
+      email: dialog.querySelector("[data-message-dialog-panel='email']")
     };
     let openFor = null;
 
@@ -121,24 +151,26 @@
       // Fire input so the box sizes itself and the character count is current.
       const box = panels[name].querySelector("textarea");
       box.dispatchEvent(new Event("input", { bubbles: true }));
-      box.focus();
+      (panels[name].querySelector("[data-message-dialog-focus]") || box).focus();
     }
 
     document.addEventListener("click", (event) => {
       const opener = event.target.closest("[data-message-dialog-open]");
       if (!opener) return;
 
-      const { noteUrl, smsUrl, messageDialogOpen } = opener.dataset;
-      const target = "messageDialogBulk" in opener.dataset ? selectedVolunteers() : oneVolunteer(opener);
+      const { noteUrl, smsUrl, emailUrl, messageDialogOpen } = opener.dataset;
+      const bulk = "messageDialogBulk" in opener.dataset;
+      const target = bulk ? selectedVolunteers() : oneVolunteer(opener);
 
       // Start fresh for different recipients so a draft never goes to the wrong person.
       if (openFor !== target.key) {
-        dialog.querySelectorAll("textarea").forEach((box) => { box.value = ""; });
+        dialog.querySelectorAll("textarea, input[type='text']").forEach((box) => { box.value = ""; });
         dialog.querySelectorAll("select").forEach((menu) => {
           menu.selectedIndex = Math.max(0, [...menu.options].findIndex((option) => option.defaultSelected));
         });
         dialog.querySelector("[name='consent']").value = "";
         panels.sms.dispatchEvent(new Event("sms-recipient-changed", { bubbles: true }));
+        panels.email.dispatchEvent(new Event("email-recipient-changed", { bubbles: true }));
         openFor = target.key;
       }
       showSessionPickers();
@@ -146,7 +178,9 @@
       title.textContent = `Message ${target.name}`;
       setFormDestination(panels.note, noteUrl, opener.dataset.noteAuthenticityToken);
       setFormDestination(panels.sms, smsUrl, opener.dataset.smsAuthenticityToken);
+      setFormDestination(panels.email, emailUrl || "", opener.dataset.emailAuthenticityToken);
       panels.sms.dataset.smsTemplateUrl = opener.dataset.smsTemplateUrl || "";
+      panels.email.dataset.emailTemplateUrl = opener.dataset.emailTemplateUrl || "";
       panels.sms.querySelector("[data-message-dialog-recipient]").textContent =
         target.ids.length ? `Sending to ${target.name}` : `To: ${target.name} · ${opener.dataset.phone || "No phone number"}`;
       if (!panels.sms.querySelector("[data-sms-template-picker]").disabled) {
@@ -157,6 +191,10 @@
       const composeLink = panels.sms.querySelector("[data-sms-compose-link]");
       composeLink.hidden = !opener.dataset.smsComposeUrl;
       if (opener.dataset.smsComposeUrl) composeLink.href = opener.dataset.smsComposeUrl;
+      panels.email.querySelector("[data-message-dialog-email-recipient]").textContent =
+        `To: ${target.name} · ${opener.dataset.email || ""}`;
+      panels.email.querySelector("[data-email-compose-link]").href = opener.dataset.emailComposeUrl || "";
+      emailTab.hidden = bulk;
       setVolunteerIds(target.ids);
       smsTab.disabled = !target.canText;
       smsTab.title = target.canText ? "" : "No phone number on file";
@@ -164,7 +202,10 @@
       noPhone.hidden = !target.phoneNote;
 
       dialog.showModal();
-      showTab(messageDialogOpen === "sms" && target.canText ? "sms" : "note");
+      let tab = "note";
+      if (messageDialogOpen === "sms" && target.canText) tab = "sms";
+      if (messageDialogOpen === "email" && !bulk) tab = "email";
+      showTab(tab);
     });
 
     function oneVolunteer(opener) {
@@ -248,7 +289,7 @@
     tabs.forEach((tab) => tab.addEventListener("keydown", (event) => {
       if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
       event.preventDefault();
-      const enabled = [...tabs].filter((item) => !item.disabled);
+      const enabled = [...tabs].filter((item) => !item.disabled && !item.hidden);
       const next = event.key === "Home" ? enabled[0] : event.key === "End" ? enabled[enabled.length - 1] :
         enabled[(enabled.indexOf(tab) + (event.key === "ArrowLeft" ? -1 : 1) + enabled.length) % enabled.length];
       showTab(next.dataset.messageDialogTab);

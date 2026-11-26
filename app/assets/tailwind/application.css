@@ -197,6 +197,15 @@
     @apply m-0 text-sm;
   }
 
+  .message-dialog__notice {
+    @apply m-0 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900;
+  }
+
+  /* An email needs more room than a note or a text */
+  .message-dialog:has([data-message-dialog-panel="email"]:not([hidden])) {
+    @apply max-w-2xl;
+  }
+
   .message-dialog__panel {
     @apply m-0 min-w-0 grid grid-cols-1 gap-1.5;
   }

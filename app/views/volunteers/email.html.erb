@@ -7,14 +7,20 @@
   <section class="card email-compose-card" id="email-compose">
     <h2 class="subsection-heading">Your email</h2>
     <p class="subtle">To <%= @volunteer.full_name %> · <%= @volunteer.email %></p>
-    <%= form_with url: send_email_volunteer_path(@volunteer), method: :post, html: { class: "email-compose" } do %>
+    <%= form_with url: send_email_volunteer_path(@volunteer), method: :post,
+          html: { class: "email-compose",
+                  data: { email_template_url: email_template_volunteer_path(@volunteer) } } do %>
+      <%= hidden_field_tag :return_to, params[:return_to] %>
+      <%= render "volunteers/email_template_picker", prefix: "email-page" %>
       <div class="email-compose__field">
         <%= label_tag :subject, "Subject" %>
-        <%= text_field_tag :subject, @subject, required: true, maxlength: Email::MailchimpOutbound::MAX_SUBJECT_LENGTH, class: "input-large" %>
+        <%= text_field_tag :subject, @subject, required: true, maxlength: Email::MailchimpOutbound::MAX_SUBJECT_LENGTH, class: "input-large",
+                           data: { email_subject: true } %>
       </div>
       <div class="email-compose__field">
         <%= label_tag :message, "Message" %>
-        <%= text_area_tag :message, @message, required: true, class: "email-compose__body", placeholder: "Write the email" %>
+        <%= text_area_tag :message, @message, required: true, class: "email-compose__body", placeholder: "Write the email",
+                          data: { email_message: true } %>
       </div>
       <div>
         <button type="submit" class="button-primary">Send</button>

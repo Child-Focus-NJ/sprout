@@ -1,0 +1,21 @@
+<% template_options = email_template_options %>
+<div class="grid gap-1.5">
+  <%= label_tag "#{prefix}-template", "Email template" %>
+  <%= select_tag :template_id, options_for_select(template_options, @template_id),
+        id: "#{prefix}-template", prompt: "Custom email", data: { email_template_picker: true },
+        disabled: template_options.empty?,
+        aria: { describedby: "#{prefix}-template-help #{prefix}-template-status" } %>
+  <p id="<%= prefix %>-template-help" class="subtle">
+    <% if template_options.empty? %>
+      No active email templates yet. Write a custom email or create an email template to reuse.
+    <% else %>
+      Choose a template to personalize, then edit the email before sending.
+    <% end %>
+  </p>
+  <p id="<%= prefix %>-template-status" class="subtle" role="status" data-email-template-status></p>
+  <% if template_options.empty? %>
+    <%= link_to "Create email template", new_admin_communication_template_path, class: "button-link" %>
+  <% else %>
+    <%= link_to "Manage message templates", admin_communication_templates_path, class: "button-link" %>
+  <% end %>
+</div>

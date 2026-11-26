@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe "Note / SMS popup", type: :request do
+RSpec.describe "Note / SMS / email popup", type: :request do
   let(:user) { create(:user) }
   let(:with_phone) { create(:volunteer, first_name: "Phoebe", last_name: "Phone", phone: "5551234567") }
   let(:without_phone) { create(:volunteer, first_name: "Nora", last_name: "Nophone", phone: nil) }
@@ -45,7 +45,7 @@ RSpec.describe "Note / SMS popup", type: :request do
       get volunteer_path(with_phone)
 
       return_fields = page_html.css("dialog#message-dialog input[name='return_to']")
-      expect(return_fields.map { |field| field["value"] }).to eq([ volunteer_path(with_phone) ] * 2)
+      expect(return_fields.map { |field| field["value"] }).to eq([ volunteer_path(with_phone) ] * 3)
     end
 
     it "lets the SMS box grow and shows the 320 character limit" do
@@ -59,7 +59,7 @@ RSpec.describe "Note / SMS popup", type: :request do
   end
 
   describe "volunteers list" do
-    it "gives each row its own Add Note and Send SMS buttons, and keeps the filters for the way back" do
+    it "gives each row its own Add Note, Send SMS and Send Email buttons, and keeps the filters for the way back" do
       with_phone
       without_phone
 
@@ -68,12 +68,14 @@ RSpec.describe "Note / SMS popup", type: :request do
       rows = page_html.css(".volunteer-row")
       expect(rows.size).to eq(2)
       rows.each do |row|
-        note_label, sms_label = row.css("button[data-message-dialog-open]").map { |button| button["aria-label"] }
+        note_label, sms_label, email_label = row.css("button[data-message-dialog-open]").map { |button| button["aria-label"] }
         expect(note_label).to eq("Add Note")
         expect(sms_label).to start_with("Send SMS")
+        expect(email_label).to eq("Send Email")
       end
       nora_row = rows.find { |row| row.text.include?("Nora Nophone") }
       expect(nora_row.at_css("button[data-message-dialog-open='sms']")["disabled"]).to be_present
+      expect(nora_row.at_css("button[data-message-dialog-open='email']")["disabled"]).to be_nil
 
       expect(page_html.css("dialog#message-dialog").size).to eq(1)
       expect(page_html.at_css("dialog#message-dialog input[name='return_to']")["value"]).to eq("/volunteers?q=o")

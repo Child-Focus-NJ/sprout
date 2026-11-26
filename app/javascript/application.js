@@ -4,6 +4,7 @@
 import "chartkick"
 import "Chart.bundle"
 import "sms_templates"
+import "email_templates"
 
 // Textareas marked data-autogrow stretch to fit what's typed instead of scrolling inside a fixed box.
 function autogrow(textarea) {

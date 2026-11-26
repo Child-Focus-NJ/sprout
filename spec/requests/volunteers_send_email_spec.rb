@@ -13,13 +13,25 @@ RSpec.describe "Volunteer email sending", type: :request do
     post send_email_volunteer_path(volunteer), params: { subject: subject, message: message }
   end
 
-  it "opens compose from the list and profile" do
-    get volunteers_path
-    expect(response.body).to include(email_volunteer_path(volunteer))
-    get volunteer_path(volunteer)
-    expect(response.body).to include(email_volunteer_path(volunteer))
+  it "opens the email popup from the list and profile, and keeps the full compose page" do
+    [ volunteers_path, volunteer_path(volunteer) ].each do |path|
+      get path
+      button = response.parsed_body.at_css("button[data-message-dialog-open='email'][data-email='#{volunteer.email}']")
+      expect(button["aria-label"]).to eq("Send Email")
+      expect(button["data-email-url"]).to eq(send_email_volunteer_path(volunteer))
+      expect(button["data-email-template-url"]).to eq(email_template_volunteer_path(volunteer))
+      expect(button["data-email-compose-url"]).to eq(email_volunteer_path(volunteer))
+      panel = response.parsed_body.at_css("dialog#message-dialog form#message-dialog-email")
+      expect(panel.css("[name='subject'], [name='message'], [name='template_id']").size).to eq(3)
+      expect(panel.at_css("[data-email-compose-link]").text).to eq("Open full email page")
+    end
     get email_volunteer_path(volunteer)
-    expect(response.body).to include('name="subject"', 'name="message"', volunteer.email)
+    expect(response.body).to include('name="subject"', 'name="message"', 'name="template_id"', volunteer.email)
+  end
+
+  it "goes back to the page the email was sent from" do
+    post send_email_volunteer_path(volunteer), params: { subject: "Hi", message: "Hello", return_to: "/volunteers?q=a" }
+    expect(response).to redirect_to("/volunteers?q=a")
   end
 
   it "sends and displays escaped content, recipient, sender and provider ID" do

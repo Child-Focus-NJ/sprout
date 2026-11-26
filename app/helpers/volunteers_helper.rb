@@ -54,7 +54,7 @@ module VolunteersHelper
     kind == :sms ? "SMS" : kind.to_s.humanize
   end
 
-  MESSAGE_DIALOG_LABELS = { note: "Add Note", sms: "Send SMS" }.freeze
+  MESSAGE_DIALOG_LABELS = { note: "Add Note", sms: "Send SMS", email: "Send Email" }.freeze
 
   def sms_template_options
     CommunicationTemplate.active.sms.order(:name).map do |template|
@@ -81,7 +81,7 @@ module VolunteersHelper
     end
   end
 
-  # An icon button that opens the note/SMS popup for this volunteer on the given tab.
+  # An icon button that opens the note/SMS/email popup for this volunteer on the given tab.
   # The tooltip and screen reader label carry the words since the button only shows an icon.
   def message_dialog_button(volunteer, tab, css_class: "button-link")
     no_phone = volunteer.phone.blank?
@@ -105,6 +105,11 @@ module VolunteersHelper
         sms_authenticity_token: form_authenticity_token(form_options: { action: send_sms_volunteer_path(volunteer), method: "post" }),
         sms_template_url: sms_template_volunteer_path(volunteer),
         sms_compose_url: sms_volunteer_path(volunteer),
+        email_url: send_email_volunteer_path(volunteer),
+        email_authenticity_token: form_authenticity_token(form_options: { action: send_email_volunteer_path(volunteer), method: "post" }),
+        email_template_url: email_template_volunteer_path(volunteer),
+        email_compose_url: email_volunteer_path(volunteer),
+        email: volunteer.email,
         phone: volunteer.phone,
         has_phone: !no_phone
       }
