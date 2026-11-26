@@ -56,7 +56,7 @@ gem "aws-sdk-s3", "~> 1.239"
 gem "caxlsx"                                # Excel generation for data exports (admin full-data export, reporting)
 gem "prawn"                                 # PDF generation for report exports
 gem "roo"                                   # Spreadsheet import (volunteer import)
-gem "image_processing", "~> 1.2"            # Active Storage variants
+gem "image_processing", "~> 2.2"            # Active Storage variants
 
 # ---------------------------------------------------------------------------
 # Deployment
