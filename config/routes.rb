@@ -70,6 +70,8 @@ Rails.application.routes.draw do
   resources :users, only: [ :create, :update ]
   resources :referral_sources, only: [ :create, :update, :destroy ]
   resources :note_categories, only: [ :create, :update, :destroy ]
+  resources :duplicate_dismissals, only: [ :create ]
+  resources :duplicate_merges, only: [ :create ]
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.

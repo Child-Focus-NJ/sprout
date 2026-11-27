@@ -120,3 +120,37 @@ Feature: Integration & Administration
             Then a full data export file should be in my downloads folder
             And the excel sheet should contain "dana88@childfocusnj.org"
             And the exported workbook should have a sheet named "volunteers"
+
+        Scenario: Review possible duplicate volunteers and mark pairs as not duplicates
+            Given these volunteers also exist:
+                | email                 | first_name | last_name | phone           |
+                | katie.jones@gmail.com | Katie      | Jones     |                 |
+                | eddie.h@gmail.com     | Eddie      | Henning   | +1 973 555 0182 |
+                | lena.ortiz@gmail.com  | Lena       | Ortiz     | 973-555-0182    |
+            When I click the "Possible Duplicates" tab
+            Then the Admin link should have a red dot
+            And I should see 2 possible duplicate pairs
+            And "Katie Jones" and "Katie Jones" should be listed as possible duplicates because of "Same name"
+            And "Eddie Henning" and "Lena Ortiz" should be listed as possible duplicates because of "Same phone"
+            When I mark "Eddie Henning" and "Lena Ortiz" as not a duplicate
+            Then I should see "Eddie Henning and Lena Ortiz won't show as possible duplicates again."
+            And I should see 1 possible duplicate pair
+            When I mark "Katie Jones" and "Katie Jones" as not a duplicate
+            Then I should see "No possible duplicates right now."
+            And the Admin link should not have a red dot
+
+        @javascript
+        Scenario: Merge two records for the same volunteer, choosing what to keep
+            Given these volunteers also exist:
+                | email                 | first_name | last_name | phone          |
+                | maria.lopez@gmail.com | Maria      | Lopez     | (973) 555-0182 |
+                | mlopez@work.org       | maria      | lopez     | 973-555-0182   |
+            When I click the "Possible Duplicates" tab
+            And I open the merge popup for "Maria Lopez" and "maria lopez"
+            And I choose "maria.lopez@gmail.com" in the merge popup
+            And I click "Merge records"
+            Then I should see "Merged the two records into Maria Lopez's profile."
+            And I should see "No possible duplicates right now."
+            When I visit "Maria Lopez"'s profile
+            Then the profile's contact details should be "maria.lopez@gmail.com" and "973-555-0182"
+            And I should see "Merged in a duplicate record for maria lopez (mlopez@work.org, 973-555-0182)"

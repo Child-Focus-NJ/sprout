@@ -71,6 +71,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_000000) do
     t.index ["user_id"], name: "index_data_export_logs_on_user_id"
   end
 
+  create_table "duplicate_dismissals", force: :cascade do |t|
+    t.bigint "volunteer_id", null: false
+    t.bigint "other_volunteer_id", null: false
+    t.bigint "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["other_volunteer_id"], name: "index_duplicate_dismissals_on_other_volunteer_id"
+    t.index ["user_id"], name: "index_duplicate_dismissals_on_user_id"
+    t.index ["volunteer_id", "other_volunteer_id"], name: "index_duplicate_dismissals_on_pair", unique: true
+    t.check_constraint "volunteer_id < other_volunteer_id", name: "duplicate_dismissals_lowest_id_first"
+  end
+
   create_table "features", force: :cascade do |t|
     t.boolean "admin_only", default: true, null: false
     t.datetime "created_at", null: false
@@ -418,6 +430,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_20_000000) do
   add_foreign_key "communications", "users", column: "sent_by_user_id"
   add_foreign_key "communications", "volunteers"
   add_foreign_key "data_export_logs", "users", on_delete: :nullify
+  add_foreign_key "duplicate_dismissals", "users", on_delete: :nullify
+  add_foreign_key "duplicate_dismissals", "volunteers", column: "other_volunteer_id", on_delete: :cascade
+  add_foreign_key "duplicate_dismissals", "volunteers", on_delete: :cascade
   add_foreign_key "information_sessions", "users", column: "created_by_user_id"
   add_foreign_key "inquiry_dismissals", "users"
   add_foreign_key "inquiry_dismissals", "volunteers"

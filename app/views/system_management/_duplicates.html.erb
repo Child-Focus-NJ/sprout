@@ -1,0 +1,59 @@
+<h2 class="section-heading">Possible Duplicates</h2>
+<p class="help-text">
+  Volunteers who share a phone number or a first and last name, newest first. If they're the same person, Merge
+  them into one profile and choose which name, email, phone and status to keep. If they're different people,
+  mark the pair "Not a duplicate" and it won't show again.
+</p>
+
+<% if @possible_duplicates.empty? %>
+  <p class="subtle" id="possible-duplicates-empty">No possible duplicates right now.</p>
+<% else %>
+  <ul id="possible-duplicates" class="duplicate-pairs">
+    <% @possible_duplicates.each do |pair| %>
+      <% names = "#{pair.volunteer.full_name} and #{pair.other_volunteer.full_name}" %>
+      <% dialog_id = "merge-dialog-#{pair.volunteer.id}-#{pair.other_volunteer.id}" %>
+      <li class="duplicate-pair">
+        <div class="duplicate-pair__header">
+          <div class="duplicate-pair__reasons">
+            <% pair.reasons.each do |reason| %>
+              <span class="duplicate-pair__reason"><%= reason %></span>
+            <% end %>
+          </div>
+          <div class="duplicate-pair__actions">
+            <button type="button" data-merge-dialog-open="<%= dialog_id %>" aria-haspopup="dialog"
+                    aria-label="Merge <%= names %>">Merge</button>
+            <%= button_to "Not a duplicate", duplicate_dismissals_path,
+                          params: { volunteer_id: pair.volunteer.id, other_volunteer_id: pair.other_volunteer.id },
+                          class: "button-link", form_class: "duplicate-pair__dismiss",
+                          aria: { label: "Not a duplicate: #{names}" } %>
+          </div>
+        </div>
+        <div class="duplicate-pair__people">
+          <% [ pair.volunteer, pair.other_volunteer ].each do |volunteer| %>
+            <div class="duplicate-pair__person">
+              <div class="duplicate-pair__name-row">
+                <%= link_to volunteer.full_name, volunteer_path(volunteer), class: "duplicate-pair__name" %>
+                <%= volunteer_status_badge(volunteer) %>
+              </div>
+              <p class="duplicate-pair__detail"><%= volunteer.email %></p>
+              <p class="duplicate-pair__detail"><%= volunteer.phone.presence || "No phone" %></p>
+              <p class="duplicate-pair__detail">Added <%= volunteer.created_at.strftime("%b %-d, %Y") %></p>
+            </div>
+          <% end %>
+        </div>
+        <%= render "system_management/merge_dialog", pair: pair, dialog_id: dialog_id %>
+      </li>
+    <% end %>
+  </ul>
+
+  <script>
+    // Each Merge button opens its pair's popup; Cancel, × and clicking outside it close it.
+    document.addEventListener("click", (event) => {
+      const opener = event.target.closest("[data-merge-dialog-open]");
+      if (opener) document.getElementById(opener.dataset.mergeDialogOpen).showModal();
+
+      const dialog = event.target.closest("dialog.merge-dialog");
+      if (dialog && (event.target === dialog || event.target.closest("[data-merge-dialog-close]"))) dialog.close();
+    });
+  </script>
+<% end %>

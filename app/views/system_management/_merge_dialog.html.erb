@@ -1,0 +1,45 @@
+<%# Merge popup for one possible-duplicate pair: staff pick the name, email, phone and status the
+    merged profile keeps. The Merge button on the pair opens it by id. %>
+<% older, newer = pair.volunteer, pair.other_volunteer %>
+<dialog id="<%= dialog_id %>" class="message-dialog merge-dialog" aria-labelledby="<%= dialog_id %>-title">
+  <div class="message-dialog__body">
+    <div class="message-dialog__header">
+      <h2 id="<%= dialog_id %>-title" class="section-heading">Merge into one profile</h2>
+      <button type="button" class="message-dialog__close" data-merge-dialog-close aria-label="Close">×</button>
+    </div>
+    <p class="subtle merge-dialog__intro">
+      Choose what to keep. Notes, emails, texts, info sessions and status history from both records move to one
+      profile, and the other record is deleted. This can't be undone.
+    </p>
+
+    <%= form_with url: duplicate_merges_path, method: :post, html: { class: "merge-dialog__form" } do %>
+      <%= hidden_field_tag :volunteer_id, older.id, id: nil %>
+      <%= hidden_field_tag :other_volunteer_id, newer.id, id: nil %>
+
+      <% merge_choices(pair).each do |choice| %>
+        <fieldset class="merge-dialog__field">
+          <legend><%= choice.label %></legend>
+          <% if choice.options.one? %>
+            <%= hidden_field_tag "keep[#{choice.key}]", choice.selected_id, id: nil %>
+            <p class="merge-dialog__only">
+              <%= choice.options.first.last %> <span class="merge-dialog__note">· <%= choice.note %></span>
+            </p>
+          <% else %>
+            <% choice.options.each do |volunteer_id, text| %>
+              <label class="merge-dialog__option">
+                <%= radio_button_tag "keep[#{choice.key}]", volunteer_id, volunteer_id == choice.selected_id,
+                                     id: "#{dialog_id}-#{choice.key}-#{volunteer_id}" %>
+                <span class="merge-dialog__value"><%= text %></span>
+              </label>
+            <% end %>
+          <% end %>
+        </fieldset>
+      <% end %>
+
+      <div class="note-form__footer merge-dialog__footer">
+        <button type="button" data-merge-dialog-close>Cancel</button>
+        <button type="submit" class="button-primary">Merge records</button>
+      </div>
+    <% end %>
+  </div>
+</dialog>
