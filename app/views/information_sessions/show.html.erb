@@ -12,35 +12,73 @@
   </p>
 
   <section class="card status-panel">
-    <h2 class="section-heading">Registered volunteers</h2>
-    <p class="help-text">
-      <%= pluralize(@registrations.size, "volunteer") %> currently registered.
-      This includes people who signed up for this session and people who rescheduled into it.
-      Cancelled registrations, and volunteers who rescheduled to a different session, are left off this list.
-    </p>
+    <% if @information_session.past? %>
+      <h2 class="section-heading">Session roster</h2>
+      <p class="help-text">
+        Everyone who registered for this session.
+        The outcome tag is that volunteer's record for this session.
+        The status tag is their current stage in Sprout.
+        Registered means an outcome has not been recorded yet.
+      </p>
 
-    <% if @registrations.empty? %>
-      <p class="subtle">No volunteers are registered for this session.</p>
-    <% else %>
-      <div class="sessions-table-wrap sessions-participants-wrap">
-        <table class="sessions-table sessions-participants-table">
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Email</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @registrations.each do |registration| %>
-              <% volunteer = registration.volunteer %>
-              <tr id="registrant-<%= volunteer.id %>">
-                <td class="sessions-participants-name"><%= link_to volunteer.full_name, volunteer_path(volunteer) %></td>
-                <td class="sessions-participants-email"><%= volunteer.email %></td>
+      <% if @registrations.empty? %>
+        <p class="subtle">Nobody registered for this session.</p>
+      <% else %>
+        <div class="sessions-table-wrap">
+          <table class="sessions-table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Session outcome</th>
+                <th scope="col">Current status</th>
               </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              <% @registrations.each do |registration| %>
+                <% volunteer = registration.volunteer %>
+                <tr id="registrant-<%= volunteer.id %>">
+                  <td><%= link_to volunteer.full_name, volunteer_path(volunteer) %></td>
+                  <td><%= volunteer.email %></td>
+                  <td><%= session_outcome_badge(registration) %></td>
+                  <td><%= volunteer_status_badge(volunteer) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    <% else %>
+      <h2 class="section-heading">Registered volunteers</h2>
+      <p class="help-text">
+        <%= pluralize(@registrations.size, "volunteer") %> currently registered.
+        This includes people who signed up for this session and people who rescheduled into it.
+        Cancelled registrations, and volunteers who rescheduled to a different session, are left off this list.
+      </p>
+
+      <% if @registrations.empty? %>
+        <p class="subtle">No volunteers are registered for this session.</p>
+      <% else %>
+        <div class="sessions-table-wrap sessions-participants-wrap">
+          <table class="sessions-table sessions-participants-table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @registrations.each do |registration| %>
+                <% volunteer = registration.volunteer %>
+                <tr id="registrant-<%= volunteer.id %>">
+                  <td class="sessions-participants-name"><%= link_to volunteer.full_name, volunteer_path(volunteer) %></td>
+                  <td class="sessions-participants-email"><%= volunteer.email %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
     <% end %>
   </section>
 </main>

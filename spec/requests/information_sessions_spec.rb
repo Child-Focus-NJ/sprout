@@ -273,6 +273,60 @@ RSpec.describe "Information Sessions", type: :request do
   end
 
   describe "GET /information_sessions/:id" do
+    def past_session
+      build(:information_session, name: "October Orientation", scheduled_at: 2.days.ago).tap do |session|
+        session.save!(validate: false)
+      end
+    end
+
+    it "shows everyone who registered, with a session outcome and their current Sprout status" do
+      session = past_session
+      attended = create(:volunteer, first_name: "Amy", last_name: "Ng", current_funnel_stage: :application_eligible)
+      rescheduled = create(:volunteer, first_name: "Bea", last_name: "Cole", current_funnel_stage: :inquiry)
+      no_show = create(:volunteer, first_name: "Cara", last_name: "Diaz", current_funnel_stage: :inquiry)
+      cancelled = create(:volunteer, first_name: "Dee", last_name: "Ellis", current_funnel_stage: :inactive)
+
+      create(:session_registration, information_session: session, volunteer: attended, status: :attended)
+      create(:session_registration, information_session: session, volunteer: rescheduled, status: :rescheduled)
+      create(:session_registration, information_session: session, volunteer: no_show, status: :no_show)
+      create(:session_registration, information_session: session, volunteer: cancelled, status: :cancelled)
+
+      get information_session_path(session)
+
+      expect(response).to be_successful
+      [ attended, rescheduled, no_show, cancelled ].each do |volunteer|
+        expect(response.body).to include(volunteer.full_name)
+      end
+      expect(response.body).to include(
+        "status-badge--outcome-attended",
+        "status-badge--outcome-rescheduled",
+        "status-badge--outcome-no-show",
+        "status-badge--outcome-cancelled",
+        "Attended",
+        "Rescheduled",
+        "No-Show",
+        "Cancelled",
+        "Application eligible",
+        "Inactive"
+      )
+    end
+
+    it "follows later changes to the session record and the volunteer status" do
+      session = past_session
+      volunteer = create(:volunteer, current_funnel_stage: :inquiry)
+      registration = create(:session_registration, information_session: session, volunteer: volunteer, status: :registered)
+
+      get information_session_path(session)
+      expect(response.body).to include("status-badge--outcome-registered", "Inquiry")
+
+      registration.update!(status: :no_show)
+      volunteer.update!(current_funnel_stage: :inactive)
+
+      get information_session_path(session)
+      expect(response.body).to include("status-badge--outcome-no-show", "Inactive")
+      expect(response.body).not_to include("status-badge--outcome-registered")
+    end
+
     it "lists volunteers registered for an upcoming session, including people who rescheduled into it" do
       staying = create(:volunteer, first_name: "Amy", last_name: "Ng")
       moved_in = create(:volunteer, first_name: "Bea", last_name: "Cole")
@@ -293,15 +347,15 @@ RSpec.describe "Information Sessions", type: :request do
       expect(response.body.index(moved_in.full_name)).to be < response.body.index(staying.full_name)
     end
 
-    it "links an upcoming session name to that list and leaves a past session as text" do
-      upcoming = information_session
-      past = build(:information_session, name: "Old Orientation", scheduled_at: 2.days.ago)
-      past.save!(validate: false)
+    it "links both past and upcoming session names to their show pages" do
+      session = past_session
+      upcoming = create(:information_session, name: "Future Orientation")
 
-      get information_sessions_path
+      get information_sessions_path(tab: "past")
+      expect(response.body).to include(%(href="#{information_session_path(session, tab: "past")}"))
 
-      expect(response.body).to include(%(href="#{information_session_path(upcoming)}"))
-      expect(response.body).not_to include(%(href="#{information_session_path(past)}"))
+      get information_sessions_path(tab: "upcoming")
+      expect(response.body).to include(%(href="#{information_session_path(upcoming, tab: "upcoming")}"))
     end
   end
 end

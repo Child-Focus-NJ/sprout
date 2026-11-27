@@ -61,6 +61,10 @@ class InformationSession < ApplicationRecord
     location == "Zoom"
   end
 
+  def past?
+    scheduled_at.present? && scheduled_at <= Time.current
+  end
+
   def upcoming?
     scheduled_at.present? && scheduled_at > Time.current
   end

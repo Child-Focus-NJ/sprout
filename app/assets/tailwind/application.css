@@ -414,6 +414,26 @@
     @apply text-gray-600 [--badge-bg:var(--color-gray-100)] [--badge-border:var(--color-gray-300)];
   }
 
+  .status-badge--outcome-registered {
+    @apply text-slate-800 [--badge-bg:var(--color-slate-100)] [--badge-border:var(--color-slate-300)];
+  }
+
+  .status-badge--outcome-attended {
+    @apply text-emerald-900 [--badge-bg:var(--color-emerald-100)] [--badge-border:var(--color-emerald-300)];
+  }
+
+  .status-badge--outcome-rescheduled {
+    @apply text-sky-900 [--badge-bg:var(--color-sky-100)] [--badge-border:var(--color-sky-300)];
+  }
+
+  .status-badge--outcome-no-show {
+    @apply text-amber-950 [--badge-bg:var(--color-amber-100)] [--badge-border:var(--color-amber-300)];
+  }
+
+  .status-badge--outcome-cancelled {
+    @apply text-gray-600 [--badge-bg:var(--color-gray-100)] [--badge-border:var(--color-gray-300)];
+  }
+
   /* Volunteers list: flag for volunteers who keep no-showing, cancelling or rescheduling info sessions */
   .missed-sessions-flag {
     @apply inline-flex items-center rounded-md border border-rose-300 bg-rose-50 px-2.5 py-0.5 text-sm font-semibold text-rose-800;
