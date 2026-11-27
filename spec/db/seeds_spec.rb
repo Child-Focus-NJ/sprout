@@ -60,6 +60,15 @@ RSpec.describe "db/seeds.rb" do
     expect(Feature.where(admin_only: false)).to be_empty
   end
 
+  it "seeds Availability as a plain note category" do
+    load_seeds
+
+    availability = NoteCategory.find_by(name: "Availability")
+    expect(availability).to be_present
+    expect(NoteCategory.plain).to include(availability)
+    expect(availability).not_to be_built_in
+  end
+
   it "can run twice without duplicating anything" do
     load_seeds
 
