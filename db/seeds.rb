@@ -69,6 +69,7 @@ end
 }.each do |key, name|
   NoteCategory.find_or_create_by!(key: key) { |category| category.name = name }
 end
+NoteCategory.find_or_create_by!(name: "Availability")
 
 # ── Volunteer Tags ─────────────────────────────────────────────────────────────
 [ "Bilingual", "Available Weekends", "Has Prior Experience", "Flexible Schedule" ].each do |title|
