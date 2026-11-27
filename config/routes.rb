@@ -13,7 +13,6 @@ Rails.application.routes.draw do
 
   namespace :admin do
     resource :data_export, only: [ :create ], controller: "data_exports"
-    resources :campaigns, only: [ :index ]
     resource :usage_report, only: [ :show ], controller: "usage_reports"
 
     resources :communication_templates do
